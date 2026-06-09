@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WonderWijs - Leerlijnen Digitale Geletterdheid</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Specifieke styling voor de uitklapbare domeinen (Accordions) */
+        .domain-card {
+            background-color: var(--white);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            border-left: 5px solid var(--ww-brown);
+            overflow: hidden;
+        }
+
+        .domain-header {
+            padding: 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .domain-header:hover {
+            background-color: #fafafa;
+        }
+
+        .domain-title {
+            flex: 1;
+        }
+
+        .goal-list {
+            display: none; /* Standaard verborgen */
+            padding: 0 25px 25px 25px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* Als de kaart open is, toon de lijst */
+        .domain-card.open .goal-list {
+            display: block;
+        }
+
+        .chevron-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+            color: var(--ww-green);
+            margin-left: 20px;
+        }
+
+        .domain-card.open .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Intro blok styling */
+        .intro-block {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            border-left: 5px solid var(--ww-green);
+            margin-bottom: 35px;
+            width: 100%;
+        }
+
+        /* Voortgangsbalk binnen de header */
+        .domain-progress-container {
+            width: 100%;
+            background-color: #EAEAEA;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .domain-progress-fill {
+            height: 100%;
+            background-color: var(--ww-green);
+            width: 0%;
+            transition: width 0.4s ease-in-out;
+        }
+        .domain-progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item">Dashboard</a>
+            <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
+            <a href="leerlijnen.html" class="menu-item active">Leerlijn digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        
+        <div class="bottom-menu">
+            <p class="menu-label">Account</p>
+            <a href="#" class="menu-item">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Leerlijnen Digitale Geletterdheid</h1>
+        </header>
+
+        <section class="intro-block">
+            <p style="font-size: 16px; line-height: 1.8; color: var(--text-dark); margin: 0;">
+                Digitale geletterdheid is essentieel om leerlingen voor te bereiden op de samenleving van nu en de toekomst. 
+                Met deze leerlijnen bieden we een helder overzicht van de vaardigheden die nodig zijn om technologie niet alleen te gebruiken, 
+                maar ook te begrijpen en kritisch te beoordelen. Gebaseerd op de landelijke handreikingen, 
+                zijn de doelen verdeeld over de domeinen <strong>Praktische kennis en vaardigheden</strong>, 
+                <strong>Mediawijsheid</strong>, <strong>Informatievaardigheden</strong> en <strong>Computational Thinking</strong>. 
+                Gebruik dit overzicht om per bouw de voortgang van je klas te monitoren en gericht aan de slag te gaan met de kerndoelen.
+            </p>
+        </section>
+
+        <div class="bouw-tabs">
+            <button class="tab-btn active" onclick="laadLeerlijn('groep1-2', this)">🌱 Groep 1-2</button>
+            <button class="tab-btn" onclick="laadLeerlijn('groep3-4', this)">🌿 Groep 3-4</button>
+            <button class="tab-btn" onclick="laadLeerlijn('groep5-6', this)">🌳 Groep 5-6</button>
+            <button class="tab-btn" onclick="laadLeerlijn('groep7-8', this)">🌲 Groep 7-8</button>
+        </div>
+
+        <section class="learning-goals" id="kerndoelenContainer">
+            </section>
+    </main>
+</div>
+
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitModal()">&times;</span>
+        <h2 id="modalTitel">Titel</h2>
+        <div id="modalInhoud"></div>
+    </div>
+</div>
+
+<script>
+const leerlijnenDB = {
+    "groep1-2": [
+        {
+            domein: "1. Praktische kennis en vaardigheden",
+            kerndoelen: [
+                { 
+                    titel: "22a Digitale systemen", 
+                    acties: ["Ontdekt dat apparaten zoals computers, tablets en smartphones verschillend werken, maar vergelijkbare functies hebben.", "Leert apparaten aan- en uit te zetten en eenvoudige handelingen uit te voeren (zoals apps openen en afsluiten).", "Herkent en benoemt digitale apparaten en begrijpt dat internet verbinding maakt met informatie"],
+                    voorbeelden: ["Samen met de leerkracht een tablet opstarten en een educatieve app openen/sluiten.", "Een praatplaat of memoryspel met digitale apparaten (computer, tablet, smartphone).", "In de kring bespreken wat je met een computer of telefoon kunt doen.", "Prentenboek Tikke takke toetsenbord", "Oude computers uit elkaar laten halen en onderdelen bespreken", "Geef een apparaat, bijv. beebot, opdrachten en laat deze uitvoeren.", "Laat leerlingen een oud apparaat demonteren; wat zien ze allemaal?"],
+                    materialen: ["Tablets", "Oude computers", "Beebot", "Osmo", "Kiene Klanken cijfers&vormen"]
+                },
+                { 
+                    titel: "22b Digitale media en informatie", 
+                    acties: ["Ontdekt dat informatie uit verschillende bronnen kan komen, zoals boeken, filmpjes of digitale prentenboeken.", "Herkent dat digitale media verschillende doelen kunnen hebben, zoals leren of vermaken.", "Leert dat niet alles wat op een scherm staat echt of waar is."],
+                    voorbeelden: ["Samen met de leerkracht filmpjes en prenten vergelijken over hetzelfde onderwerp.", "Bespreek wat echt is en wat verzonnen (bijv. sprookje vs. filmpje van dieren).", "Gebruik kindvriendelijke zoeksites of apps (bijv. WizeNoze, Junior Einstein, SchoolTV Patsboem)."],
+                    materialen: ["Junior Einstein", "WizeNoze"]
+                },
+                { 
+                    titel: "22c Data", 
+                    acties: ["Herkent en verzamelt eenvoudige data (tellen, turven)", "Ordent gegevens met fysieke materialen of pictogrammen", "Vergelijkt en benoemt 'meeste/minste'", "Herkent spelenderwijs patronen en voorkeuren"],
+                    voorbeelden: ["Tel hoeveel kinderen een bepaalde kleur het mooist vinden en maak een staafgrafiek met blokjes", "Houd dagelijks het weer bij op een weerkalender en bespreek welke dag het zonnigst was", "Orden meegenomen fruit en maak een 'fruitslinger' per soort", "Gebruik een digitale weer-app (bv. Buienradar) om samen het weer te voorspellen en vergelijk met het eigen weerkalenderbord.", "Maak met Book Creator of een ander digitaal prentenboek een klasboek: \"Wat is onze lievelingskleur?\" met foto's van de kinderen."],
+                    materialen: ["Kleuterkrant", "Weer-kalender", "Pictogram-kaarten", "Gratis tools zoals Kleuter-portaal :", "Buienradar / KNMI/ Weeronline", "Book Creator/iPad"]
+                },
+                { 
+                    titel: "22d Artificiële Intelligentie (AI)", 
+                    acties: ["Herkent eenvoudige AI-toepassingen in het dagelijks leven (zoals spraassistenten of slimme apparaten).", "Ontwikkelt een eerste begrip van 'slimme' technologie."],
+                    voorbeelden: ["Voorlezen van een prentenboek over een robot.", "Spelen met een robot die reageert op geluid of bewegingen.", "Gesprek: 'Wat kan een robot wel en niet?'"],
+                    materialen: ["Beebot", "mTiny", "Speelgoed-robots", "Tablets met Al-Apps."]
+                }
+            ]
+        },
+        {
+            domein: "2. Ontwerpen en maken",
+            kerndoelen: [
+                { 
+                    titel: "23a Creëren met digitale technologie", 
+                    acties: ["Ontdekt dat je met technologie iets kunt maken.", "Ervaart plezier in digitaal creëren."],
+                    voorbeelden: ["Teken een verhaal / een scene uit een leesboek op de tablet.", "Maak een stop-motion filmpje met speelgoed van bv. een thema of leesboek.", "Bouw een fantasiedier met blokken en maak er een foto van.", "Maak een korte film van een boeken scène"],
+                    materialen: ["Greenscreen-box", "Piximakey met kralenplank", "Ipads"]
+                },
+                { 
+                    titel: "23b Programmeren", 
+                    acties: ["Ontdekt dat je een computer of robot kunt aansturen met instructies.", "Leert dat je stappen in een bepaalde volgorde moet zetten om een doel te bereiken.", "Ervaart dat fouten horen bij uitproberen en verbeteren.", "Herkent eenvoudige patronen (kleur, vorm, herhaling).", "Ziet in dat een reeks opdrachten samen een stappenplan /algoritme vormt."],
+                    voorbeelden: ["Sorteren van kleuren- en vormpatronen (bijv. met Lego of blokken)", "Stap-voor-stap instructies oefenen ('programmeer je klasgenoot')", "Robots programmeren met pijltjes (vooruit, achteruit, draaien)", "Laat een robot een parcours afleggen", "Plattegronden en puzzelstukken gebruiken", "Werken met eenvoudige codeeropdrachten", "Herkennen en maken van patronen en herhalingen", "Programmeren van routes of opdrachten via blokken of kaarten"],
+                    materialen: ["Beebot", "mTiny", "Indi", "Unplugged opdrachten", "DUPLO Coding Express"]
+                }
+            ]
+        },
+        {
+            domein: "3. De gedigitaliseerde wereld",
+            kerndoelen: [
+                { 
+                    titel: "24a Veiligheid & privacy", 
+                    acties: ["Snapt dat niet alles op een scherm echt of veilig is.", "Weet dat hij of zij niet alles over zichzelf hoeft te vertellen online.", "Weet dat hulp vragen mag als iets spannend of raar voelt op het scherm."],
+                    voorbeelden: ["Praatplaat: \"Wat deel ik wel/niet?\"", "Rollenspel met een pop die privévragen stelt.", "Samen een geheim wachtwoord verzinnen met kleuren of vormen.", "Prentenboeken rondom dit thema, bijv. Tikkie, takkie, toetsenbord.", "Kaarten sorteren: dingen die ik mag vertellen (lievelingskleur) en dingen die ik geheim hou (adres).", "\"Stop of doorgaan\"-spel: de juf leest situaties voor (\"Iemand vraagt om mijn adres\") leerlingen lopen naar stop/doorgaan-hoek.", "Lessen lentekriebels"],
+                    materialen: ["Prentenboeken (Tikke Takke Toetsenbord)", "Filmpjes via Mediawijsheid.nl"]
+                },
+                { 
+                    titel: "24b Digitale technologie, jezelf en de ander", 
+                    acties: ["Snapt dat te lang naar een scherm kijken niet altijd gezond is.", "Weet dat het goed is om af en toe pauze te nemen.", "Weet dat niet alles wat online te zien is, echt of waar hoeft te zijn.", "Oefent met aardig en respectvol communiceren, ook digitaal.", "Snapt dat online gedrag invloed kan hebben op anderen."],
+                    voorbeelden: ["Praatplaatgesprek: wat doe je graag met een scherm, en wat doe je liever buiten?", "Samen oefenen met een \"digitaal compliment\" sturen (bv. via een klas-app of op kaartjes).", "Vergelijk echt vs. nepplaatjes (bv. filters op foto's, sprookjesfiguren).", "Toneelspel: iemand krijgt een digitaal bericht - hoe voelt dat?", "Schermtijd bespreken in gouden weken, ook met ouders", "Prentenboek 'Anti Scherm Politie'"],
+                    materialen: ["Praatplaat", "Prentenboek 'Anti Scherm Politie'", "Mediamasters", "Voorbeeldreclames YouTube", "Klokhuis (aflevering schermtijd)"]
+                },
+                { 
+                    titel: "24c Digitale technologie, samenleving en wereld", 
+                    acties: ["Snapt dat apparaten overal om ons heen zijn.", "Weet dat apparaten helpen bij dagelijkse dingen zoals leren, spelen en communiceren."],
+                    voorbeelden: ["Boekje lezen over robots in het ziekenhuis.", "Gesprek: \"Wat doet een telefoon allemaal?\"", "Boek Meester Sander 'Tikke Takke Toetsenbord'", "Bespreken welke apparaten ze thuis of op school gebruiken", "Verzinnen en tekenen/knutselen van een 'slimme' robot of apparaat"],
+                    materialen: ["Prentenboeken over technologie", "Speelgoed met technologie (bijv. robotstofzuiger)"]
+                }
+            ]
+        }
+    ],
+    "groep3-4": [
+        {
+            domein: "1. Praktische kennis en vaardigheden",
+            kerndoelen: [
+                { 
+                    titel: "22a Digitale systemen", 
+                    acties: ["Leert bestanden aan te maken, op te slaan en terug te vinden met begeleiding.", "Begrijpt dat apps en programma's specifieke functies hebben en leert ze doelgericht te gebruiken.", "Ontdekt het verschil tussen lokaal en online opslaan.", "Ontdekt dat een computer reageert op signalen uit de omgeving."],
+                    voorbeelden: ["Basisvaardigheden Office leren met de leerlijn van Arno Koenders", "Oefenen met het opslaan van een tekening of document in een map ('schoolwerk', 'foto\\'s').", "Een instructieactiviteit: een document openen, aanpassen en opnieuw opslaan.", "Klassikale ontdekkingstocht: wat doet een app? (bijv. Tekenen in Paint vs. schrijven in Word).", "Laat leerlingen samenwerken in een gedeeld document met simpele invoeropdrachten. Wie doet wat?", "QR codetocht door de klas; voer de opdracht uit onder de QR code."],
+                    materialen: ["Scratch", "Ipads", "Chromebooks", "Makey Makey", "Office leerlijn Arno Koenders"]
+                },
+                { 
+                    titel: "22b Digitale media en informatie", 
+                    acties: ["Leert eenvoudige informatievragen te stellen en passende zoektermen te gebruiken.", "Begrijpt dat media commerciële doelen kunnen hebben, zoals reclame of verdienmodellen in apps.", "Weet dat persoonlijke gegevens beschermd moeten blijven en waarom dat belangrijk is."],
+                    voorbeelden: ["Een vraag stellen ('Hoe leven pinguïns?') en samen zoeken in Jeugdjournaal, Wikikids of Junior Einstein. Maak er daarna een poster van (op papier of canva)", "Bespreken hoe reclame of kleurgebruik aandacht trekt.", "Oefenen met filters: plaatje, tekst, filmpje."],
+                    materialen: ["Wikids", "Canva", "Jeugdjournaal", "Google"]
+                },
+                { 
+                    titel: "22c Data", 
+                    acties: ["Verzamelt gegevens via vragenlijsten of observaties", "Ordent in lijsten of tabellen", "Maakt eenvoudige grafieken (staafdiagram, cirkeldiagram)", "Trekt eenvoudige conclusies op basis van data", "Begrijpt dat meetresultaten kunnen verschillen"],
+                    voorbeelden: ["Doe een mini-enquête: 'Welke sport doe jij?' en verwerk de data in een cirkel- of staafdiagram", "Meet hoeveel stappen je zet in een week en vergelijk met klasgenoten", "Maak een tabel van leeftijden van verschillende dieren en bespreek: wie wordt het oudst?", "Gebruik Kahoot om een mini-enquête in de klas uit te voeren en laat de resultaten direct in grafiekvorm zien."],
+                    materialen: ["Werkbladen voor enquêtes", "Kahoot", "Canva"]
+                },
+                { 
+                    titel: "22d Artificiële Intelligentie (AI)", 
+                    acties: ["Begrijpt dat AI leert van data.", "Kan voorbeelden geven van AI in apps of games.", "Denkt na over wat eerlijk of oneerlijk is bij slimme systemen.", "Leren kritisch nadenken over wat ai wel en niet kan."],
+                    voorbeelden: ["Spel: 'Wie is de robot?' (begrijpen van regels en patronen).", "Verkennen van een AI-app (zoals een tekenapp die herkent wat je tekent).", "Gesprek over 'slimme' keuzes: 'Waarom kiest YouTube dit filmpje voor mij?'"],
+                    materialen: ["Ai-tekenapps", "Dash & Dot robot", "Chatbots", "Diverse soorten Robots, zoals Indi, mTiny, Bluebot"]
+                }
+            ]
+        },
+        {
+            domein: "2. Ontwerpen en maken",
+            kerndoelen: [
+                { 
+                    titel: "23a Creëren met digitale technologie", 
+                    acties: ["Gebruikt eenvoudige digitale tools om ideeën vorm te geven.", "Leert dat ontwerpen en verbeteren bij elkaar horen."],
+                    voorbeelden: ["Maak een digitale verjaardagskaart.", "Bouw een eenvoudig spelletje met ScratchJr.", "Ontwerp een huis in een bouw-app.", "Onderzoek materialen met behulp van de Easi scope", "Bedenk en creëer een digitaal verhaal met beeld en geluid"],
+                    materialen: ["3d pennen", "Easi Scope", "Canva", "ScratchJr op tablets", "Greenscreen-box", "Greenscreen-set", "Powerpoint"]
+                },
+                { 
+                    titel: "23b Programmeren", 
+                    acties: ["Leert dat herhaling (loops) een kortere manier is om patronen en instructies weer te geven.", "Gebruikt eigen woorden om uit te leggen wat een programma of route doet.", "Ervaart dat een programma getest en aangepast moet worden om te werken."],
+                    voorbeelden: ["Laat een robot een parcours afleggen", "Plattegronden en puzzelstukken gebruiken", "Werken met eenvoudige codeeropdrachten", "Herkennen en maken van patronen en herhalingen", "Programmeren van routes of opdrachten via blokken of kaarten"],
+                    materialen: ["BlueBot", "mTiny", "Indi", "Cue", "Dash", "Photon", "Intelino", "Unplugged (=offline) opdrachten", "Eenvoudige digitale tools"]
+                }
+            ]
+        },
+        {
+            domein: "3. De gedigitaliseerde wereld",
+            kerndoelen: [
+                { 
+                    titel: "24a Veiligheid & privacy", 
+                    acties: ["Kan zeggen wat wel en niet gedeeld mag worden.", "Stopt als iets online niet goed voelt en vraagt dan om hulp.", "Snapt dat persoonlijke gegevens beschermd moeten worden.", "Weet wat persoonlijke gegevens zijn.", "Weet dat niet alles op internet waar of veilig is.", "Weet wat een goed wachtwoord is en dat dit privé blijft.", "Gebruikt digitale middelen met begeleiding op een veilige manier."],
+                    voorbeelden: ["\"Stop of doorgaan\"-spel: de juf leest situaties voor (\"Iemand vraagt om mijn adres\") leerlingen lopen naar stop/doorgaan-hoek.", "Lessen lentekriebels", "Wachtwoorden verbeteren in de klas (Maak \"1234\" -> \"Paard2025!\") en toepassen in online leeromgeving.", "Digibord-quiz: veilig of onveilig?", "Tekening: mijn geheime box met 3 dingen die ik niet online deel.", "Maak een collage (digitaal of op papier) met plaatjes/foto's die veilig en onveilig gedrag laten zien.", "Zoekopdracht: leerlingen markeren in een tekst of plaatje alle persoonlijke gegevens (naam, geboortedatum, adres)."],
+                    materialen: ["veilig-internetten.nl", "Games zoals DigiDuck, HackShield Kids"]
+                },
+                { 
+                    titel: "24b Digitale technologie, jezelf en de ander", 
+                    acties: ["Snapt dat schermtijd invloed heeft op hoe je je voelt.", "Weet dat er een verschil is tussen de echte en de online versie van jezelf.", "Kan op een nette en respectvolle manier reageren op berichten.", "Herkent dat media invloed hebben op wat je denkt of leuk vindt.", "Weet dat sommige games en apps expres proberen dat je blijft doorspelen."],
+                    voorbeelden: ["Weekopdracht: turven hoeveel tijd ik op schermen zit en bespreken hoe dat voelt.", "Werkblad: wat laat ik van mezelf zien online (bv. profielfoto, spelnaam)?", "Klassikaal rollenspel: reageer op een digitaal bericht - wat is netjes, wat niet?", "Analyse van een reclamefilmpje: wat willen ze dat ik denk of koop?", "Bespreek hoe meldingen of beloningssystemen werken in een spel (bijv. extra leven of muntjes).", "Schermtijd bespreken in gouden weken, ook met ouders"],
+                    materialen: ["Praatplaat", "Prentenboek 'Anti Scherm Politie'", "Mediamasters", "Voorbeeldreclames YouTube", "Klokhuis (aflevering schermtijd)"]
+                },
+                { 
+                    titel: "24c Digitale technologie, samenleving en wereld", 
+                    acties: ["Snapt dat apparaten invloed hebben op het dagelijks leven.", "Kan uitleggen wat er gebeurt als apparaten niet werken.", "Denkt na over hoe technologie dingen makkelijker maakt, maar soms ook lastig."],
+                    voorbeelden: ["Maak een collage: \"Technologie in mijn leven\".", "Speel een simulatiespel over keuzes maken met technologie.", "Groepsgesprek over wat er gebeurt als apparaten even niet werken of als er even geen internet is.", "Simpele rollenspellen: 'een dag zonder tablet'"],
+                    materialen: ["Educatieve video's", "Beebot", "Dash & Dot", "Osmo"]
+                }
+            ]
+        }
+    ],
+    "groep5-6": [
+        {
+            domein: "1. Praktische kennis en vaardigheden",
+            kerndoelen: [
+                { 
+                    titel: "22a Digitale systemen", 
+                    acties: ["Gebruikt digitale toepassingen (tekstverwerker, presentatieprogramma, browser) om informatie te verwerken en schooltaken uit te voeren.", "Leert persoonlijke bestanden zelfstandig te ordenen, kopiëren, delen en verwijderen.", "Begrijpt basisprincipes van bestandsbeheer en online opslag (cloud).", "Leert dat fysieke schakelingen digitale acties aansturen."],
+                    voorbeelden: ["Een werkstuk maken in Word met opgeslagen afbeeldingen (evt. met behulp van Leerlijn Arno Koenders)", "Mappenstructuur aanleggen voor schoolvakken of projecten.", "Simulatie: 'Waar is mijn bestand gebleven?' - oefenen met zoeken, hernoemen, opslaan in de cloud.", "Ontwerp een spelcontroller van klei of karton voor een Scratch-spel.", "Maak een digitale dobbelsteen of stappenteller met de microbit", "Laat iets bewegen met Lego Essential"],
+                    materialen: ["Scratch", "Microbit", "Lego Essential", "Leerlijn Office Arno Koenders", "Canva", "Microsoft Word"]
+                },
+                { 
+                    titel: "22b Digitale media en informatie", 
+                    acties: ["Leert feiten en meningen in online informatie te onderscheiden.", "Gebruikt betrouwbare bronnen doelgericht en beoordeelt ze op betrouwbaarheid en actualiteit.", "Weet hoe digitale veiligheid werkt, zoals sterke wachtwoorden en het beheer van accounts."],
+                    voorbeelden: ["Vergelijk twee websites over hetzelfde onderwerp: wat is betrouwbaar?", "Zoek en gebruik afbeeldingen met bronvermelding.", "Maak een presentatie met informatie uit meerdere bronnen.", "Gebruik Fake News Generator, Quiz Fake News of Nieuwsbegrip Mediawijsheid om beïnvloeding te herkennen."],
+                    materialen: ["Powerpoint", "Fake News Generator", "Nieuwsbegrip", "Media Masters"]
+                },
+                { 
+                    titel: "22c Data", 
+                    acties: ["Verwerkt en voert data in met digitale tools (Excel, Forms)", "Herkent en interpreteert verschillende grafieksoorten", "Vergelijkt data en geeft verklaringen voor verschillen", "Kijkt kritisch naar juistheid en herkomst van data"],
+                    voorbeelden: ["Onderzoek: 'Waar groeit een plantje het best?' meet, noteer en verwerk data digitaal", "Vergelijk weerdata van verschillende weken en trek conclusies", "Bespreek hoe verschillende antwoorden een grafiek kunnen beïnvloeden", "Laat leerlingen in Canva, Microsoft Powerpoint of Microsoft Excel hun eigen infographic maken van onderzoeksdata.", "Gebruik Mentimeter: stel een vraag (\"Hoe vaak eet je fruit per dag?\") en bespreek live de grafieken die verschijnen."],
+                    materialen: ["Microbit (bv. stappenteller)", "Microsoft Forms", "Microsoft Excel", "Microsoft Powerpoint", "Canva", "Mentimeter", "MediaMasters", "Bureau Jeugd & Media", "FutureNL"]
+                },
+                { 
+                    titel: "22d Artificiële Intelligentie (AI)", 
+                    acties: ["Begrijpt hoe AI beslissingen neemt op basis van data.", "Herkent bias (vertekeningen) en fouten in AI systemen.", "Stelt vragen over betrouwbaarheid van AI."],
+                    voorbeelden: ["Simulatie: AI trainen met plaatjes.", "Discussie: 'Wat als een robot een fout maakt?'", "Mini-project: Ontwerp een slimme assistent voor de klas.", "Leren prompten", "AI vragen om kleurplaten te maken"],
+                    materialen: ["Teachable Machine (Google)", "Microbit", "Say what you see (Google)", "Microsoft Copilot", "Diverse soorten Robots, zoals Photon, Dash, Cue"]
+                }
+            ]
+        },
+        {
+            domein: "2. Ontwerpen en maken",
+            kerndoelen: [
+                { 
+                    titel: "23a Creëren met digitale technologie", 
+                    acties: ["Ontwerpt en maakt een digitaal product met een doel.", "Gebruikt feedback om het product te verbeteren."],
+                    voorbeelden: ["Programmeer een interactieve quiz.", "Ontwerp een logo of poster voor een project.", "Maak een animatie over een thema.", "Ontwerp een bouwwerk binnen een thema met Lego Education", "Neem een podcast op over een thema en voeg een externe gast toe", "Canva kleurplaat of animatie", "Scratch scene maken"],
+                    materialen: ["Canva", "Kahoot", "Blooket", "Microbit", "Flipaclip app", "Microsoft Powerpoint", "Lego Education Essential", "Podcast", "Tinkercat met 3D printer", "Scratch"]
+                },
+                { 
+                    titel: "23b Programmeren", 
+                    acties: ["Gebruikt basisconcepten: invoer (toets/muis), uitvoer (geluid/ beweging), variabelen en operatoren.", "Ontwerpt en bouwt een eigen eenvoudig programma of spel.", "Werkt samen: uitleggen wat je hebt gemaakt en verwerkt feedback.", "Test systematisch en debugt: fouten vinden en verbeteren.", "Begrijpt dat er verschillende manieren zijn om eenzelfde probleem op te lossen."],
+                    voorbeelden: ["Programmeren in een blokgebaseerde programmeertaal (Scratch-achtig)", "Ontwerpen en aanpassen van eenvoudige programma's", "Samenwerken aan opdrachten en testen/debuggen; de een programmeert, de ander geeft feedback", "Debug een fout in een bestaand Scratch-project (bv. kat beweegt niet goed).", "Maak een bouwwerk met Lego en laat deze opdrachten uitvoeren.", "Programmeer een robot/trein/apparaat en laat deze opdrachten uitvoeren."],
+                    materialen: ["Scratch (online)", "Ozobot", "Microbit", "Photon", "Intelino", "Sphero Mini", "Lego Spike Essential", "MediaMasters", "Unplugged opdrachten"]
+                }
+            ]
+        },
+        {
+            domein: "3. De gedigitaliseerde wereld",
+            kerndoelen: [
+                { 
+                    titel: "24a Veiligheid & privacy", 
+                    acties: ["Snapt dat wachtwoorden geheim blijven om jezelf te beschermen.", "Weet dat sommige berichten of websites nep of misleidend kunnen zijn.", "Denkt na voordat hij of zij iets van zichzelf of anderen online deelt.", "Herkent ongepaste berichten en weet dat deze gemeld kunnen worden.", "Herkent wanneer beelden of berichten gemanipuleerd zijn (zoals deepfakes) en kijkt hier kritisch naar.", "Gebruikt digitale omgevingen bewust en veilig.", "Snapt dat online gedrag gevolgen heeft voor zichzelf en anderen."],
+                    voorbeelden: ["Stappenplan: mijn eigen sterke wachtwoord maken.", "Oefening: wat gebeurt er als je account open blijft staan?", "Klasafspraak: wanneer mag je een foto van iemand posten?", "Spot de nepper: leerlingen krijgen voorbeelden van berichten (nep vs echt) en bespreken signalen (rare link, te mooi om waar te zijn).", "Reken uit hoeveel mogelijkheden een wachtwoord heeft met 4, 6 of 8 tekens.", "Poster Whatshappy invullen met de groep (Download de WhatsHappy. poster - Mediawijsheid.nl)", "Laat leerlingen korte filmpjes of foto's zien waarvan één echt is en één nep en bespreek de verschillen.", "Lessen lentekriebels"],
+                    materialen: ["MediaMasters", "Filmpjes van Kliksafe", "Diverse leesboeken over het thema", "Traject Mediaweerbaarheid Wonderwijs", "Maak een profiel van een historisch persoon (offline)", "Kliksafe"]
+                },
+                { 
+                    titel: "24b Digitale technologie, jezelf en de ander", 
+                    acties: ["Weet wat online identiteit is en waardoor die wordt beïnvloed.", "Reflecteert op eigen schermgebruik en maakt keuzes die goed zijn voor gezondheid en balans.", "Snapt dat beelden en media invloed hebben op het zelfbeeld.", "Kan bewust kiezen hoe en met wie online wordt gecommuniceerd."],
+                    voorbeelden: ["Onderzoek: zoek jezelf online op en bespreek wat je vindt.", "Klassendialoog: hoe voelt het om veel tijd online te zijn? Wat is gezond?", "Reclame-analyse: hoe proberen makers mij te beïnvloeden? (mode, games, eten).", "Maak een groepsposter: \"Zo communiceren wij respectvol online\".", "Schermtijd bespreken in gouden weken, ook met ouders"],
+                    materialen: ["Mediamasters", "Veiliginternetten.nl", "Digidoener: Wachtwoorden (Gynzy)", "Klokhuis (aflevering online verslavingen)", "De Dikke Datashow (aflevering filterbubbel, haatcomments, datavervuiling)", "Diverse leesboeken", "Traject Mediaweerbaarheid Wonderwijs (lessen en ouderavond)"]
+                },
+                { 
+                    titel: "24c Digitale technologie, samenleving en wereld", 
+                    acties: ["Snapt dat technologie invloed heeft op mensen, natuur en milieu.", "Weet dat niet iedereen dezelfde toegang heeft tot internet en apparaten.", "Denkt na over eerlijk en duurzaam gebruik van technologie."],
+                    voorbeelden: ["Onderzoek: \"Hoeveel schermtijd heb ik per dag?\"", "Discussie: \"Is technologie altijd goed?\"", "Project: ontwerp een duurzame tech-oplossing.", "Onderzoek: energiegebruik van apparaten thuis", "Bespreken digitale ongelijkheid: wie heeft wel/niet internet en wat betekent dat?", "Maak een videoreportage over dit onderwerp (bv. vlog)"],
+                    materialen: ["Canva", "Lego Education Essential", "Microbit (schermtijd maken)", "Greenscreen"]
+                }
+            ]
+        }
+    ],
+    "groep7-8": [
+        {
+            domein: "1. Praktische kennis en vaardigheden",
+            kerndoelen: [
+                { 
+                    titel: "22a Digitale systemen", 
+                    acties: ["Begrijpt hoe digitale systemen samenwerken en leert eenvoudige technische problemen herkennen en oplossen (zoals opnieuw opstarten of wifi-instellingen controleren).", "Gebruikt geavanceerdere toepassingen zoals spreadsheets met eenvoudige formules.", "Leert hoe onderdelen zoals processor, geheugen en router bijdragen aan het functioneren van apparaten.", "Werkt samen in gedeelde documenten en past opmaak en structuur toe in teksten.", "Begrijpt de werking van input/output en kan problemen oplossen bij verbinding of programmering."],
+                    voorbeelden: ["Probleemopdracht: los een verbindingsprobleem op in tweetallen (internet valt uit, printer werkt niet).", "Spreadsheets maken voor een budget of klassenspel, inclusief formules.", "Onderzoek: wat zit er in een computer? (filmpje + klassengesprek).", "Samen werken aan een gedeeld document in Word en feedback geven via opmerkingen.", "Maak een interactieve muurposter of muziekinstrument met Makey Makey.", "Onderzoek waarom een schakeling niet werkt en los dit op, dit kan met Makey Makey, Microbit of elektronische schakelmateriaal", "ontwerp een alarm of meetstation met temperatuur- en lichtsensoren met de microbit", "Bouw iets met Lego Essential of Spike en programmeer deze zodat het dingen uitvoert."],
+                    materialen: ["Excel", "Word", "Oude computers", "Microbit", "Scratch", "Lego Essential en Prime", "Microsoft Powerpoint", "Makey Makey"]
+                },
+                { 
+                    titel: "22b Digitale media en informatie", 
+                    acties: ["Begrijpt hoe algoritmes en zoekmachines zoekresultaten beïnvloeden.", "Leert informatie te beoordelen op betrouwbaarheid, actualiteit en bedoeling van de maker.", "Onderzoekt de invloed van digitale media op privacy, veiligheid en samenleving.", "Leert informatie visueel te verwerken in grafieken of tabellen."],
+                    voorbeelden: ["Analyse van zoekresultaten: waarom krijg jij andere resultaten dan je klasgenoot?", "Oefening met bronnen en factchecken.", "Ontwerp een informatieposter of infographic met bronverwijzingen.", "Creëer zelf een fake nieuwsbericht. Leg deze naast 2 echte opvallende berichten en laat klasgenoten raden welke fake is en welke echt.", "Laat leerlingen vragen beantwoorden over de boomoctopus (zie website); ontdekken ze dat dit allemaal fake is?", "Laat leerlingen zien / ervaren dat niet alles dat AI taalmodellen, zoals ChatGPT, waarheid is.", "Maak een fake news video", "Gastles 'gedrag online en groepsdruk' (Halt)"],
+                    materialen: ["Mediamasters", "Which Face Is Real?", "De Pacific", "Noordwest Boomoctopus - Home", "CoPilot/ChatGPT", "Greenscreen/camera"]
+                },
+                { 
+                    titel: "22c Data", 
+                    acties: ["Ziet in dat verkeerde conclusies kunnen ontstaan door foutieve data", "Zet zelfstandig onderzoek op met dataverzameling en -analyse", "Interpreteert complexere data en presenteert visueel", "Denkt kritisch na over bronnen en meetmethoden", "Begrijpt hoe algoritmes werken (bijv. bij sociale media)", "Is ethisch bewust: data en privacy, digitale voetafdruk en keuzes in datadeling"],
+                    voorbeelden: ["Voer een onderzoek uit: 'Hoe laat gaan we naar bed?', maak een enquête en presenteer de data in grafieken", "Analyseer Google aanbevelingen: wat denk je dat het algoritme over jou weet?", "Doe een online privacyquiz en bespreek welke data je onbewust deelt", "Zet een digitale enquête uit met Microsoft Forms en bespreek samen hoe de tool de data automatisch visualiseert", "Onderzoek welke data apps verzamelen (locatie, contacten, camera). Bespreek de gevolgen en privacy-aspecten.", "Verzamel data in Excel over lengte van klasgenoten. Bereken gemiddelde en mediaan en maak een grafiek."],
+                    materialen: ["Microbit (bv Stappenteller)", "Microsoft Forms", "Microsoft Excel", "Microsoft Powerpoint", "Canva"]
+                },
+                { 
+                    titel: "22d Artificiële Intelligentie (AI)", 
+                    acties: ["Analyseert de werking en impact van AI op mens en maatschappij.", "Reflecteert op ethische dilemma's (zoals privacy, autonomie, bias).", "Ontwerpt of onderzoekt een AI-toepassing."],
+                    voorbeelden: ["Debat: 'Mag AI bepalen wie een baan krijgt?'", "Onderzoek: hoe werkt ChatGPT of een zoekalgoritme?", "Ontwerp een Fake Nieuws artikel met behulp van AI."],
+                    materialen: ["debatindeklas.nl", "Chromebooks/tablets met toegang tot AI-tools.", "ChatGPT", "Canva", "Suno", "whichfaceisreal.com", "Microsoft Copilot"]
+                }
+            ]
+        },
+        {
+            domein: "2. Ontwerpen en maken",
+            kerndoelen: [
+                { 
+                    titel: "23a Creëren met digitale technologie", 
+                    acties: ["Werkt zelfstandig of in groepjes aan een digitaal project.", "Combineert verschillende tools en technieken.", "Reflecteert op het resultaat."],
+                    voorbeelden: ["Ontwerpt een educatieve wereld in Minecraft Education.", "Maak een promotievideo voor een goed doel/school", "Bouw een prototype met sensoren", "Maak een school- of themajournaal (video of radio)", "Ontwerp een bouwwerk met Lego Education", "Los een probleem op door iets te ontwerpen en te printen met een 3d printer", "Laat een drone opdrachten uitvoeren die geprogrammeerd zijn"],
+                    materialen: ["Lego Education Spike", "Minecraft Education", "Greenscreenset", "Videobewerkings-software (Canva of iMovie).", "Podcast", "Tinkercat met 3D printer", "Drones"]
+                },
+                { 
+                    titel: "23b Programmeren", 
+                    acties: ["Ontwerpt een game of programma met meerdere programmeer-concepten (if/else, herhaling, variabelen).", "Geeft complexere algoritmes schematisch weer en implementeert", "Begrijpt en past bestaande programma's aan en breidt uit met eigen ideeën.", "Programma's koppelen aan fysieke robots of sensoren.", "Presenteert eigen project: beschrijven doel, werking en keuzes.", "Reflecteert op het proces: hoe testen, aanpassen en verbeteren bijdroeg aan eindresultaat"],
+                    voorbeelden: ["Ontwerpen en programmeren van games in bv. Scratch of op Microbits, die reageren op invoer", "Robots aansturen om taken uit te voeren (bijv. pad volgen)", "Aanpassen en verbeteren van bestaande programma's", "Zelf een project ontwerpen en presenteren", "Neem deel aan of realiseer zelf een Lego League", "Programmeer een drone die een bepaalde route moet afleggen", "Maak een bouwwerk van Lego die opdrachten automatisch uitvoert"],
+                    materialen: ["Ozobot", "Microbit", "Drones", "Scratch (uitgebreid)", "Lego Education Spike Prime", "Lego League Wonderwijs", "MediaMasters", "Veiliginternetten.nl"]
+                }
+            ]
+        },
+        {
+            domein: "3. De gedigitaliseerde wereld",
+            kerndoelen: [
+                { 
+                    titel: "24a Veiligheid & privacy", 
+                    acties: ["Weet hoe bedrijven informatie over hem of haar verzamelen.", "Maakt bewuste keuzes over wat wel of niet online gedeeld wordt.", "Gaat veilig om met digitale identiteit en profielinstellingen.", "Herkent nep-mails en scams.", "Weet dat nieuwe technologieën, zoals AI, ook veiligheidsrisico's hebben.", "Denkt kritisch na over wat veilig gedeeld kan worden."],
+                    voorbeelden: ["Nep en echte mails onderzoeken", "Maak een nep bericht.", "Casus: een klasgenoot krijgt nare berichten wat kan ik doen?", "Site boomoctopus bekijken: nep/echt", "Poster of video maken voor jongere kinderen over veilig online gedrag.", "Escape room in de klas met opdrachten over veiligheid en privacy.", "Praktijkoefening: samen door instellingen van een apparaat (tablet, telefoon) lopen en privacy-instellingen ontdekken.", "Poster maken: wat weten bedrijven van mij?", "Onderzoek: welke gegevens gebruikt een AI-app of filter van je? Bespreek de risico's"],
+                    materialen: ["Maak een profiel van een historisch persoon (offline)", "Kliksafe", "MediaMasters", "Whatshappy", "veiliginternetten.nl", "Diverse leesboeken over het thema", "Website (fake) Boomoctopus", "Klokhuis aflevering deepfake/AI"]
+                },
+                { 
+                    titel: "24b Digitale technologie, jezelf en de ander", 
+                    acties: ["Kan bewuste keuzes maken over wat online wordt gedeeld en met wie.", "Begrijpt hoe bedrijven en platforms data gebruiken en hoe dit invloed heeft op online identiteit.", "Denkt kritisch na over media en hoe ze gedachten en gedrag kunnen sturen.", "Reflecteert op de balans tussen online en offline leven.", "Snapt dat algoritmes bepalen wat online zichtbaar wordt en denkt kritisch na over deze invloed."],
+                    voorbeelden: ["Onderzoek: welke meldingen kreeg ik gisteren op mijn tablet/telefoon? Welke waren nuttig, welke niet?", "Lesopdracht: bestudeer privacy-instellingen van een sociaal platform en maak keuzes in een oefenaccount.", "Discussie: \"Iedereen aan tafel met mobiel - goed idee of niet?\"", "Onderzoek: welke sporen laat ik online achter en wie kan ze zien?", "Media-analyse: bespreek hoe sociale media invloed hebben op schoonheidsidealen of populariteit.", "Vergelijk zoekresultaten of feeds (TikTok/YouTube) van verschillende leerlingen en bespreek de verschillen.", "Schermtijd bespreken in gouden weken, ook met ouders."],
+                    materialen: ["Mediamasters", "Veiliginternetten.nl", "Digidoener: Wachtwoorden (Gynzy)", "Klokhuis (aflevering digitale voetafdruk)", "De Dikke Datashow (aflevering filterbubbel, haatcomments, datavervuiling)", "Diverse leesboeken", "Traject Mediaweerbaarheid Wonderwijs (lessen en ouderavond)"]
+                },
+                { 
+                    titel: "24c Digitale technologie, samenleving en wereld", 
+                    acties: ["Snapt dat technologie zowel kansen als risico's heeft voor mens en samenleving.", "Weet hoe technologische ontwikkelingen invloed hebben op maatschappij, werk en milieu.", "Kan een eigen mening vormen over nieuwe technologieën en deze onderbouwen.", "Denkt kritisch na over de rol van technologie in de toekomst."],
+                    voorbeelden: ["Debat: \"Moet iedereen toegang hebben tot internet?\"", "Onderzoek: \"Wat doet AI met banen?\"", "Ontwerp een campagne over verantwoord technologiegebruik.", "Debat over robots in de klas of slimme apparaten in huis en maak er een m.b.v. van een Microbit", "Onderzoek naar invloed van datacenters and/of AI op het milieu", "Bespreken digitale economie en geldzaken", "Maak een tv-/radiouitzending/podcast over dit onderwerp."],
+                    materialen: ["Debatindeklas.nl", "Canva", "Microbit", "Lego Eduction Spike", "Microsoft Powerpoint", "Podcaststudio", "Greenscreen"]
+                }
+            ]
+        }
+    ]
+};
+
+// Functie om de HTML en Checkboxes te genereren
+function laadLeerlijn(bouw, knop) {
+    const knoppen = document.querySelectorAll('.tab-btn');
+    knoppen.forEach(k => k.classList.remove('active'));
+    if(knop) knop.classList.add('active');
+
+    const data = leerlijnenDB[bouw] || [];
+    const container = document.getElementById('kerndoelenContainer');
+    
+    let volledigeHTML = '';
+
+    data.forEach((domeinInfo, domeinIndex) => {
+        // HIER IS DE FIX: We voegen de groepsnaam (bouw) toe aan het ID, zodat elk vinkje 100% uniek is!
+        let domeinId = 'domein-' + bouw + '-' + domeinIndex;
+        
+        let domeinHTML = `
+            <div class="domain-card" id="${domeinId}">
+                <div class="domain-header" onclick="toggleDomein('${domeinId}')">
+                    <div class="domain-title">
+                        <h3>${domeinInfo.domein}</h3>
+                        <div class="domain-progress-container">
+                            <div class="domain-progress-fill" id="progress-${domeinId}"></div>
+                        </div>
+                        <span class="domain-progress-text" id="text-${domeinId}">0% voltooid</span>
+                    </div>
+                    <span class="chevron-icon">▼</span>
+                </div>
+                <div class="goal-list">
+        `;
+
+        domeinInfo.kerndoelen.forEach((doel, doelIndex) => {
+            let actiesHTML = doel.acties.map((actie, actieIndex) => `
+                <li class="checkbox-item" style="display:flex; align-items:start; gap:10px; margin-bottom:8px;">
+                    <input type="checkbox" id="check-${domeinId}-${doelIndex}-${actieIndex}" 
+                           onclick="event.stopPropagation();" 
+                           onchange="updateVoortgang('${domeinId}')">
+                    <label for="check-${domeinId}-${doelIndex}-${actieIndex}">${actie}</label>
+                </li>
+            `).join('');
+
+            let voorbeeldenJSON = encodeURIComponent(JSON.stringify(doel.voorbeelden || [])).replace(/'/g, "%27");
+            let materialenJSON = encodeURIComponent(JSON.stringify(doel.materialen || [])).replace(/'/g, "%27");
+            let veiligeTitel = doel.titel.replace(/'/g, "\\'");
+
+            domeinHTML += `
+                <div class="goal-item" style="padding: 20px 0; border-bottom: 1px dashed #EAEAEA;">
+                    <div class="goal-content">
+                        <span class="goal-icon">🎯</span>
+                        <div class="goal-text">
+                            <strong style="font-size: 16px;">${doel.titel}</strong>
+                            <ul class="checkbox-list" style="list-style: none; padding: 0; margin-top: 10px;">
+                                ${actiesHTML}
+                            </ul>
+                            <div class="goal-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button class="btn-small" onclick="event.stopPropagation(); openModal('${veiligeTitel} - Voorbeelden', '${voorbeeldenJSON}')">💡 Voorbeelden</button>
+                                <button class="btn-small" onclick="event.stopPropagation(); openModal('${veiligeTitel} - Materialen', '${materialenJSON}')">📦 Materialen</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        domeinHTML += `</div></div>`;
+        volledigeHTML += domeinHTML;
+    });
+
+    container.innerHTML = volledigeHTML;
+
+    // Haal de vinkjes direct op uit de cloud/geheugen zodra je een nieuw tabblad opent!
+    if (typeof reproduceerVinkjes === 'function') {
+        reproduceerVinkjes();
+    }
+
+    // Zorg dat de groene balkjes direct de juiste berekening krijgen
+    data.forEach((domeinInfo, domeinIndex) => {
+        updateVoortgang('domein-' + bouw + '-' + domeinIndex);
+    });
+}
+
+// Open/sluit het domein (Accordion)
+function toggleDomein(id) {
+    const card = document.getElementById(id);
+    card.classList.toggle('open');
+}
+
+// Update de voortgangsbalk
+function updateVoortgang(domeinId) {
+    const domeinKaart = document.getElementById(domeinId);
+    if(!domeinKaart) return;
+    
+    const checkboxes = domeinKaart.querySelectorAll('input[type="checkbox"]');
+    const checkedBoxes = domeinKaart.querySelectorAll('input[type="checkbox"]:checked');
+    let percentage = checkboxes.length > 0 ? Math.round((checkedBoxes.length / checkboxes.length) * 100) : 0;
+
+    const bar = document.getElementById('progress-' + domeinId);
+    const text = document.getElementById('text-' + domeinId);
+    
+    if(bar) bar.style.width = percentage + '%';
+    if(text) text.innerText = percentage + '% voltooid';
+}
+
+function openModal(titel, dataJSON) {
+    const modal = document.getElementById('infoModal');
+    const items = JSON.parse(decodeURIComponent(dataJSON));
+    document.getElementById('modalTitel').innerText = titel;
+    
+    let icon = titel.includes('Voorbeelden') ? '💡' : '📦';
+    let lijstHTML = '<ul style="list-style:none; padding:0;">';
+    items.forEach(item => {
+        lijstHTML += `<li style="background: #F8F9FA; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px; border-left: 4px solid var(--ww-brown);"><span>${icon}</span> <span>${item}</span></li>`;
+    });
+    lijstHTML += '</ul>';
+    
+    document.getElementById('modalInhoud').innerHTML = lijstHTML;
+    modal.style.display = 'flex';
+}
+
+function sluitModal() {
+    document.getElementById('infoModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('infoModal');
+    if (event.target === modal) modal.style.display = 'none';
+}
+
+window.onload = function() {
+    const eersteKnop = document.querySelector('.tab-btn');
+    if(eersteKnop) laadLeerlijn('groep1-2', eersteKnop);
+};
+</script>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WonderWijs - Leskisten & reserveren</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item">Dashboard</a>
+            <a href="reserveren.html" class="menu-item active" id="menuMateriaalTekst">Leskisten & reserveren</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        <div class="bottom-menu">
+            <p class="menu-label">Account</p>
+            <a href="#" class="menu-item">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Leskisten & reserveren</h1>
+            <button class="btn-green-action" onclick="window.openStoringModal()" style="background: #f59e0b; border: none; padding: 10px 20px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">⚠️ Storing / Schade Melden</button>
+        </header>
+
+        <div id="docentKistControls" style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+            <div id="docentKistFilters" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="window.filterDocentKisten('Alle')" class="filter-btn active" style="background: #8CC63F; color: white; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;">Alle</button>
+                <button onclick="window.filterDocentKisten('Onderbouw')" class="filter-btn" style="background: white; color: #64748b; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;">Onderbouw</button>
+                <button onclick="window.filterDocentKisten('Middenbouw')" class="filter-btn" style="background: white; color: #64748b; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;">Middenbouw</button>
+                <button onclick="window.filterDocentKisten('Bovenbouw')" class="filter-btn" style="background: white; color: #64748b; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;">Bovenbouw</button>
+                <button onclick="window.filterDocentKisten('Favorieten')" class="filter-btn" style="background: white; color: #ef4444; border: 1px solid #ef4444; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;">Mijn Favorieten</button>
+            </div>
+            <div>
+                <input id="docentKistZoekInput" type="text" placeholder="🔍 Zoek een leskist..." onkeyup="window.zoekDocentKisten()" style="padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; width: 250px; font-size: 13px; background: white;">
+            </div>
+        </div>
+
+        <section class="leskisten-grid" id="leskistenContainer" style="margin-top: 20px;">
+        </section>
+    </main>
+</div>
+
+<div id="infoReserveModal" class="modal modal-large">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalTitle" style="color: var(--ww-brown); font-size: 28px; margin-bottom: 20px; border-bottom: 2px solid #EAEAEA; padding-bottom: 15px;">Laden...</h2>
+        <div class="info-grid">
+            <div class="info-left">
+                <h3>Beschrijving</h3>
+                <div id="modalBeschrijving" class="info-text">Laden...</div>
+                <div id="modalVideoContainer" class="info-video" style="display: none; margin-top: 20px;">
+                    <iframe id="modalVideo" src="" allowfullscreen style="width: 100%; border-radius: 8px; min-height: 250px;"></iframe>
+                </div>
+                <div id="modalGekoppeldeIdeeen" style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #cbd5e1; display: none;">
+                    <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 10px;">💡 Inspiratie voor dit materiaal</h3>
+                    <div id="gekoppeldeIdeeenLijst" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+            </div>
+            <div class="info-right">
+                <h3>Eigenschappen</h3>
+                <div class="info-property"><strong>Doelgroep:</strong> <span id="modalDoelgroep">...</span></div>
+                <div class="info-property"><strong>Kerndoelen:</strong> <span id="modalKerndoelen">...</span></div>
+                <h3 style="margin-top: 30px;">Inhoud</h3>
+                <div id="modalInhoud" class="info-text" style="margin-bottom: 20px;">Laden...</div>
+                <div id="modalPdfContainer" style="margin-bottom: 30px; display: none; background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;"></div>
+                <div style="border-top: 1px solid #EAEAEA; padding-top: 20px;">
+                    <form id="reserveForm">
+                        <input type="hidden" id="geselecteerdeKistId">
+                        <input type="hidden" id="geselecteerdeKistNaam">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Voor welke locatie reserveer je?</label>
+                            <select id="schoolSelect" required style="padding: 10px; border-radius: 8px; border: 1px solid #EAEAEA; font-family: 'Ubuntu', sans-serif; width: 100%;"></select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Kies een beschikbare periode:</label>
+                            <select id="periodeSelect" required style="padding: 10px; border-radius: 8px; border: 1px solid #EAEAEA; font-family: 'Ubuntu', sans-serif; width: 100%; margin-bottom: 15px;"></select>
+                        </div>
+                        <button type="submit" id="reserveSubmitBtn" class="btn-large-reserve" style="width: 100%;">Reserveer hem hier</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="storingModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 style="color: #f59e0b; margin-bottom: 15px;">⚠️ Schade of storing melden</h2>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Is er iets kapot, of ontbreekt er een onderdeel? Geef het direct door zodat we het kunnen oplossen voor de volgende school!</p>
+        
+        <form id="storingForm">
+            <div class="form-group">
+                <label>Betreffende Leskist / Materiaal:</label>
+                <select id="storingKist" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit;">
+                    </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Soort melding:</label>
+                <select id="storingSoort" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit;">
+                    <option value="" disabled selected>-- Maak een keuze --</option>
+                    <option value="Schade">Onderdeel kapot / Schade</option>
+                    <option value="Ontbrekend">Onderdeel ontbreekt</option>
+                    <option value="Technisch">Software / Technisch probleem</option>
+                    <option value="Anders">Overige opmerkingen</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Toelichting / Beschrijving:</label>
+                <textarea id="storingBeschrijving" rows="4" placeholder="Wat is er precies kapot of mist er?" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Voeg een foto toe (Optioneel):</label>
+                <input type="file" id="storingFotoFile" accept="image/*" style="width: 100%;">
+                <input type="hidden" id="storingFotoData">
+                <div id="storingFotoPreview" style="margin-top: 10px;"></div>
+                <p style="font-size: 11px; color: #888; margin-top: 5px;">Gebruik je een tablet of telefoon? Je kunt direct je camera gebruiken!</p>
+            </div>
+
+            <button type="submit" class="btn-green-action" style="width: 100%; padding: 12px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">Verstuur Melding</button>
+        </form>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

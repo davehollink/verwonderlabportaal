@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WonderWijs - Lesideeën & inspiratie</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="mededelingenBalk" style="display:none; background:#ef4444; color:white; text-align:center; padding:10px; font-weight:bold; font-size:14px; position: relative; z-index: 1000;"></div>
+
+<div class="dashboard-container">
+    
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item">Dashboard</a>
+            <a href="reserveren.html" class="menu-item" id="menuMateriaalTekst">Leskisten & reserveren</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        <div class="bottom-menu">
+            <p class="menu-label">Account</p>
+            <a href="#" class="menu-item">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Lesideeën & inspiratie</h1>
+        </header>
+
+        <div class="dashboard-layout" style="display: block; padding: 30px;">
+            
+            <div class="hero-lesideeen">
+                <h1>Laat je inspireren! ✨</h1>
+                <p>Ontdek innovatieve manieren om digitale geletterdheid tot leven te brengen in jouw klas. Van plug-and-play lesbrieven tot out-of-the-box projecten met het (ver)Wonderlab materiaal.</p>
+            </div>
+            
+            <div id="lesideeenContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;">
+                </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

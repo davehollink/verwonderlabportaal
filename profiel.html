@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijn Profiel - WonderWijs</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="logo"><img src="Verwonderlab.jpg" alt="Verwonderlab" class="logo-img"></div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item">Dashboard</a>
+            <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën</a>
+            <p class="menu-label">Account</p>
+            <a href="profiel.html" class="menu-item active">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <h1>Mijn Profiel</h1>
+        <div class="admin-section" style="background: white; padding: 20px; border-radius: 8px;">
+            <form id="profielForm" onsubmit="event.preventDefault(); window.saveProfiel();">
+                <div class="form-group">
+                    <label>Naam (als bekend in systeem):</label>
+                    <input type="text" id="profielNaam" readonly style="background: #f1f5f9;">
+                </div>
+                <div class="form-group">
+                    <label>Standaard Locatie:</label>
+                    <select id="profielSchool" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;"></select>
+                </div>
+                <button type="submit" class="btn-green-action">Instellingen opslaan</button>
+            </form>
+        </div>
+
+        <h2 style="margin-top: 30px;">Mijn Reserveringshistorie</h2>
+        <div id="historieLijst" class="task-list"></div>
+    </main>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

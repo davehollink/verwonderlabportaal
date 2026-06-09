@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WonderWijs - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
+        .modal-content {
+            max-height: 85vh; 
+            overflow-y: auto; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="ssoGatekeeper" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f8fafc; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Ubuntu', sans-serif;">
+    <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" style="max-width: 200px; margin-bottom: 20px;">
+    <h2 style="color: #1e293b;">Beveiligde Omgeving</h2>
+    <p id="gatekeeperText" style="color: #64748b; margin-bottom: 20px;">We controleren je inloggegevens...</p>
+    <button id="gatekeeperBtn" onclick="window.loginMetMicrosoft()" class="btn-green-action" style="display: none; background-color: #0078D4; padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; color: white; font-weight: bold;">Inloggen met Microsoft</button>
+</div>
+
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item">Dashboard</a>
+            <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        <div class="bottom-menu">
+            <p class="menu-label">Account</p>
+            <a href="profiel.html" class="menu-item">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1 id="pageTitle">Welkom, Leerkracht!</h1>
+            <div class="top-actions" style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="window.loginMetMicrosoft()" class="btn-green-action" style="background-color: #0078D4;">Inloggen met Microsoft</button>
+                <button id="roleToggleBtn" class="btn-role" onclick="toggleRole()">Weergave: Beheerder ⚙️</button>
+            </div>
+        </header>
+
+        <div id="leerkrachtView" class="dashboard-layout">
+            <div class="left-column">
+                <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 20px;">Welkom bij het Verwonderlab reserveringssysteem.</p>
+                <section class="quick-actions">
+                    <button class="quick-btn" onclick="window.location.href='reserveren.html'"><span class="quick-icon">📅</span> Snel reserveren</button>
+                    <button class="quick-btn" onclick="window.location.href='mailto:verwonderlab@wonderwijs.nl?subject=Storing Melden&body=Leskist:'"><span class="quick-icon">⚠️</span> Storing melden</button>
+                </section>
+                <section class="recent-tasks">
+                    <h2>Mijn reserveringen</h2>
+                    <div class="task-list" id="teacherReservationsList"></div>
+                </section>
+            </div>
+            <div class="right-column">
+                <div class="calendar-widget">
+                    <div class="calendar-header">
+                        <h3 id="monthYearText">Laden...</h3>
+                        <div class="calendar-nav">
+                            <span id="prevMonthBtn">&lt;</span>
+                            <span id="nextMonthBtn">&gt;</span>
+                        </div>
+                    </div>
+                    <div class="calendar-days-grid" id="calendarGrid">
+                        <div class="day-name">Ma</div><div class="day-name">Di</div><div class="day-name">Wo</div>
+                        <div class="day-name">Do</div><div class="day-name">Vr</div><div class="day-name">Za</div><div class="day-name">Zo</div>
+                    </div>
+                    <div class="upcoming-events">
+                        <h4>Binnenkort</h4>
+                        <div id="upcomingEventsList"></div>
+                    </div>
+                </div>
+                <div class="inspiration-widget" id="tipContainer">
+                    <div class="inspire-icon">💡</div>
+                    <h3>Wist je dat?</h3>
+                    <p id="tipText">Laden...</p>
+                    <a href="leerlijnen.html" class="inspire-link">Bekijk leerlijnen →</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="beheerdersView" style="display: none;">
+            <div class="admin-tabs">
+    <button class="admin-tab-btn active" onclick="switchAdminTab('tab-reserveringen', this)">Reserveringen</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('tab-periodes', this)">Periodes beheer</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('tab-scholen', this)">Locaties beheer</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('tab-leskisten', this)">Materialen beheer</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('tab-lesideeen', this)">Lesideeën beheer</button>
+    
+    <button class="admin-tab-btn" onclick="switchAdminTab('tab-gebruikers', this)">Gebruikersbeheer</button>
+</div>
+            
+            <div id="tab-reserveringen" class="admin-tab-content">
+                <section class="admin-section">
+                    <h2>Actuele reserveringen</h2>
+                    <table class="data-table">
+                        <thead><tr><th>Leskist</th><th>Leerkracht</th><th>Periode</th><th>Status</th><th>Actie</th></tr></thead>
+                        <tbody id="adminReservationsBody"></tbody>
+                    </table>
+                </section>
+            </div>
+            
+            <div id="tab-periodes" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div class="section-header-flex"><h2>Uitleen periodes</h2><button class="btn-green-action" onclick="openPeriodeModal()">+ Periode aanmaken</button></div>
+                    <table class="data-table"><thead><tr><th>Naam</th><th>Start</th><th>Eind</th><th style="text-align: right;">Actie</th></tr></thead><tbody id="adminPeriodsBody"></tbody></table>
+                </section>
+            </div>
+
+            <div id="tab-scholen" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>Scholen & Locaties</h2>
+                        <button class="btn-green-action" onclick="openSchoolModal()">+ Locatie aanmaken</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Naam locatie</th>
+                                <th style="text-align: right;">Actie</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminScholenBody"></tbody>
+                    </table>
+                </section>
+            </div>
+
+<div id="tab-gebruikers" class="admin-tab-content" style="display: none;">
+    <section class="admin-section">
+        <div class="section-header-flex">
+            <h2>Beheerders (SSO Voorbereiding)</h2>
+        </div>
+        <p style="font-size: 13px; color: #64748b; margin-top: -10px; margin-bottom: 20px;">
+            Voeg hier de e-mailadressen toe van collega's die na de SSO-koppeling automatisch beheerdersrechten moeten krijgen.
+        </p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <input type="email" id="nieuweBeheerderEmail" placeholder="bijv. b.jansen@wonderwijs.nl" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; flex: 1; max-width: 400px; font-family: inherit;">
+            <button class="btn-green-action" onclick="window.voegBeheerderToe()" style="padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #8CC63F; color: white;">+ Maak Beheerder</button>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>E-mailadres (SSO Account)</th>
+                    <th style="text-align: right;">Actie</th>
+                </tr>
+            </thead>
+            <tbody id="adminGebruikersBody"></tbody>
+        </table>
+    </section>
+</div>
+
+            <div id="tab-leskisten" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div class="section-header-flex">
+                        <h2>Materialen & leskisten</h2>
+                        <button class="btn-green-action" onclick="openMateriaalModal()">+ Nieuw materiaal</button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap;">
+                        <input type="text" id="searchMateriaal" placeholder="🔍 Zoek op naam of tag..." onkeyup="filterMaterialen()" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; flex: 1; min-width: 200px; font-family: inherit;">
+                        
+                        <select id="filterDoelgroep" onchange="filterMaterialen()" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-family: inherit; color: #334155;">
+                            <option value="Alle">Alle doelgroepen</option>
+                            <option value="Onderbouw">Onderbouw</option>
+                            <option value="Middenbouw">Middenbouw</option>
+                            <option value="Bovenbouw">Bovenbouw</option>
+                        </select>
+                        
+                        <select id="filterStatus" onchange="filterMaterialen()" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-family: inherit; color: #334155;">
+                            <option value="Alle">Alle statussen</option>
+                            <option value="Actief">Actief</option>
+                            <option value="Reparatie">In reparatie</option>
+                        </select>
+                    </div>
+
+                    <table class="data-table"><thead><tr><th>Beeld</th><th>Naam</th><th>Doelgroep</th><th style="text-align: right;">Actie</th></tr></thead><tbody id="adminLeskistenBody"></tbody></table>
+                </section>
+            </div>
+            
+            <div id="tab-lesideeen" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div class="section-header-flex"><h2>Lesideeën beheer</h2><button class="btn-green-action" onclick="openLesideeModal()">+ Nieuw lesidee</button></div>
+                    <table class="data-table"><thead><tr><th>Titel</th><th>Beschrijving</th><th style="text-align: right;">Actie</th></tr></thead><tbody id="adminLesideeenBody"></tbody></table>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="periodeModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalPeriodeTitle">Periode</h2>
+        <form id="periodeForm">
+            <input type="hidden" id="editPeriodeId">
+            <div class="form-group">
+                <label>Naam:</label>
+                <input type="text" id="periodeNaam" required>
+            </div>
+            <div class="form-group">
+                <label>Start:</label>
+                <input type="date" id="periodeStart" required>
+            </div>
+            <div class="form-group">
+                <label>Eind:</label>
+                <input type="date" id="periodeEind" required>
+            </div>
+            <button type="submit" class="btn-green-action" style="padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #8CC63F; color: white;">Opslaan</button>
+        </form>
+    </div>
+</div>
+
+<div id="schoolModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalSchoolTitle">Locatie</h2>
+        <form id="schoolForm">
+            <input type="hidden" id="editSchoolId">
+            <div class="form-group">
+                <label>Naam locatie (bijv. De Wegwijzer):</label>
+                <input type="text" id="schoolNaam" required>
+            </div>
+            <button type="submit" class="btn-green-action" style="padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #8CC63F; color: white;">Opslaan</button>
+        </form>
+    </div>
+</div>
+
+<div id="editLeskistModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalMateriaalTitle">Materiaal</h2>
+        <form id="editLeskistForm">
+            <input type="hidden" id="editKistId">
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="editBeschikbaar" checked>
+                <label>Beschikbaar voor reservering</label>
+            </div>
+            <div class="form-group">
+                <label>Afbeelding URL (of data):</label>
+                <input type="file" id="editAfbeeldingFile" accept="image/*">
+                <input type="hidden" id="editAfbeelding">
+                <div id="imagePreview" style="margin-top: 10px;"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Leskaarten / Bijlagen (PDF):</label>
+                <input type="file" id="editPdfFiles" accept="application/pdf" multiple>
+                <div id="pdfPreviewContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
+                <input type="hidden" id="editPdfData">
+                <p style="font-size: 11px; color: #888; margin-top: 5px;">Tip: Je kunt meerdere bestanden tegelijk selecteren door Ctrl (of Cmd op Mac) in te drukken tijdens het klikken.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Naam Leskist:</label>
+                <input type="text" id="editNaam" required>
+            </div>
+            <div class="form-group">
+                <label>Tag (bijv. '8 items'):</label>
+                <input type="text" id="editTag">
+            </div>
+            <div class="form-group">
+                <label>Doelgroep:</label>
+                <input type="text" id="editDoelgroep">
+            </div>
+            <div class="form-group">
+                <label>Kerndoelen:</label>
+                <input type="text" id="editKerndoelen">
+            </div>
+            <div class="form-group">
+                <label>Beschrijving:</label>
+                <textarea id="editBeschrijving" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Inhoud (bijv. 4x iPad):</label>
+                <textarea id="editInhoud" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Video URL:</label>
+                <input type="text" id="editVideo">
+            </div>
+            <button type="submit" class="btn-green-action" style="padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #8CC63F; color: white;">Opslaan</button>
+        </form>
+    </div>
+</div>
+
+<div id="editLesideeModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalLesideeTitle">Lesidee</h2>
+        <form id="editLesideeForm">
+            <input type="hidden" id="editLesideeId">
+            <div class="form-group">
+                <label>Titel:</label>
+                <input type="text" id="editLesideeTitel" required>
+            </div>
+            <div class="form-group">
+                <label>Categorie:</label>
+                <input type="text" id="editLesideeCategorie" required>
+            </div>
+            <div class="form-group">
+                <label>Beschrijving:</label>
+                <textarea id="editLesideeBeschrijving" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Externe Link (optioneel):</label>
+                <input type="url" id="editLesideeLink">
+            </div>
+            <button type="submit" class="btn-green-action" style="padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #8CC63F; color: white;">Opslaan</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterMaterialen() {
+        const searchInput = document.getElementById('searchMateriaal').value.toLowerCase();
+        const doelgroepFilter = document.getElementById('filterDoelgroep').value;
+        const statusFilter = document.getElementById('filterStatus').value;
+        
+        const rows = document.querySelectorAll('#adminLeskistenBody tr');
+        
+        rows.forEach(row => {
+            const naamTekst = row.cells[1].innerText.toLowerCase();
+            const doelgroepEnStatusTekst = row.cells[2].innerText; 
+            
+            let matchSearch = naamTekst.includes(searchInput);
+            let matchDoelgroep = doelgroepFilter === 'Alle' || doelgroepEnStatusTekst.includes(doelgroepFilter);
+            let matchStatus = statusFilter === 'Alle' || 
+                              (statusFilter === 'Actief' && doelgroepEnStatusTekst.includes('Actief')) || 
+                              (statusFilter === 'Reparatie' && doelgroepEnStatusTekst.includes('In reparatie'));
+                              
+            if (matchSearch && matchDoelgroep && matchStatus) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
