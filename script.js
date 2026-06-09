@@ -101,7 +101,7 @@ window.vergrendelPortaal = function(melding) {
 
         const firebaseConfig = {
             apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
-            authDomain: "verwonderlabportaal.vercel.app", // <--- DIT MOET DE VERCEL LINK ZIJN!
+            authDomain: "verwonderlab-portaal.firebaseapp.com", // <-- TERUG NAAR ORIGINEEL
             projectId: "verwonderlab-portaal",
             storageBucket: "verwonderlab-portaal.firebasestorage.app",
             messagingSenderId: "778630419427",
