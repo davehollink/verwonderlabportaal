@@ -1,16 +1,17 @@
 // ==========================================
-// WONDERWIJS PORTAAL (Versie 57: Bulletproof Redirect SSO)
+// WONDERWIJS PORTAAL (Versie 57: Bulletproof Redirect SSO voor Vercel)
 // ==========================================
 
 const defaultImg = "https://placehold.co/600x400/8CC63F/ffffff?text=WonderWijs+Materiaal";
 
+// Globale Firebase Auth variabelen voor SSO
 window.firebaseApp = null;
 window.firebaseAuth = null;
-window.firebaseOAuthProvider = null;
 window.firebaseSignInWithRedirect = null;
+window.firebaseOAuthProvider = null;
 
 // ==========================================
-// 1. LOKALE DATA & VARIABELEN
+// 1. VEILIGE LOKALE DATA (Anti-Crash Systeem)
 // ==========================================
 function safeGetLocal(key, defaultData) {
     try {
@@ -23,8 +24,17 @@ function safeGetLocal(key, defaultData) {
     return defaultData;
 }
 
-let periodes = safeGetLocal('ww_periodes_v11', [{ id: 1, naam: "Periode 1 schooljaar 2025/2026", start: "2025-08-25", eind: "2025-09-15" }]);
-let scholen = safeGetLocal('ww_scholen_v1', [{ id: 1, naam: "De Wegwijzer" }]);
+let periodes = safeGetLocal('ww_periodes_v11', [
+    { id: 1, naam: "Periode 1 schooljaar 2025/2026", start: "2025-08-25", eind: "2025-09-15" },
+    { id: 2, naam: "Periode 2 schooljaar 2025/2026", start: "2025-09-22", eind: "2025-10-20" }
+]);
+
+let scholen = safeGetLocal('ww_scholen_v1', [
+    { id: 1, naam: "De Wegwijzer" },
+    { id: 2, naam: "Het Mozaïek" },
+    { id: 3, naam: "De Springplank" }
+]);
+
 let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
 let beheerdersLijst = safeGetLocal('ww_beheerders_v1', []); 
 let mijnFavorieten = safeGetLocal('ww_favorieten_v1', []); 
@@ -35,9 +45,28 @@ let actieveDocentFilter = 'Alle';
 let actieveDocentZoekterm = '';
 let currentPdfs = [];
 
-const ictTips = ["Tip: Gebruik Canva Education (gratis voor scholen) om leerlingen zelf presentaties of posters te laten ontwerpen."];
-let leskisten = safeGetLocal('ww_leskisten_v15', []);
-let lesideeen = safeGetLocal('ww_lesideeen_v15', []);
+const ictTips = [
+    "Tip: Gebruik Canva Education (gratis voor scholen) om leerlingen zelf presentaties of posters te laten ontwerpen.",
+    "Wist je dat? Met 'Unplugged' activiteiten kun je computationeel denken oefenen zonder één scherm te gebruiken!",
+    "Mediawijsheid: Bespreek wekelijks een actueel jeugdjournaal-item en vraag de klas hoe zij hiermee om zouden gaan.",
+    "Probeer eens 'Micro:bit' in te zetten bij de rekenles. Laat de leerlingen een digitale dobbelsteen programmeren."
+];
+
+// De 42 Standaard Kisten
+const standaardLeskisten = [
+    { id: 101, afbeelding: "img/3dpennen.jpg", naam: "3d pennen groepsset", tag: "8 items", beschikbaar: true, doelgroep: "Middenbouw, Bovenbouw", kerndoelen: "23a Creëren", beschrijving: "Laat jonge leerlingen spelenderwijs ontdekken en creëren met een 3D-pen!", inhoud: "8 x 3d pen\nSnelstartboekje", videoUrl: "https://www.youtube.com/watch?v=n42vAOM2r1s", pdfs: [] },
+    { id: 102, afbeelding: "img/3dprinter.jpg", naam: "3D printer nr. 1", tag: "Apparaat", beschikbaar: true, doelgroep: "Bovenbouw", kerndoelen: "23a Creëren", beschrijving: "Ontwerp en print je eigen 3D modellen.", inhoud: "1x 3D Printer\nFilament", videoUrl: "", pdfs: [] },
+    { id: 104, afbeelding: "img/ipad.jpg", naam: "4 iPads", tag: "Tablets", beschikbaar: true, doelgroep: "Onderbouw, Middenbouw, Bovenbouw", kerndoelen: "22a Digitale Systemen", beschrijving: "Set van 4 iPads voor groepsopdrachten.", inhoud: "4x iPad\nOpladers", videoUrl: "", pdfs: [] }
+];
+
+const standaardLesideeen = [
+    { id: 201, titel: "Doolhof Programmeren in de gymzaal", categorie: "Programmeren", beschrijving: "Gebruik de Bee-Bots of Blue-Bots om leerlingen spelenderwijs de weg te laten vinden in een doolhof van gymblokken.", link: "" },
+    { id: 202, titel: "Ons eigen Jeugdjournaal", categorie: "Mediawijsheid", beschrijving: "Laat de kinderen een nieuwsitem presenteren voor de Greenscreenstudio.", link: "" },
+    { id: 203, titel: "Stop-motion met klei", categorie: "Creatief", beschrijving: "Gebruik de Piximakey sets en simpele klei om verhalen tot leven te brengen in stop-motion video's.", link: "" }
+];
+
+let leskisten = safeGetLocal('ww_leskisten_v15', standaardLeskisten);
+let lesideeen = safeGetLocal('ww_lesideeen_v15', standaardLesideeen);
 
 function slaDataOp() {
     try {
@@ -49,14 +78,340 @@ function slaDataOp() {
         localStorage.setItem('ww_beheerders_v1', JSON.stringify(beheerdersLijst));
         localStorage.setItem('ww_favorieten_v1', JSON.stringify(mijnFavorieten));
         localStorage.setItem('ww_meldingen_v1', JSON.stringify(meldingen));
-    } catch(e) { console.error("Opslagfout", e); }
+    } catch(e) {
+        console.error("Opslagfout (geheugen mogelijk vol):", e);
+        alert("Oeps! Het geheugen van je browser zit te vol (mogelijk door een te grote foto). Wis je cache of open een nieuw venster.");
+    }
 }
 
+// ==========================================
+// 2. VEILIGE OPVANG FUNCTIES 
+// ==========================================
 const getVal = (id, def = "") => { const el = document.getElementById(id); return el ? el.value : def; };
 const getCheck = (id, def = true) => { const el = document.getElementById(id); return el ? el.checked : def; };
 
 // ==========================================
-// 8. FIREBASE & DE VEILIGE REDIRECT PORTIER
+// 3. 100% GLOBAAL FORMULIER SLOT
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(f => f.setAttribute('novalidate', 'true'));
+});
+
+document.addEventListener('submit', async (e) => {
+    const form = e.target;
+    if (['editLeskistForm', 'editLesideeForm', 'periodeForm', 'reserveForm', 'schoolForm', 'storingForm'].includes(form.id)) {
+        e.preventDefault(); 
+        const btn = form.querySelector('button[type="submit"]') || form.querySelector('button.btn-green-action') || form.querySelector('button');
+        await verwerkFormulier(form.id, btn); 
+    }
+});
+
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const formId = btn.getAttribute('form');
+    if (formId && ['editLeskistForm', 'editLesideeForm', 'periodeForm', 'reserveForm', 'schoolForm', 'storingForm'].includes(formId)) {
+        e.preventDefault(); 
+        await verwerkFormulier(formId, btn); 
+    }
+});
+
+// ==========================================
+// 4. BEELDT COMPRESSIE FUNCTIE (Onzichtbaar & Snel)
+// ==========================================
+function comprimeerFoto(file, callback) {
+    if (!file) return callback("");
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800; // Maximale grootte in pixels
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// ==========================================
+// 5. PROFIEL INITIALISATIE & LOGICA
+// ==========================================
+window.saveProfiel = function() {
+    const school = document.getElementById('profielSchool').value;
+    localStorage.setItem('ww_standaard_school', school);
+    alert("✅ Profiel bijgewerkt!");
+}
+
+function laadProfielPagina() {
+    const naam = localStorage.getItem('ww_huidige_leerkracht') || "Niet ingelogd";
+    const nameEl = document.getElementById('profielNaam');
+    if(nameEl) nameEl.value = naam;
+    
+    const schoolSelect = document.getElementById('profielSchool');
+    if(schoolSelect) {
+        schoolSelect.innerHTML = '<option value="">-- Kies je locatie --</option>';
+        scholen.forEach(s => schoolSelect.innerHTML += `<option value="${s.naam}">${s.naam}</option>`);
+        schoolSelect.value = localStorage.getItem('ww_standaard_school') || "";
+    }
+
+    // Vul reserveringshistorie van deze leerkracht
+    const mijnReserveringen = reserveringen.filter(r => r.leerkracht === naam);
+    const lijst = document.getElementById('historieLijst');
+    if(lijst) {
+        lijst.innerHTML = mijnReserveringen.length > 0 ? mijnReserveringen.map(r => {
+            const statusKleur = r.status === "Geaccepteerd" ? "#8CC63F" : (r.status === "Afgewezen" ? "#ef4444" : "#f59e0b");
+            const per = periodes.find(p => p.id == r.periodeId);
+            return `
+            <div style="background:white; padding:15px; margin-bottom:10px; border-radius:8px; border-left: 4px solid ${statusKleur}; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <strong style="color: #1e293b;">${r.kist}</strong>
+                <span style="display:block; font-size:12px; color:#64748b; margin-top:5px;">Locatie: ${r.school} | Periode: ${per ? per.naam : 'Onbekend'}</span>
+                <span style="display:inline-block; margin-top:10px; background:${statusKleur}; color:white; font-size:11px; padding:3px 8px; border-radius:12px; font-weight:bold;">${r.status}</span>
+            </div>
+            `;
+        }).join('') : '<p style="color:#64748b; font-size:14px;">Nog geen historie opgebouwd in dit account.</p>';
+    }
+}
+
+// ==========================================
+// 6. HET VERWERKEN VAN DE FORMULIEREN
+// ==========================================
+async function verwerkFormulier(formId, btnElement) {
+    let originalText = "Opslaan";
+    if (btnElement) {
+        originalText = btnElement.innerText || "Opslaan";
+        btnElement.innerText = "Opslaan... ⏳";
+        btnElement.disabled = true; 
+    }
+
+    try {
+        if (formId === 'editLeskistForm') {
+            const rawId = getVal('editKistId');
+            const imgData = getVal('editAfbeelding', defaultImg);
+            let kistId = rawId ? parseInt(rawId) : Date.now();
+            
+            const newData = { 
+                id: kistId, naam: getVal('editNaam', 'Naamloos Materiaal'), tag: getVal('editTag'), 
+                doelgroep: getVal('editDoelgroep'), kerndoelen: getVal('editKerndoelen'), 
+                beschrijving: getVal('editBeschrijving'), inhoud: getVal('editInhoud'), 
+                videoUrl: getVal('editVideo'), beschikbaar: getCheck('editBeschikbaar', true),
+                afbeelding: imgData, pdfs: currentPdfs || []
+            };
+
+            const idx = leskisten.findIndex(k => k.id == kistId);
+            if(idx > -1) leskisten[idx] = { ...leskisten[idx], ...newData };
+            else leskisten.push(newData);
+
+            slaDataOp();
+            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+            if(window.renderReserveringsGrid) window.renderReserveringsGrid();
+            
+            if(window.saveMateriaalToCloud) await window.saveMateriaalToCloud(rawId, newData, imgData, currentPdfs);
+            window.sluitAlleModals();
+            alert("✅ Materiaal succesvol opgeslagen!");
+        }
+        
+        else if (formId === 'editLesideeForm') {
+            const rawId = getVal('editLesideeId'); 
+            const ideeId = rawId ? parseInt(rawId) : Date.now();
+            
+            const newData = { 
+                id: ideeId, titel: getVal('editLesideeTitel', 'Naamloos Idee'), categorie: getVal('editLesideeCategorie', 'Standaard'), 
+                beschrijving: getVal('editLesideeBeschrijving'), link: getVal('editLesideeLink') 
+            };
+
+            const idx = lesideeen.findIndex(i => i.id == ideeId);
+            if(idx > -1) lesideeen[idx] = { ...lesideeen[idx], ...newData };
+            else lesideeen.push(newData);
+
+            slaDataOp();
+            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+            if(window.renderLesideeenGrid) window.renderLesideeenGrid();
+            
+            if(window.saveLesideeToCloud) await window.saveLesideeToCloud(newData);
+            window.sluitAlleModals();
+            alert("✅ Lesidee succesvol opgeslagen!");
+        }
+
+        else if (formId === 'periodeForm') {
+            const rawId = getVal('editPeriodeId');
+            const perId = rawId ? parseInt(rawId) : Date.now();
+            
+            const newData = { id: perId, naam: getVal('periodeNaam', 'Naamloze Periode'), start: getVal('periodeStart'), eind: getVal('periodeEind') };
+            
+            const idx = periodes.findIndex(p => p.id == perId);
+            if(idx > -1) periodes[idx] = { ...periodes[idx], ...newData };
+            else periodes.push(newData);
+
+            slaDataOp();
+            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+            if(window.savePeriodeToCloud) await window.savePeriodeToCloud(newData);
+            window.sluitAlleModals();
+            if(window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+            alert("✅ Periode succesvol opgeslagen!");
+        }
+
+        else if (formId === 'schoolForm') {
+            const rawId = getVal('editSchoolId');
+            const schoolId = rawId ? parseInt(rawId) : Date.now();
+            
+            const newData = { id: schoolId, naam: getVal('schoolNaam', 'Naamloze School') };
+            const idx = scholen.findIndex(s => s.id == schoolId);
+            if(idx > -1) scholen[idx] = { ...scholen[idx], ...newData };
+            else scholen.push(newData);
+
+            slaDataOp();
+            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+            if(window.saveSchoolToCloud) await window.saveSchoolToCloud(newData);
+            window.sluitAlleModals();
+            alert("✅ Locatie succesvol opgeslagen!");
+        }
+
+        else if (formId === 'reserveForm') {
+            const kistNaam = getVal('geselecteerdeKistNaam', 'Onbekende Kist'); 
+            const gekozenPeriodeId = parseInt(getVal('periodeSelect', '0')); 
+            const gekozenSchool = getVal('schoolSelect'); 
+            
+            if(!gekozenPeriodeId || !gekozenSchool) { 
+                alert("⚠️ Selecteer alstublieft een school en een periode."); 
+                if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
+                return; 
+            }
+            
+            const nieuweReservering = { 
+                id: Date.now(), kist: kistNaam, leerkracht: localStorage.getItem('ww_huidige_leerkracht') || "Mijn Klas (Demo)", 
+                school: gekozenSchool, periodeId: gekozenPeriodeId, status: "In afwachting" 
+            };
+            reserveringen.push(nieuweReservering);
+            
+            slaDataOp();
+            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+            if(window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+            if(window.addReserveringToCloud) await window.addReserveringToCloud(nieuweReservering);
+            
+            window.sluitAlleModals();
+            const formObj = document.getElementById('reserveForm');
+            if (formObj) formObj.reset();
+            alert('✅ Aanvraag is gelukt en is zichtbaar op je dashboard!');
+        }
+
+        else if (formId === 'storingForm') {
+            const kistSelect = getVal('storingKist');
+            const soortMelding = getVal('storingSoort');
+            const beschrijving = getVal('storingBeschrijving');
+            const imgData = getVal('storingFotoData', '');
+            
+            if(!kistSelect || !soortMelding || !beschrijving) {
+                alert("⚠️ Vul alstublieft alle verplichte velden in.");
+                if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
+                return;
+            }
+
+            const nieuweMelding = {
+                id: Date.now(), kist: kistSelect, soort: soortMelding, beschrijving: beschrijving, foto: imgData, 
+                leerkracht: localStorage.getItem('ww_huidige_leerkracht') || "Onbekende Leerkracht", datum: new Date().toLocaleDateString('nl-NL'), status: 'Open'
+            };
+            meldingen.push(nieuweMelding);
+            
+            slaDataOp();
+            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+            if(window.saveMeldingToCloud) await window.saveMeldingToCloud(nieuweMelding);
+            
+            window.sluitAlleModals();
+            const formObj = document.getElementById('storingForm');
+            if(formObj) formObj.reset();
+            if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = '';
+            if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = '';
+            
+            alert('✅ Je melding is succesvol verzonden. Bedankt voor het doorgeven!');
+        }
+
+    } catch(err) {
+        alert("❌ Er is iets misgegaan tijdens het verwerken: " + err.message);
+        console.error(err);
+    } finally {
+        if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
+    }
+}
+
+// ==========================================
+// 7. INITIALISATIE EN FILE UPLOADS
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPage = window.location.pathname.split("/").pop();
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        if(!item.classList.contains('logout')) {
+            item.classList.remove('active'); 
+            const itemPage = item.getAttribute('href');
+            if (itemPage === currentPage || (currentPage === '' && itemPage === 'index.html')) item.classList.add('active'); 
+        }
+    });
+
+    if(window.location.pathname.includes('profiel.html')) laadProfielPagina();
+
+    if(typeof checkLeerkrachtLogin === "function") checkLeerkrachtLogin(); 
+    if(typeof toonWillekeurigeTip === "function") toonWillekeurigeTip(); 
+
+    if(document.getElementById('leskistenContainer')) window.renderReserveringsGrid();
+    if(document.getElementById('lesideeenContainer')) window.renderLesideeenGrid();
+    if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
+    if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst();
+
+    const fileInput = document.getElementById('editAfbeeldingFile'); 
+    const hiddenInput = document.getElementById('editAfbeelding'); 
+    const preview = document.getElementById('imagePreview');
+    if(fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            comprimeerFoto(e.target.files[0], function(compressedDataUrl) {
+                if(hiddenInput) hiddenInput.value = compressedDataUrl; 
+                if(preview) preview.innerHTML = `<img src="${compressedDataUrl}" style="width: 100%; border-radius: 8px;">`;
+            });
+        });
+    }
+
+    const storingFileInput = document.getElementById('storingFotoFile');
+    const storingHiddenInput = document.getElementById('storingFotoData');
+    const storingPreview = document.getElementById('storingFotoPreview');
+    if(storingFileInput) {
+        storingFileInput.addEventListener('change', function(e) {
+            comprimeerFoto(e.target.files[0], function(compressedDataUrl) {
+                if(storingHiddenInput) storingHiddenInput.value = compressedDataUrl;
+                if(storingPreview && compressedDataUrl !== "") storingPreview.innerHTML = `<img src="${compressedDataUrl}" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`;
+            });
+        });
+    }
+
+    const editPdfFiles = document.getElementById('editPdfFiles');
+    if(editPdfFiles) {
+        editPdfFiles.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (evt) => { currentPdfs.push({ naam: file.name, data: evt.target.result }); if(window.updatePdfPreview) window.updatePdfPreview(); };
+                reader.readAsDataURL(file);
+            });
+            editPdfFiles.value = ""; 
+        });
+    }
+});
+
+
+// ==========================================
+// 8. FIREBASE CLOUD CONNECTIE & DE VEILIGE REDIRECT PORTIER
 // ==========================================
 (async () => {
     try {
@@ -115,7 +470,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
                 window.checkLeerkrachtLogin();
             } else {
-                // ❌ NIET INGELOGD (Toon de knop)
+                // ❌ NIET INGELOGD (Toon de knop - Geen automatische redirect meer om loop te voorkomen!)
                 if (gatekeeper) gatekeeper.style.display = 'flex';
                 if (mainApp) mainApp.style.display = 'none'; 
                 if (gateText) gateText.innerText = "Log in met je Microsoft school-account om toegang te krijgen.";
@@ -126,7 +481,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         const db = getFirestore(window.firebaseApp);
         const storage = getStorage(window.firebaseApp);
 
-        // ... Database logica ...
         onSnapshot(collection(db, "periodes"), (snapshot) => { if(!snapshot.empty) { periodes = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); } });
         onSnapshot(collection(db, "scholen"), (snapshot) => { if(!snapshot.empty) { scholen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } });
         onSnapshot(collection(db, "beheerders"), (snapshot) => { if(!snapshot.empty) { beheerdersLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } else { beheerdersLijst = []; slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } window.checkLeerkrachtLogin(); });
@@ -206,29 +560,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    const currentPage = window.location.pathname.split("/").pop();
-    document.querySelectorAll('.menu-item').forEach(item => {
-        if(!item.classList.contains('logout')) {
-            item.classList.remove('active'); 
-            const itemPage = item.getAttribute('href');
-            if (itemPage === currentPage || (currentPage === '' && itemPage === 'index.html')) item.classList.add('active'); 
-        }
-    });
-
-    if(window.location.pathname.includes('profiel.html')) laadProfielPagina();
-    if(typeof checkLeerkrachtLogin === "function") checkLeerkrachtLogin(); 
-
-    if(document.getElementById('leskistenContainer')) window.renderReserveringsGrid();
-    if(document.getElementById('lesideeenContainer')) window.renderLesideeenGrid();
-    if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
-    if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst();
-});
-
 // ... Overige functies (formulieren, modals, kalender, uploads) ...
-async function verwerkFormulier(formId, btnElement) { let originalText = "Opslaan"; if (btnElement) { originalText = btnElement.innerText || "Opslaan"; btnElement.innerText = "Opslaan... ⏳"; btnElement.disabled = true; } try { if (formId === 'editLeskistForm') { const rawId = getVal('editKistId'); const imgData = getVal('editAfbeelding', defaultImg); let kistId = rawId ? parseInt(rawId) : Date.now(); const newData = { id: kistId, naam: getVal('editNaam', 'Naamloos Materiaal'), tag: getVal('editTag'), doelgroep: getVal('editDoelgroep'), kerndoelen: getVal('editKerndoelen'), beschrijving: getVal('editBeschrijving'), inhoud: getVal('editInhoud'), videoUrl: getVal('editVideo'), beschikbaar: getCheck('editBeschikbaar', true), afbeelding: imgData, pdfs: currentPdfs || [] }; const idx = leskisten.findIndex(k => k.id == kistId); if(idx > -1) leskisten[idx] = { ...leskisten[idx], ...newData }; else leskisten.push(newData); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); if(window.saveMateriaalToCloud) await window.saveMateriaalToCloud(rawId, newData, imgData, currentPdfs); window.sluitAlleModals(); alert("✅ Materiaal succesvol opgeslagen!"); } else if (formId === 'editLesideeForm') { const rawId = getVal('editLesideeId'); const ideeId = rawId ? parseInt(rawId) : Date.now(); const newData = { id: ideeId, titel: getVal('editLesideeTitel', 'Naamloos Idee'), categorie: getVal('editLesideeCategorie', 'Standaard'), beschrijving: getVal('editLesideeBeschrijving'), link: getVal('editLesideeLink') }; const idx = lesideeen.findIndex(i => i.id == ideeId); if(idx > -1) lesideeen[idx] = { ...lesideeen[idx], ...newData }; else lesideeen.push(newData); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.renderLesideeenGrid) window.renderLesideeenGrid(); if(window.saveLesideeToCloud) await window.saveLesideeToCloud(newData); window.sluitAlleModals(); alert("✅ Lesidee succesvol opgeslagen!"); } else if (formId === 'periodeForm') { const rawId = getVal('editPeriodeId'); const perId = rawId ? parseInt(rawId) : Date.now(); const newData = { id: perId, naam: getVal('periodeNaam', 'Naamloze Periode'), start: getVal('periodeStart'), eind: getVal('periodeEind') }; const idx = periodes.findIndex(p => p.id == perId); if(idx > -1) periodes[idx] = { ...periodes[idx], ...newData }; else periodes.push(newData); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.savePeriodeToCloud) await window.savePeriodeToCloud(newData); window.sluitAlleModals(); if(window.updateKalenderEnLijst) window.updateKalenderEnLijst(); alert("✅ Periode succesvol opgeslagen!"); } else if (formId === 'schoolForm') { const rawId = getVal('editSchoolId'); const schoolId = rawId ? parseInt(rawId) : Date.now(); const newData = { id: schoolId, naam: getVal('schoolNaam', 'Naamloze School') }; const idx = scholen.findIndex(s => s.id == schoolId); if(idx > -1) scholen[idx] = { ...scholen[idx], ...newData }; else scholen.push(newData); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.saveSchoolToCloud) await window.saveSchoolToCloud(newData); window.sluitAlleModals(); alert("✅ Locatie succesvol opgeslagen!"); } else if (formId === 'reserveForm') { const kistNaam = getVal('geselecteerdeKistNaam', 'Onbekende Kist'); const gekozenPeriodeId = parseInt(getVal('periodeSelect', '0')); const gekozenSchool = getVal('schoolSelect'); if(!gekozenPeriodeId || !gekozenSchool) { alert("⚠️ Selecteer alstublieft een school en een periode."); if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; } return; } const nieuweReservering = { id: Date.now(), kist: kistNaam, leerkracht: localStorage.getItem('ww_huidige_leerkracht') || "Mijn Klas (Demo)", school: gekozenSchool, periodeId: gekozenPeriodeId, status: "In afwachting" }; reserveringen.push(nieuweReservering); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateKalenderEnLijst) window.updateKalenderEnLijst(); if(window.addReserveringToCloud) await window.addReserveringToCloud(nieuweReservering); window.sluitAlleModals(); const formObj = document.getElementById('reserveForm'); if (formObj) formObj.reset(); alert('✅ Aanvraag is gelukt en is zichtbaar op je dashboard!'); } else if (formId === 'storingForm') { const kistSelect = getVal('storingKist'); const soortMelding = getVal('storingSoort'); const beschrijving = getVal('storingBeschrijving'); const imgData = getVal('storingFotoData', ''); if(!kistSelect || !soortMelding || !beschrijving) { alert("⚠️ Vul alstublieft alle verplichte velden in."); if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; } return; } const nieuweMelding = { id: Date.now(), kist: kistSelect, soort: soortMelding, beschrijving: beschrijving, foto: imgData, leerkracht: localStorage.getItem('ww_huidige_leerkracht') || "Onbekende Leerkracht", datum: new Date().toLocaleDateString('nl-NL'), status: 'Open' }; meldingen.push(nieuweMelding); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.saveMeldingToCloud) await window.saveMeldingToCloud(nieuweMelding); window.sluitAlleModals(); const formObj = document.getElementById('storingForm'); if(formObj) formObj.reset(); if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; alert('✅ Je melding is succesvol verzonden. Bedankt voor het doorgeven!'); } } catch(err) { alert("❌ Er is iets misgegaan tijdens het verwerken: " + err.message); console.error(err); } finally { if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; } } }
-function comprimeerFoto(file, callback) { if (!file) return callback(""); const reader = new FileReader(); reader.onload = function(evt) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); const MAX_WIDTH = 800; const MAX_HEIGHT = 800; let width = img.width; let height = img.height; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.7)); }; img.src = evt.target.result; }; reader.readAsDataURL(file); }
-window.toonWillekeurigeTip = function() { const tipElement = document.getElementById('tipText'); if (tipElement) tipElement.innerText = ictTips[Math.floor(Math.random() * ictTips.length)]; }
 window.updatePdfPreview = function() { const pdfPreviewContainer = document.getElementById('pdfPreviewContainer'); if(!pdfPreviewContainer) return; pdfPreviewContainer.innerHTML = currentPdfs.map((pdf, index) => `<div style="display: flex; justify-content: space-between; background: #e2e8f0; padding: 6px 12px; border-radius: 4px; font-size: 12px; align-items: center; margin-bottom: 5px;"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;">📄 ${pdf.naam}</span><span style="cursor: pointer; color: #ef4444; font-weight: bold; padding-left: 10px;" onclick="window.removePdf(${index}, event)">✖</span></div>`).join(''); const editPdfData = document.getElementById('editPdfData'); if(editPdfData) editPdfData.value = JSON.stringify(currentPdfs); }
 window.removePdf = function(index, event) { event.preventDefault(); currentPdfs.splice(index, 1); window.updatePdfPreview(); }; window.sluitAlleModals = function() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); const vid = document.getElementById('modalVideo'); if(vid) vid.src = ""; }; window.onclick = function(event) { if (event.target.classList.contains('modal')) window.sluitAlleModals(); };
 window.switchAdminTab = function(tabId, btnElement) { document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none'); document.getElementById(tabId).style.display = 'block'; document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active')); if(btnElement) btnElement.classList.add('active'); }
