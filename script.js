@@ -1,5 +1,5 @@
 // ==========================================
-// WONDERWIJS PORTAAL (Versie 62: De Waterdichte Dashboard Ontgrendeling)
+// WONDERWIJS PORTAAL (Versie 63: De ÉCHTE Redirect + Gordijn Fix)
 // ==========================================
 
 const defaultImg = "https://placehold.co/600x400/8CC63F/ffffff?text=WonderWijs+Materiaal";
@@ -7,7 +7,7 @@ const defaultImg = "https://placehold.co/600x400/8CC63F/ffffff?text=WonderWijs+M
 window.firebaseApp = null;
 window.firebaseAuth = null;
 window.firebaseOAuthProvider = null;
-window.firebaseSignInWithPopup = null; 
+window.firebaseSignInWithRedirect = null; 
 
 // ==========================================
 // 1. LOKALE DATA & VARIABELEN
@@ -56,28 +56,24 @@ const getVal = (id, def = "") => { const el = document.getElementById(id); retur
 const getCheck = (id, def = true) => { const el = document.getElementById(id); return el ? el.checked : def; };
 
 // ==========================================
-// 8. FIREBASE & DE PORTIER LOGICA
+// 8. FIREBASE & DE PORTIER LOGICA (REDIRECT)
 // ==========================================
 
-// GLOEDNIEUW: Deze functie dwingt het portaal om te openen!
 window.ontgrendelPortaal = function(naam) {
     const gatekeeper = document.getElementById('ssoGatekeeper');
-    if (gatekeeper) gatekeeper.style.display = 'none'; // Verberg de muur
+    if (gatekeeper) gatekeeper.style.display = 'none'; 
 
-    // Zoek het dashboard en forceer weergave
     const mainApp = document.getElementById('mainApp') || document.querySelector('.dashboard-container');
     if (mainApp) {
         mainApp.style.display = 'block'; 
         mainApp.style.opacity = '1';
         mainApp.style.visibility = 'visible';
     } else {
-        // Noodoplossing als de classes afwijken: laat alle hoofdelementen zien
         document.querySelectorAll('body > div').forEach(div => {
             if (div.id !== 'ssoGatekeeper') div.style.display = 'block';
         });
     }
 
-    console.log("🔓 Portaal succesvol ontgrendeld voor:", naam);
     window.checkLeerkrachtLogin();
 };
 
@@ -99,7 +95,9 @@ window.vergrendelPortaal = function(melding) {
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
         const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         const { getStorage, ref, uploadString, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js");
-        const { getAuth, signInWithPopup, OAuthProvider, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
+        
+        // Let op: Hier halen we signInWithRedirect op!
+        const { getAuth, signInWithRedirect, getRedirectResult, OAuthProvider, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
 
         const firebaseConfig = {
             apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
@@ -112,17 +110,31 @@ window.vergrendelPortaal = function(melding) {
 
         window.firebaseApp = initializeApp(firebaseConfig);
         window.firebaseAuth = getAuth(window.firebaseApp);
-        window.firebaseSignInWithPopup = signInWithPopup;
+        window.firebaseSignInWithRedirect = signInWithRedirect; // Redirect methode opgeslagen!
         window.firebaseOAuthProvider = OAuthProvider;
 
-        // KIJK OF IEMAND AL BINNEN IS
+        window.vergrendelPortaal("Systeem controleren...");
+
+        // STAP 1: KIJK OF WE NET TERUGKOMEN VAN MICROSOFT REDIRECT
+        getRedirectResult(window.firebaseAuth)
+            .then((result) => {
+                if (result) {
+                    const gateText = document.getElementById('gatekeeperText');
+                    if(gateText) gateText.innerText = "Inloggen geslaagd! Portaal wordt geladen...";
+                }
+            })
+            .catch((error) => {
+                console.error("SSO Redirect Fout:", error);
+                window.vergrendelPortaal(`Fout bij terugkeer van Microsoft: ${error.message}`);
+            });
+
+        // STAP 2: KIJK OF DE GEBRUIKER BEKEND IS
         onAuthStateChanged(window.firebaseAuth, (user) => {
             if (user) {
                 // ✅ INGELOGD
                 const email = user.email || "";
                 const naam = user.displayName || email.split('@')[0] || "Docent";
 
-                // Beveiliging
                 if (!email.toLowerCase().endsWith('@wonderwijs.nl')) {
                     window.vergrendelPortaal("Toegang geweigerd: Alleen @wonderwijs.nl accounts zijn toegestaan.");
                     window.firebaseAuth.signOut();
@@ -161,10 +173,10 @@ window.vergrendelPortaal = function(melding) {
 })();
 
 // ==========================================
-// 8.5 SSO MICROSOFT LOGIN UITVOEREN (POPUP)
+// 8.5 SSO MICROSOFT LOGIN UITVOEREN (DE ECHTE REDIRECT)
 // ==========================================
 window.loginMetMicrosoft = function() {
-    if (!window.firebaseAuth || !window.firebaseSignInWithPopup || !window.firebaseOAuthProvider) {
+    if (!window.firebaseAuth || !window.firebaseSignInWithRedirect || !window.firebaseOAuthProvider) {
         alert("⏳ Applicatie is nog aan het laden. Wacht even.");
         return;
     }
@@ -176,21 +188,15 @@ window.loginMetMicrosoft = function() {
     });
 
     const gateText = document.getElementById('gatekeeperText');
-    if (gateText) gateText.innerText = "Bezig met inloggen via Microsoft...";
+    const gateBtn = document.getElementById('gatekeeperBtn');
+    if (gateText) gateText.innerText = "Je wordt nu doorgestuurd naar Microsoft...";
+    if (gateBtn) gateBtn.style.display = 'none';
 
-    // Start de Pop-up (op Vercel is dit perfect veilig)
-    window.firebaseSignInWithPopup(window.firebaseAuth, provider)
-        .then(() => {
-            // Gelukt! De onAuthStateChanged functie hierboven pakt het nu automatisch 
-            // op en roept de nieuwe ontgrendelPortaal() functie aan!
-        })
-        .catch((error) => {
-            console.error("SSO Fout:", error);
-            if (error.code !== 'auth/popup-closed-by-user') {
-                alert("❌ Fout bij inloggen: " + error.message);
-            }
-            window.vergrendelPortaal("Inloggen afgebroken. Klik nogmaals om opnieuw te proberen.");
-        });
+    // NAVIGEER WEG. DIT GEBEURT NU ECHT!
+    window.firebaseSignInWithRedirect(window.firebaseAuth, provider).catch((error) => {
+        console.error("SSO Fout:", error);
+        window.vergrendelPortaal(`Fout bij doorsturen: ${error.message}`);
+    });
 };
 
 // ==========================================
