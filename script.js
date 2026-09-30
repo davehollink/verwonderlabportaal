@@ -819,8 +819,12 @@ window.openLeskistInfo = function(id) {
     
     const schoolSelect = document.getElementById('schoolSelect');
     if (schoolSelect) {
-        schoolSelect.innerHTML = '<option value="" disabled selected>-- Kies een locatie --</option>';
-        scholen.forEach(s => schoolSelect.innerHTML += `<option value="${s.naam}">${s.naam}</option>`);
+        const opgeslagenStandaardSchool = localStorage.getItem('ww_standaard_school') || "";
+        schoolSelect.innerHTML = '<option value="" disabled>-- Kies een locatie --</option>';
+        scholen.forEach(s => {
+            let isSelected = (s.naam === opgeslagenStandaardSchool) ? 'selected' : '';
+            schoolSelect.innerHTML += `<option value="${s.naam}" ${isSelected}>${s.naam}</option>`;
+        });
     }
     
     const select = document.getElementById('periodeSelect');

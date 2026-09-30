@@ -504,3 +504,20 @@ body { font-family: 'Ubuntu', sans-serif; background-color: var(--bg-color); col
     color: white;
     border-color: #8CC63F;
 }
+/* Zorg dat de sidebar altijd een vaste flex-kolom is met het account onderaan */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.sidebar .menu {
+    flex-grow: 1;
+}
+
+.sidebar .bottom-menu {
+    margin-top: auto;
+    padding-bottom: 20px;
+}

@@ -3,47 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mijn Profiel - WonderWijs</title>
+    <title>WonderWijs - Mijn Profiel</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .modal-content {
+            max-height: 85vh; 
+            overflow-y: auto; 
+        }
+        /* Extra fix om de sidebar optisch altijd gelijk te houden */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .bottom-menu {
+            margin-top: auto;
+            padding-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="dashboard-container">
+<div class="dashboard-container" id="mainApp">
     <aside class="sidebar">
-        <div class="logo"><img src="Verwonderlab.jpg" alt="Verwonderlab" class="logo-img"></div>
+        <div class="logo">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
         <nav class="menu">
             <p class="menu-label">Menu</p>
             <a href="index.html" class="menu-item">Dashboard</a>
             <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
-            <a href="leerlijnen.html" class="menu-item">Leerlijn</a>
-            <a href="lesideeen.html" class="menu-item">Lesideeën</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        <div class="bottom-menu">
             <p class="menu-label">Account</p>
             <a href="profiel.html" class="menu-item active">Mijn Profiel</a>
             <a href="#" class="menu-item logout">Uitloggen</a>
-        </nav>
+        </div>
     </aside>
 
     <main class="main-content">
-        <h1>Mijn Profiel</h1>
-        <div class="admin-section" style="background: white; padding: 20px; border-radius: 8px;">
-            <form id="profielForm" onsubmit="event.preventDefault(); window.saveProfiel();">
-                <div class="form-group">
-                    <label>Naam (als bekend in systeem):</label>
-                    <input type="text" id="profielNaam" readonly style="background: #f1f5f9;">
-                </div>
-                <div class="form-group">
-                    <label>Standaard Locatie:</label>
-                    <select id="profielSchool" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;"></select>
-                </div>
-                <button type="submit" class="btn-green-action">Instellingen opslaan</button>
-            </form>
+        <header class="top-bar">
+            <h1>Mijn Profiel</h1>
+            <div class="top-actions" style="display: flex; gap: 10px; align-items: center;">
+                <button id="adminLoginBtn" class="btn-role" onclick="checkAdminPassword()" style="display: none;">Admin ⚙️</button>
+                <button id="adminLogoutBtn" class="btn-role" onclick="logoutAdmin()" style="display: none;">Verlaat Admin</button>
+            </div>
+        </header>
+
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px;">
+            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 15px;">Persoonlijke instellingen</h2>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #334155;">Naam (ingelogd als):</label>
+                <input type="text" id="profielNaamInput" readonly style="width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #64748b;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #334155;">E-mailadres (SSO / Account):</label>
+                <input type="email" id="profielEmailInput" readonly style="width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #64748b;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #334155;">Standaard Locatie / School:</label>
+                <select id="profielStandaardSchool" style="width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; font-family: inherit;">
+                    <option value="">-- Kies je standaard school --</option>
+                </select>
+                <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Deze school wordt voortaan automatisch geselecteerd wanneer je een leskist reserveert.</p>
+            </div>
+
+            <button onclick="window.slaProfielInstellingenOp()" class="btn-green-action" style="padding: 10px 20px; background: #8CC63F; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Instellingen opslaan</button>
         </div>
 
-        <h2 style="margin-top: 30px;">Mijn Reserveringshistorie</h2>
-        <div id="historieLijst" class="task-list"></div>
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 15px;">Mijn Reserveringshistorie</h2>
+            <div id="profielHistorieLijst">
+                <p style="color: #888; font-size: 13px;">Reserveringen laden...</p>
+            </div>
+        </div>
     </main>
 </div>
+
+<script>
+    // Specifieke laadfunctie voor de profielpagina
+    function laadProfielPagina() {
+        const naam = localStorage.getItem('ww_huidige_leerkracht') || "";
+        const email = localStorage.getItem('ww_huidige_email') || "";
+        const opgeslagenSchool = localStorage.getItem('ww_standaard_school') || "";
+
+        if(document.getElementById('profielNaamInput')) document.getElementById('profielNaamInput').value = naam;
+        if(document.getElementById('profielEmailInput')) document.getElementById('profielEmailInput').value = email;
+
+        // Vul locaties dropdown vanuit de globale scholen array (uit script.js)
+        const schoolSelect = document.getElementById('profielStandaardSchool');
+        if (schoolSelect && typeof scholen !== 'undefined') {
+            schoolSelect.innerHTML = '<option value="">-- Kies je standaard school --</option>';
+            scholen.forEach(s => {
+                let selected = (s.naam === opgeslagenSchool) ? 'selected' : '';
+                schoolSelect.innerHTML += `<option value="${s.naam}" ${selected}>${s.naam}</option>`;
+            });
+        }
+
+        // Laad historie
+        laadProfielHistorie(email);
+    }
+
+    window.slaProfielInstellingenOp = function() {
+        const gekozenSchool = document.getElementById('profielStandaardSchool').value;
+        if(!gekozenSchool) {
+            alert("⚠️ Kies een geldige standaard school.");
+            return;
+        }
+        localStorage.setItem('ww_standaard_school', gekozenSchool);
+        alert("✅ Je standaard locatie is succesvol opgeslagen! Deze wordt nu automatisch ingevuld bij reserveringen.");
+    }
+
+    function laadProfielHistorie(email) {
+        const historieContainer = document.getElementById('profielHistorieLijst');
+        if(!historieContainer) return;
+
+        // Controleer of reserveringen variabele bestaat
+        if(typeof reserveringen === 'undefined') {
+            historieContainer.innerHTML = `<p style="color: #888; font-size: 13px;">Geen reserveringen gevonden.</p>`;
+            return;
+        }
+
+        const mijnReserveringen = reserveringen.filter(r => r.aanvragerEmail === email);
+
+        if(mijnReserveringen.length === 0) {
+            historieContainer.innerHTML = `<p style="color: #888; font-size: 13px;">Je hebt nog geen reserveringen gedaan.</p>`;
+        } else {
+            historieContainer.innerHTML = mijnReserveringen.map(r => {
+                const periode = (typeof periodes !== 'undefined') ? periodes.find(p => p.id == r.periodeId) : null;
+                let statusColor = r.status === "Geaccepteerd" ? "#8CC63F" : (r.status === "Afgewezen" ? "#ef4444" : "#f59e0b");
+                return `
+                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${statusColor};">
+                    <div>
+                        <strong style="display: block; font-size: 14px; color: #1e293b;">${r.kist}</strong>
+                        <span style="font-size: 12px; color: #64748b;">Locatie: ${r.school || 'Nu'} | Periode: ${periode ? periode.naam : 'Onbekend'}</span>
+                    </div>
+                    <span style="background: ${statusColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: bold;">${r.status}</span>
+                </div>`;
+            }).join('');
+        }
+    }
+</script>
+
 <script src="script.js"></script>
 </body>
 </html>
