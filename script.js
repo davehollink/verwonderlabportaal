@@ -87,7 +87,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "lesideeen"), (snapshot) => { if(!snapshot.empty) { lesideeen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderLesideeenGrid) window.renderLesideeenGrid(); } }, checkError);
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); } }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
-// Voortgang realtime ophalen en synchroniseren op basis van e-mailadres
+// Voortgang realtime ophalen en direct toepassen op de vinkjes
         onSnapshot(collection(db, "voortgang"), (snapshot) => { 
             let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
             if (huidigeEmail) { 
@@ -95,18 +95,24 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 const docSnap = snapshot.docs.find(d => d.id === veiligId); 
                 if(docSnap && docSnap.data().vinkjes) { 
                     localStorage.setItem('ww_vinkjes', docSnap.data().vinkjes); 
-                    if(typeof window.reproduceerVinkjes === "function") window.reproduceerVinkjes(); 
+                    if(typeof window.reproduceerVinkjes === "function") {
+                        window.reproduceerVinkjes(); 
+                    }
                 } 
             } 
         }, checkError);
 
-        // Functie om de voortgang veilig naar de Firebase cloud te schrijven
+        // Functie om de voortgang waterdicht op te slaan in Firebase
         window.saveVoortgangToCloud = async function(email, vinkjes) { 
             try {
                 const veiligId = email.replace(/[@.]/g, '_');
-                await setDoc(doc(db, "voortgang", veiligId), { email: email, vinkjes: vinkjes }); 
+                await setDoc(doc(db, "voortgang", veiligId), { 
+                    email: email, 
+                    vinkjes: vinkjes,
+                    laatsteUpdate: new Date().toISOString()
+                }, { merge: true }); 
             } catch(e) {
-                console.error("Opslaan voortgang mislukt:", e);
+                console.error("Opslaan voortgang in cloud mislukt:", e);
             }
         };
         
