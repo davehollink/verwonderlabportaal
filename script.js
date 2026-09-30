@@ -246,7 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Altijd login check uitvoeren zodra pagina laadt
+    // Roep de tip direct aan
+    if(typeof toonWillekeurigeTip === "function") toonWillekeurigeTip();
+
     if(typeof checkLeerkrachtLogin === "function") checkLeerkrachtLogin(); 
     if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
 });
@@ -780,6 +782,31 @@ window.openLeskistInfo = function(id) {
     } else {
         if (videoIframe) videoIframe.src = "";
         if (videoContainer) videoContainer.style.display = "none";
+    }
+
+    // NIEUW: Gekoppelde lesideeën tonen in de pop-up ter inspiratie
+    const gekoppeldeIdeeenLijst = document.getElementById('gekoppeldeIdeeenLijst');
+    const modalGekoppeldeIdeeen = document.getElementById('modalGekoppeldeIdeeen');
+    if (gekoppeldeIdeeenLijst && modalGekoppeldeIdeeen) {
+        const zoekTerm = kist.naam.toLowerCase().replace('groepsset', '').replace('nr.', '').trim();
+        const relevanteIdeeen = lesideeen.filter(idee => 
+            idee.titel.toLowerCase().includes(zoekTerm) || 
+            (idee.beschrijving && idee.beschrijving.toLowerCase().includes(zoekTerm))
+        ).slice(0, 3);
+
+        if (relevanteIdeeen.length > 0) {
+            gekoppeldeIdeeenLijst.innerHTML = relevanteIdeeen.map(idee => `
+                <div style="background: #f1f5f9; padding: 10px 15px; border-radius: 8px; border-left: 3px solid #8CC63F; margin-bottom: 8px;">
+                    <strong style="font-size: 13px; color: #1e293b;">${idee.titel}</strong>
+                    <p style="font-size: 12px; color: #64748b; margin: 5px 0 0 0;">${idee.beschrijving}</p>
+                    ${idee.link ? `<a href="${idee.link}" target="_blank" style="font-size: 11px; color: #3b82f6; text-decoration: none; display: inline-block; margin-top: 5px;">🔗 Bekijk idee →</a>` : ''}
+                </div>
+            `).join('');
+            modalGekoppeldeIdeeen.style.display = 'block';
+        } else {
+            // Als er geen automatische match is, tonen we een standaard inspiratie-melding of verbergen we het
+            modalGekoppeldeIdeeen.style.display = 'none';
+        }
     }
 
     if(document.getElementById('geselecteerdeKistId')) document.getElementById('geselecteerdeKistId').value = kist.id;
