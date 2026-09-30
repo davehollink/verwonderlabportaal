@@ -240,14 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!item.classList.contains('logout')) {
             item.classList.remove('active'); 
             const itemPage = item.getAttribute('href');
+            // Zorg dat 'index.html' ook matcht als er geen bestandsnaam in de URL staat
             if (itemPage === currentPage || (currentPage === '' && itemPage === 'index.html')) {
                 item.classList.add('active'); 
             }
         }
     });
     
-    // Roep de tip direct aan
     if(typeof toonWillekeurigeTip === "function") toonWillekeurigeTip();
+
+    // Specifieke check voor profiel pagina
+    if(window.location.pathname.includes('profiel.html')) {
+        if(typeof laadProfielPagina === "function") laadProfielPagina();
+    }
 
     if(typeof checkLeerkrachtLogin === "function") checkLeerkrachtLogin(); 
     if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
