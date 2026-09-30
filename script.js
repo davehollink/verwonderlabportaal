@@ -87,6 +87,28 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "lesideeen"), (snapshot) => { if(!snapshot.empty) { lesideeen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderLesideeenGrid) window.renderLesideeenGrid(); } }, checkError);
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); } }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+// Voortgang realtime ophalen en synchroniseren op basis van e-mailadres
+        onSnapshot(collection(db, "voortgang"), (snapshot) => { 
+            let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
+            if (huidigeEmail) { 
+                const veiligId = huidigeEmail.replace(/[@.]/g, '_');
+                const docSnap = snapshot.docs.find(d => d.id === veiligId); 
+                if(docSnap && docSnap.data().vinkjes) { 
+                    localStorage.setItem('ww_vinkjes', docSnap.data().vinkjes); 
+                    if(typeof window.reproduceerVinkjes === "function") window.reproduceerVinkjes(); 
+                } 
+            } 
+        }, checkError);
+
+        // Functie om de voortgang veilig naar de Firebase cloud te schrijven
+        window.saveVoortgangToCloud = async function(email, vinkjes) { 
+            try {
+                const veiligId = email.replace(/[@.]/g, '_');
+                await setDoc(doc(db, "voortgang", veiligId), { email: email, vinkjes: vinkjes }); 
+            } catch(e) {
+                console.error("Opslaan voortgang mislukt:", e);
+            }
+        };
         
         // Opslaan Functies
         window.saveMateriaalToCloud = async function(rawId, newData, imgData, pdfsData) {
@@ -869,3 +891,40 @@ window.openStoringModal = function() { const form = document.getElementById('sto
 window.openMateriaalModal = function(id = null) { const form = document.getElementById('editLeskistForm'); if(form) form.reset(); const afbFile = document.getElementById('editAfbeeldingFile'); if(afbFile) afbFile.value = ""; const editPdfFiles = document.getElementById('editPdfFiles'); if(editPdfFiles) editPdfFiles.value = ""; if(id) { document.getElementById('modalMateriaalTitle').innerText = "Materiaal Bewerken"; const kist = leskisten.find(k => k.id == id); if(document.getElementById('editKistId')) document.getElementById('editKistId').value = kist.id; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = kist.afbeelding || defaultImg; let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg); if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = `<img src="${imgSource}" style="width: 100%; border-radius: 8px;">`; if(document.getElementById('editNaam')) document.getElementById('editNaam').value = kist.naam || ""; if(document.getElementById('editTag')) document.getElementById('editTag').value = kist.tag || ""; if(document.getElementById('editDoelgroep')) document.getElementById('editDoelgroep').value = kist.doelgroep || ""; if(document.getElementById('editKerndoelen')) document.getElementById('editKerndoelen').value = kist.kerndoelen || ""; if(document.getElementById('editBeschrijving')) document.getElementById('editBeschrijving').value = kist.beschrijving || ""; if(document.getElementById('editInhoud')) document.getElementById('editInhoud').value = kist.inhoud || ""; if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; currentPdfs = kist.pdfs || []; } else { document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = defaultImg; if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; currentPdfs = []; } if(window.updatePdfPreview) window.updatePdfPreview(); const m = document.getElementById('editLeskistModal'); if(m) m.style.display = 'flex'; }
 window.openLesideeModal = function(id = null) { const form = document.getElementById('editLesideeForm'); if(!form) return; form.reset(); if(id) { document.getElementById('modalLesideeTitle').innerText = "Lesidee Bewerken"; const idee = lesideeen.find(i => i.id == id); if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = idee.id; if(document.getElementById('editLesideeTitel')) document.getElementById('editLesideeTitel').value = idee.titel || ""; if(document.getElementById('editLesideeCategorie')) document.getElementById('editLesideeCategorie').value = idee.categorie || ""; if(document.getElementById('editLesideeBeschrijving')) document.getElementById('editLesideeBeschrijving').value = idee.beschrijving || ""; if(document.getElementById('editLesideeLink')) document.getElementById('editLesideeLink').value = idee.link || ""; } else { document.getElementById('modalLesideeTitle').innerText = "Nieuw Lesidee Toevoegen"; if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = ""; } const m = document.getElementById('editLesideeModal'); if(m) m.style.display = 'flex'; }
 window.toonWillekeurigeTip = function() { const tipElement = document.getElementById('tipText'); if (tipElement) tipElement.innerText = ictTips[Math.floor(Math.random() * ictTips.length)]; }
+// ==========================================
+// LEERLIJNEN VOORTGANG & CLOUD SYNCHRONISATIE
+// ==========================================
+document.addEventListener('change', (e) => { 
+    if (e.target.type === 'checkbox' && e.target.id && e.target.id.startsWith('check-domein')) { 
+        let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
+        if(!huidigeEmail) {
+            alert("⚠️ Je bent niet ingelogd met een e-mailadres. Je voortgang kan zo niet in de cloud worden opgeslagen.");
+            return;
+        }
+        
+        const checkboxStates = JSON.parse(localStorage.getItem('ww_vinkjes')) || {}; 
+        checkboxStates[e.target.id] = e.target.checked; 
+        const strState = JSON.stringify(checkboxStates); 
+        
+        localStorage.setItem('ww_vinkjes', strState); 
+        
+        // Sla direct op in de Firebase cloud gekoppeld aan het e-mailadres
+        if(window.saveVoortgangToCloud) {
+            window.saveVoortgangToCloud(huidigeEmail, strState); 
+        }
+    } 
+});
+
+window.reproduceerVinkjes = function() { 
+    const savedChecks = JSON.parse(localStorage.getItem('ww_vinkjes')) || {}; 
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => { 
+        if (cb.id && cb.id.startsWith('check-domein')) {
+            cb.checked = !!savedChecks[cb.id];
+        }
+    }); 
+    document.querySelectorAll('.domain-card').forEach(card => { 
+        if (typeof updateVoortgang === "function") {
+            updateVoortgang(card.id);
+        }
+    }); 
+};
