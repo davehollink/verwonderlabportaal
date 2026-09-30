@@ -673,41 +673,59 @@ async function verwerkFormulier(formId, btnElement) {
             const formObj = document.getElementById('reserveForm'); 
             if (formObj) formObj.reset(); 
             alert('✅ Aanvraag is gelukt en is direct zichtbaar op je dashboard!'); 
-        } else if (formId === 'storingForm') { 
-            const kistSelect = getVal('storingKist'); 
-            const soortMelding = getVal('storingSoort'); 
-            const beschrijving = getVal('storingBeschrijving'); 
-            const imgData = getVal('storingFotoData', ''); 
-            
-            if(!kistSelect || !soortMelding || !beschrijving) { 
-                alert("⚠️ Vul alstublieft alle verplichte velden in."); 
-                if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; } 
-                return; 
-            } 
-            
-            const nieuweMelding = { 
-                id: Date.now(), 
-                kist: kistSelect, 
-                soort: soortMelding, 
-                beschrijving: beschrijving, 
-                foto: imgData, 
-                leerkracht: localStorage.getItem('ww_huidige_leerkracht') || "Onbekende Leerkracht", 
-                datum: new Date().toLocaleDateString('nl-NL'), 
-                status: 'Open' 
-            }; 
-            
-            meldingen.push(nieuweMelding); 
-            slaDataOp(); 
-            if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
-            if(window.saveMeldingToCloud) await window.saveMeldingToCloud(nieuweMelding); 
-            
-            window.sluitAlleModals(); 
-            const formObj = document.getElementById('storingForm'); 
-            if(formObj) formObj.reset(); 
-            if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; 
-            if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; 
-            alert('✅ Je melding is succesvol verzonden. Bedankt voor het doorgeven!'); 
+       } else if (formId === 'storingForm') { 
+        const kistSelect = getVal('storingKist'); 
+        const soortMelding = getVal('storingSoort'); 
+        const beschrijving = getVal('storingBeschrijving'); 
+        const imgData = getVal('storingFotoData', ''); 
+        
+        if(!kistSelect || !soortMelding || !beschrijving) { 
+            alert("⚠️ Vul alstublieft alle verplichte velden in."); 
+            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; } 
+            return; 
         } 
+        
+        const melderNaam = localStorage.getItem('ww_huidige_leerkracht') || "Onbekende Leerkracht";
+        const melderEmail = localStorage.getItem('ww_huidige_email') || "Onbekend";
+
+        const nieuweMelding = { 
+            id: Date.now(), 
+            kist: kistSelect, 
+            soort: soortMelding, 
+            beschrijving: beschrijving, 
+            foto: imgData, 
+            leerkracht: melderNaam, 
+            datum: new Date().toLocaleDateString('nl-NL'), 
+            status: 'Open' 
+        }; 
+        
+        meldingen.push(nieuweMelding); 
+        slaDataOp(); 
+        if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
+        if(window.saveMeldingToCloud) await window.saveMeldingToCloud(nieuweMelding); 
+        
+        window.sluitAlleModals(); 
+        const formObj = document.getElementById('storingForm'); 
+        if(formObj) formObj.reset(); 
+        if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; 
+        if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; 
+        
+        // NIEUW: Maak de e-mail op en open het mailprogramma van de gebruiker
+        const mailOnderwerp = encodeURIComponent(`Storing / Schade: ${kistSelect}`);
+        const mailBody = encodeURIComponent(
+            `Beste beheerder,\n\nEr is zojuist een nieuwe storingsmelding gedaan via het Verwonderlab Portaal.\n\n` +
+            `Materiaal: ${kistSelect}\n` +
+            `Soort melding: ${soortMelding}\n` +
+            `Gemeld door: ${melderNaam} (${melderEmail})\n\n` +
+            `Beschrijving:\n${beschrijving}\n\n` +
+            `(De eventuele foto en huidige status kun je bekijken in het Beheerders Dashboard)`
+        );
+        
+        // Dit opent Outlook/Mail met alles al ingevuld
+        window.location.href = `mailto:verwonderlab@wonderwijs.nl?subject=${mailOnderwerp}&body=${mailBody}`;
+
+        alert('✅ Je melding is opgeslagen in het systeem en je e-mailprogramma wordt nu geopend om de melding te versturen!'); 
+    }
     } catch(err) { 
         alert("❌ Er is iets misgegaan tijdens het verwerken: " + err.message); 
         console.error(err); 
