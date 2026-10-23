@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261023k">
+    <link rel="stylesheet" href="style.css?v=20261023l">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
@@ -559,6 +559,74 @@
     </div>
 </div>
 
+<div id="feedbackDetailModal" class="modal modal-large">
+    <div class="modal-content" style="max-width: 760px; max-height: 90vh; overflow-y: auto;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1.5px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">📝</div>
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Evaluatie & Ervaring</span>
+                <h2 id="feedbackModalKist" style="color: var(--slate-950); font-size: 22px; font-weight: 800; margin: 0;">Lesmateriaal</h2>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #f8fafc; padding: 14px 18px; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Leerkracht</span>
+                <div id="feedbackModalDocent" style="font-size: 13.5px; font-weight: 700; color: #0f172a;">...</div>
+            </div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Periode</span>
+                <div id="feedbackModalPeriode" style="font-size: 13.5px; font-weight: 700; color: #0f172a;">...</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Algemene Beoordeling</span>
+            <div id="feedbackModalSterren" style="display: flex; align-items: center;"></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Enthousiasme Klas</span>
+                <div id="feedbackModalEnthousiasme" style="font-size: 13px; font-weight: 700; color: #1e293b;">...</div>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Compleetheid Kist</span>
+                <div id="feedbackModalCompleet" style="font-size: 13px; font-weight: 700; color: #1e293b;">...</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px;">Toelichting / Leservaring</span>
+            <div id="feedbackModalToelichting" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; color: #334155;">...</div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px;">Doelen Digitale Geletterdheid</span>
+            <div id="feedbackModalDoelen" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+            <div style="font-size: 12.5px; color: #64748b;">
+                <strong>Opdracht:</strong> <span id="feedbackModalOpdracht">...</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px;">📸 Projectfoto's uit de klas</span>
+            <div id="feedbackModalFotos" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+            <div id="feedbackModalOneDrive" style="margin-top: 10px; font-size: 13px; display: none;"></div>
+        </div>
+
+        <div id="feedbackModalQuoteContainer" style="margin-bottom: 20px; display: none; background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase;">Quote van leerling / leerkracht</span>
+            <div id="feedbackModalQuote" style="font-style: italic; font-size: 13.5px; color: #92400e; margin-top: 4px;">...</div>
+        </div>
+
+        <div style="text-align: right; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <button class="pill-btn secondary" onclick="sluitAlleModals()">Sluiten</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Functionaliteit voor het openen van het beheerdersdashboard (zonder wachtwoord, geverifieerd via Microsoft SSO)
     function checkAdminPassword() {
@@ -608,6 +676,6 @@
 
 <script src="auth-config.js?v=20261023"></script>
 <script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261023k"></script>
+<script src="script.js?v=20261023l"></script>
 </body>
 </html>

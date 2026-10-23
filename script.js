@@ -104,6 +104,7 @@ let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
 let beheerdersLijst = safeGetLocal('ww_beheerders_v1', []); 
 let mijnFavorieten = safeGetLocal('ww_favorieten_v1', []); 
 let meldingen = safeGetLocal('ww_meldingen_v1', []); 
+let feedbackLijst = safeGetLocal('ww_feedback_v1', []);
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
 const standaardLesideeen = [
     {
@@ -713,6 +714,7 @@ function slaDataOp() {
         localStorage.setItem('ww_beheerders_v1', JSON.stringify(beheerdersLijst));
         localStorage.setItem('ww_favorieten_v1', JSON.stringify(mijnFavorieten));
         localStorage.setItem('ww_meldingen_v1', JSON.stringify(meldingen));
+        localStorage.setItem('ww_feedback_v1', JSON.stringify(feedbackLijst));
     } catch(e) { console.error("Opslagfout", e); }
 }
 
@@ -762,6 +764,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         }, checkError);
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); } }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+        onSnapshot(collection(db, "feedback"), (snapshot) => { if(!snapshot.empty) { feedbackLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
 
         // Voortgang realtime ophalen en direct toepassen op de vinkjes
         onSnapshot(collection(db, "voortgang"), (snapshot) => { 
@@ -862,6 +865,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.deleteReserveringFromCloud = async function(id) { await deleteDoc(doc(db, "reserveringen", id.toString())); };
         window.deleteMeldingFromCloud = async function(id) { await deleteDoc(doc(db, "meldingen", id.toString())); };
         window.updateMeldingStatusInCloud = async function(id, status) { await setDoc(doc(db, "meldingen", id.toString()), {status: status}, {merge: true}); };
+        window.saveFeedbackToCloud = async function(newData) { await setDoc(doc(db, "feedback", newData.id.toString()), newData); };
 
     } catch (error) { 
         console.error("Firebase module overgeslagen. Lokaal actief."); 
@@ -1599,15 +1603,27 @@ window.renderBeheerdersTabellen = function() {
                     statusHTML = `<span style="background: ${statusColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">${r.status}</span>`;
                     
                     if (r.status === "Geaccepteerd") {
+                        let feedbackBtnHTML = '';
+                        if (r.feedbackVerstuurd) {
+                            feedbackBtnHTML = `<button type="button" class="btn-feedback-action sent" onclick="window.stuurFeedbackFormulier(${r.id})" title="Formulier reeds verstuurd op ${r.feedbackVerstuurdOp || 'onlangs'}. Klik om opnieuw te mailen via Outlook."><span>✅</span> Feedbackformulier verstuurd</button>`;
+                        } else {
+                            feedbackBtnHTML = `<button type="button" class="btn-feedback-action" onclick="window.stuurFeedbackFormulier(${r.id})" title="Stuur feedbackformulier direct via Outlook naar ${r.aanvragerEmail || 'de leerkracht'}"><span>✉️</span> Stuur feedbackformulier</button>`;
+                        }
+
+                        if (r.feedbackOntvangen) {
+                            feedbackBtnHTML += `<button type="button" class="btn-view-feedback" onclick="window.bekijkIngevuldeFeedback(${r.id})" title="Bekijk de ingevulde evaluatie en foto's">⭐ Bekijk feedback</button>`;
+                        }
+
                         statusHTML += `
                         <div style="margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 8px;">📋 Logboek / Status Kist</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center;">
                                 <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.klaar ? '#8CC63F' : '#fff'}; color: ${r.klaar ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'klaar', this.checked)" ${r.klaar ? 'checked' : ''}>📦 Klaarzetten</label>
                                 <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.opgehaald ? '#8CC63F' : '#fff'}; color: ${r.opgehaald ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'opgehaald', this.checked)" ${r.opgehaald ? 'checked' : ''}>🤝 Opgehaald</label>
                                 <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.ingeleverd ? '#8CC63F' : '#fff'}; color: ${r.ingeleverd ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'ingeleverd', this.checked)" ${r.ingeleverd ? 'checked' : ''}>🔙 Ingeleverd</label>
                                 <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.compleet ? '#8CC63F' : '#fff'}; color: ${r.compleet ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'compleet', this.checked)" ${r.compleet ? 'checked' : ''}>✅ Compleet</label>
                                 <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.schade ? '#ef4444' : '#fff'}; color: ${r.schade ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'schade', this.checked)" ${r.schade ? 'checked' : ''}>⚠️ Schade</label>
+                                ${feedbackBtnHTML}
                             </div>
                             <input type="text" placeholder="✏️ Ruimte voor toelichting..." value="${r.toelichting || ''}" onchange="window.updateChecklist(${r.id}, 'toelichting', this.value)" style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
                         </div>`;
@@ -2693,6 +2709,164 @@ Afzender: verwonderlab@wonderwijs.nl`;
 };
 window.actieReserveringVerwijderen = function(id, event) { event.preventDefault(); if(confirm("Weet je zeker dat je deze reservering definitief wilt verwijderen?")) { reserveringen = reserveringen.filter(r => r.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteReserveringFromCloud) window.deleteReserveringFromCloud(id); } }
 window.updateChecklist = async function(id, veld, waarde) { let r = reserveringen.find(x => x.id == id); if(r) r[veld] = waarde; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateChecklistInCloud) window.updateChecklistInCloud(id, { [veld]: waarde }); }
+
+window.stuurFeedbackFormulier = function(resId) {
+    const r = reserveringen.find(res => res.id == resId);
+    if (!r) {
+        alert("Reservering niet gevonden.");
+        return;
+    }
+
+    let email = (r.aanvragerEmail || "").trim();
+    if (!email) {
+        const ingevuldeMail = prompt("Er is nog geen e-mailadres gekoppeld aan deze leerkracht. Vul het e-mailadres in om het feedbackformulier te versturen:", "naam@wonderwijs.nl");
+        if (!ingevuldeMail || !ingevuldeMail.includes('@')) {
+            alert("⚠️ Geen geldig e-mailadres opgegeven.");
+            return;
+        }
+        email = ingevuldeMail.trim();
+        r.aanvragerEmail = email;
+        slaDataOp();
+    }
+
+    const per = periodes.find(p => p.id == r.periodeId);
+    const periodeNaam = per ? per.naam : (r.periodeNaam || "afgelopen periode");
+    const kistNaam = r.kist || "de leskist";
+    const docentNaam = r.leerkracht || "collega";
+    const schoolNaam = r.school || "";
+
+    // Genereer de unieke URL naar het feedbackformulier
+    const currentUrl = new URL(window.location.href);
+    const basePath = currentUrl.pathname.substring(0, currentUrl.pathname.lastIndexOf('/') + 1);
+    const feedbackUrl = `${currentUrl.origin}${basePath}feedback.html?resId=${encodeURIComponent(r.id)}&kist=${encodeURIComponent(kistNaam)}&periode=${encodeURIComponent(periodeNaam)}&docent=${encodeURIComponent(docentNaam)}&email=${encodeURIComponent(email)}&school=${encodeURIComponent(schoolNaam)}`;
+
+    const subject = `Hoe is ${kistNaam} bevallen? Deel je ervaring en foto's met het Verwonderlab!`;
+
+    const body = `Beste ${docentNaam},
+
+Wat ontzettend leuk dat je onlangs ${kistNaam} hebt gebruikt in de klas tijdens ${periodeNaam}!
+
+Om het Verwonderlab en ons aanbod binnen Stichting Wonderwijs continu te verbeteren en inspiratie te verzamelen voor collega-leerkrachten, zijn we erg benieuwd naar jouw ervaringen. 
+
+Zou je via onderstaande link ons korte feedbackformulier willen invullen?
+${feedbackUrl}
+
+In het formulier kun je onder andere delen:
+• Hoe het materiaal is bevallen en hoe enthousiast de leerlingen waren
+• Aan welke kerndoelen van Digitale Geletterdheid (DG) er is gewerkt
+• Eventuele leuke foto's of quotes uit de les (optioneel)
+
+Het invullen duurt slechts 2 minuten en je helpt het Verwonderlab en je collega's er enorm mee!
+
+Alvast hartelijk dank voor je inzet en enthousiasme!
+
+Met vriendelijke groet,
+
+Het Verwonderlab Team
+Stichting Wonderwijs
+verwonderlab@wonderwijs.nl`;
+
+    // 1. Open direct in Outlook (Microsoft 365)
+    window.openInOutlook(email, subject, body);
+
+    // 2. Registreer verzendstatus
+    r.feedbackVerstuurd = true;
+    r.feedbackVerstuurdOp = new Date().toISOString().split('T')[0];
+    slaDataOp();
+    if (typeof window.updateChecklistInCloud === "function") {
+        window.updateChecklistInCloud(r.id, { 
+            feedbackVerstuurd: true, 
+            feedbackVerstuurdOp: r.feedbackVerstuurdOp,
+            aanvragerEmail: email
+        });
+    }
+
+    if (typeof window.renderBeheerdersTabellen === "function") {
+        window.renderBeheerdersTabellen();
+    }
+};
+
+window.bekijkIngevuldeFeedback = function(resId) {
+    const r = reserveringen.find(res => res.id == resId);
+    let item = (feedbackLijst || []).find(f => f.resId == resId);
+    if (!item && r && r.feedbackData) item = r.feedbackData;
+
+    if (!item) {
+        alert("Er is nog geen ingevulde evaluatie gevonden voor deze reservering.");
+        return;
+    }
+
+    const modal = document.getElementById('feedbackDetailModal');
+    if (!modal) return;
+
+    if (document.getElementById('feedbackModalKist')) document.getElementById('feedbackModalKist').innerText = item.kist || (r ? r.kist : "Leskist");
+    if (document.getElementById('feedbackModalDocent')) document.getElementById('feedbackModalDocent').innerText = `${item.docent || ''} (${item.email || ''}) • ${item.school || ''}`;
+    if (document.getElementById('feedbackModalPeriode')) document.getElementById('feedbackModalPeriode').innerText = item.periode || '';
+
+    // Sterren
+    const sterrenAantal = item.sterren || 5;
+    let sterrenHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        sterrenHTML += `<span style="font-size: 22px; color: ${i <= sterrenAantal ? '#f59e0b' : '#cbd5e1'};">★</span>`;
+    }
+    if (document.getElementById('feedbackModalSterren')) {
+        document.getElementById('feedbackModalSterren').innerHTML = `${sterrenHTML} <strong style="margin-left: 8px; color: #b45309; font-size: 13.5px;">${sterrenAantal} / 5 sterren</strong>`;
+    }
+
+    if (document.getElementById('feedbackModalEnthousiasme')) document.getElementById('feedbackModalEnthousiasme').innerText = item.enthousiasme || 'Niet ingevuld';
+    if (document.getElementById('feedbackModalCompleet')) document.getElementById('feedbackModalCompleet').innerText = item.compleetheid || 'Niet ingevuld';
+    if (document.getElementById('feedbackModalToelichting')) document.getElementById('feedbackModalToelichting').innerText = item.toelichting || '(Geen toelichting opgegeven)';
+
+    // DG Doelen
+    const domeinen = item.dgDomeinen || [];
+    const doelenContainer = document.getElementById('feedbackModalDoelen');
+    if (doelenContainer) {
+        if (domeinen.length > 0) {
+            doelenContainer.innerHTML = domeinen.map(d => `<span style="background: rgba(140, 198, 63, 0.15); color: #166534; font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 12px; display: inline-block; margin: 3px;">🎯 ${d}</span>`).join('');
+        } else {
+            doelenContainer.innerText = 'Geen specifieke domeinen aangevinkt.';
+        }
+    }
+
+    if (document.getElementById('feedbackModalOpdracht')) document.getElementById('feedbackModalOpdracht').innerText = item.specifiekeOpdracht || 'Geen specifieke opdracht vermeld.';
+
+    // Foto's
+    const fotos = item.fotos || [];
+    const fotoContainer = document.getElementById('feedbackModalFotos');
+    if (fotoContainer) {
+        if (fotos.length > 0) {
+            fotoContainer.innerHTML = fotos.map(src => `
+                <a href="${src}" target="_blank" style="display: block; width: 110px; height: 85px; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #cbd5e1;">
+                    <img src="${src}" style="width: 100%; height: 100%; object-fit: cover;">
+                </a>
+            `).join('');
+        } else {
+            fotoContainer.innerHTML = '<span style="color: #64748b; font-size: 13px;">Geen foto\'s geüpload bij deze evaluatie.</span>';
+        }
+    }
+
+    const onedriveEl = document.getElementById('feedbackModalOneDrive');
+    if (onedriveEl) {
+        if (item.onedriveLink) {
+            onedriveEl.innerHTML = `🔗 <a href="${item.onedriveLink}" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Open gedeelde SharePoint / OneDrive fotomap</a>`;
+            onedriveEl.style.display = 'block';
+        } else {
+            onedriveEl.style.display = 'none';
+        }
+    }
+
+    const quoteBox = document.getElementById('feedbackModalQuoteContainer');
+    if (quoteBox) {
+        if (item.quote) {
+            document.getElementById('feedbackModalQuote').innerText = `"${item.quote}"`;
+            quoteBox.style.display = 'block';
+        } else {
+            quoteBox.style.display = 'none';
+        }
+    }
+
+    modal.style.display = 'flex';
+};
 window.toggleMeldingStatus = async function(id) { let m = meldingen.find(x => x.id == id); if(m) { m.status = m.status === 'Open' ? 'Opgelost' : 'Open'; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateMeldingStatusInCloud) await window.updateMeldingStatusInCloud(id, m.status); } }
 window.deleteMelding = async function(id) { if(confirm("Weet je zeker dat je deze melding wilt verwijderen?")) { meldingen = meldingen.filter(m => m.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteMeldingFromCloud) await window.deleteMeldingFromCloud(id); } }
 window.deletePeriode = function(id) { if(confirm("Weet je zeker dat je deze periode wilt verwijderen?")) { periodes = periodes.filter(p => p.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deletePeriodeFromCloud) window.deletePeriodeFromCloud(id); } }

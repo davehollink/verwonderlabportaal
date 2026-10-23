@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verwonderlab - Feedback & Ervaringen</title>
+    <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
+    <link rel="stylesheet" href="style.css?v=20261023l">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: var(--bg-cream);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(140, 198, 63, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 30px 16px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedback-container {
+            width: 100%;
+            max-width: 780px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            box-sizing: border-box;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-header {
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .feedback-logo {
+            width: 76px;
+            height: 76px;
+            border-radius: 20px;
+            object-fit: cover;
+            box-shadow: 0 8px 20px rgba(140, 198, 63, 0.25);
+            margin-bottom: 16px;
+        }
+
+        .feedback-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(140, 198, 63, 0.15);
+            color: var(--ww-green-dark);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feedback-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--slate-950);
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .feedback-subtitle {
+            font-size: 14.5px;
+            color: var(--slate-600);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Context Card van de reservering */
+        .reservation-context-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1.5px solid #bbf7d0;
+            border-radius: 18px;
+            padding: 20px 24px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .context-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .context-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #15803d;
+            letter-spacing: 0.5px;
+        }
+
+        .context-value {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .section-box {
+            background: #ffffff;
+            border: 1px solid var(--slate-200);
+            border-radius: 20px;
+            padding: 24px 26px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .section-box h3 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--slate-900);
+            margin: 0 0 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: var(--slate-500);
+            margin: 0 0 18px 0;
+        }
+
+        /* Interactieve Sterren Rating */
+        .star-rating-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .star-btn {
+            font-size: 36px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: all 0.15s ease;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .star-btn.active, .star-btn:hover {
+            color: #f59e0b;
+            transform: scale(1.18);
+        }
+
+        .star-label-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: #b45309;
+            margin-left: 10px;
+        }
+
+        /* Choice Pills Grid */
+        .choice-pills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .choice-pill-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--slate-50);
+            border: 1.5px solid var(--slate-200);
+            border-radius: 14px;
+            padding: 12px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--slate-700);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .choice-pill-label input[type="radio"],
+        .choice-pill-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .choice-pill-label.selected {
+            background: rgba(140, 198, 63, 0.12);
+            border-color: var(--ww-green);
+            color: var(--ww-green-dark);
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(140, 198, 63, 0.15);
+        }
+
+        /* DG Domeinen Cards */
+        .dg-domains-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .dg-domain-card {
+            background: #ffffff;
+            border: 1.5px solid var(--slate-200);
+            border-radius: 16px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .dg-domain-card.selected {
+            background: #f0fdf4;
+            border-color: var(--ww-green);
+            box-shadow: 0 4px 12px rgba(140, 198, 63, 0.15);
+        }
+
+        .dg-domain-card input[type="checkbox"] {
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--ww-green);
+            cursor: pointer;
+        }
+
+        .dg-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--slate-900);
+            margin-bottom: 2px;
+        }
+
+        .dg-desc {
+            font-size: 11.5px;
+            color: var(--slate-500);
+            line-height: 1.4;
+        }
+
+        /* Form Controls */
+        .form-control-text {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1.5px solid var(--slate-200);
+            font-family: inherit;
+            font-size: 13.5px;
+            color: var(--slate-800);
+            box-sizing: border-box;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-text:focus {
+            outline: none;
+            border-color: var(--ww-green);
+            box-shadow: 0 0 0 3px rgba(140, 198, 63, 0.2);
+        }
+
+        /* Foto Upload Preview */
+        .foto-upload-dropzone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 18px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8fafc;
+            transition: all 0.2s ease;
+        }
+
+        .foto-upload-dropzone:hover {
+            border-color: var(--ww-green);
+            background: rgba(140, 198, 63, 0.04);
+        }
+
+        .foto-previews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .foto-preview-card {
+            position: relative;
+            width: 100%;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            border: 1px solid var(--slate-200);
+        }
+
+        .foto-preview-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .foto-preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.65);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Verzendknop */
+        .btn-submit-feedback {
+            width: 100%;
+            padding: 16px 28px;
+            background: linear-gradient(135deg, var(--ww-green) 0%, #76ab33 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-full);
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 24px var(--ww-green-glow);
+            transition: all 0.25s var(--spring-easing);
+            margin-top: 30px;
+        }
+
+        .btn-submit-feedback:hover {
+            background: linear-gradient(135deg, var(--ww-green-dark) 0%, #68992c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px var(--ww-green-glow);
+        }
+
+        .btn-submit-feedback:active {
+            transform: translateY(0);
+        }
+
+        /* Succes Bedankscherm */
+        .success-card {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #15803d;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 10px 25px rgba(22, 163, 74, 0.2);
+        }
+
+        @media (max-width: 640px) {
+            .feedback-container {
+                padding: 24px 18px;
+                border-radius: 20px;
+            }
+            .feedback-title {
+                font-size: 24px;
+            }
+            .reservation-context-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="feedback-container">
+    <div id="feedbackFormView">
+        <div class="feedback-header">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="feedback-logo">
+            <br>
+            <span class="feedback-badge">✨ Verwonderlab Ervaringen • Stichting Wonderwijs</span>
+            <h1 class="feedback-title">Hoe is het lesmateriaal bevallen?</h1>
+            <p class="feedback-subtitle">
+                Jouw ervaring helpt ons om het Verwonderlab continu te verbeteren en inspiratie te delen met collega-leerkrachten!
+            </p>
+        </div>
+
+        <!-- CONTEXT VAN DE RESERVERING (Automatisch ingevuld) -->
+        <div class="reservation-context-card">
+            <div class="context-item">
+                <span class="context-label">📦 Geleend Materiaal</span>
+                <span class="context-value" id="displayKistNaam">3D pennen groepsset</span>
+            </div>
+            <div class="context-item">
+                <span class="context-label">📅 Uitleenperiode</span>
+                <span class="context-value" id="displayPeriodeNaam">Periode 2 schooljaar 2026/2027</span>
+            </div>
+            <div class="context-item">
+                <span class="context-label">👤 Leerkracht & Locatie</span>
+                <span class="context-value" id="displayDocentEnSchool">Dave Hollink • Binnenstebuiten</span>
+            </div>
+        </div>
+
+        <form id="feedbackMainForm">
+            <!-- VRAAG 1: STERREN RATING -->
+            <div class="section-box">
+                <h3>⭐ 1. Algemene beoordeling</h3>
+                <p class="section-desc">Hoe beoordeel je deze leskist over het geheel genomen?</p>
+                
+                <div class="star-rating-row">
+                    <button type="button" class="star-btn" data-val="1">★</button>
+                    <button type="button" class="star-btn" data-val="2">★</button>
+                    <button type="button" class="star-btn" data-val="3">★</button>
+                    <button type="button" class="star-btn" data-val="4">★</button>
+                    <button type="button" class="star-btn" data-val="5">★</button>
+                    <span id="starRatingLabel" class="star-label-text">Selecteer een score</span>
+                </div>
+                <input type="hidden" id="sterrenInput" name="sterren" value="5" required>
+            </div>
+
+            <!-- VRAAG 2: ERVARING IN DE KLAS -->
+            <div class="section-box">
+                <h3>👥 2. Ervaring & enthousiasme in de klas</h3>
+                <p class="section-desc">Hoe hebben de leerlingen het werken met dit materiaal ervaren?</p>
+
+                <div class="choice-pills-grid" id="enthousiasmeGroup">
+                    <label class="choice-pill-label selected" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                        <input type="radio" name="enthousiasme" value="Zeer enthousiast" checked>
+                        <span>🤩 Zeer enthousiast!</span>
+                    </label>
+                    <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                        <input type="radio" name="enthousiasme" value="Positief & betrokken">
+                        <span>🙂 Positief & betrokken</span>
+                    </label>
+                    <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                        <input type="radio" name="enthousiasme" value="Wisselende reacties">
+                        <span>😐 Wisselende reacties</span>
+                    </label>
+                    <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                        <input type="radio" name="enthousiasme" value="Moeite met motiveren">
+                        <span>😕 Moeite met motiveren</span>
+                    </label>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                        Kwaliteit & compleetheid van de kist:
+                    </label>
+                    <div class="choice-pills-grid" id="compleetheidGroup">
+                        <label class="choice-pill-label selected" onclick="window.selectPill(this, 'compleetheidGroup')">
+                            <input type="radio" name="compleetStatus" value="Helemaal compleet en klaar" checked>
+                            <span>✅ Helemaal compleet & gebruiksklaar</span>
+                        </label>
+                        <label class="choice-pill-label" onclick="window.selectPill(this, 'compleetheidGroup')">
+                            <input type="radio" name="compleetStatus" value="Onderdeel ontbrak">
+                            <span>⚠️ Er ontbrak een klein onderdeel</span>
+                        </label>
+                        <label class="choice-pill-label" onclick="window.selectPill(this, 'compleetheidGroup')">
+                            <input type="radio" name="compleetStatus" value="Storing / defect">
+                            <span>🔧 Technisch mankement ervaren</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                        Toelichting of ervaringen uit de les:
+                    </label>
+                    <textarea id="toelichtingInput" class="form-control-text" rows="3" placeholder="Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht wellicht helpen?"></textarea>
+                </div>
+            </div>
+
+            <!-- VRAAG 3: DIGITALE GELETTERDHEID (SLO DOELEN) -->
+            <div class="section-box">
+                <h3>🎯 3. Doelen Digitale Geletterdheid (DG)</h3>
+                <p class="section-desc">Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?</p>
+
+                <div class="dg-domains-grid">
+                    <label class="dg-domain-card selected" onclick="window.toggleDgCard(this)">
+                        <input type="checkbox" name="dgDomeinen" value="Computational Thinking & Programmeren" checked>
+                        <div>
+                            <div class="dg-title">🧠 Computational Thinking</div>
+                            <div class="dg-desc">Algoritmes, probleemoplossend denken, logica, debuggen en robots programmeren.</div>
+                        </div>
+                    </label>
+
+                    <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
+                        <input type="checkbox" name="dgDomeinen" value="ICT-basisvaardigheden">
+                        <div>
+                            <div class="dg-title">💻 ICT-basisvaardigheden</div>
+                            <div class="dg-desc">Hardware en sensoren bedienen, iPads/laptops, opslag en softwarefuncties verkennen.</div>
+                        </div>
+                    </label>
+
+                    <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
+                        <input type="checkbox" name="dgDomeinen" value="Mediawijsheid & Maatschappij">
+                        <div>
+                            <div class="dg-title">🌐 Mediawijsheid</div>
+                            <div class="dg-desc">Online veiligheid, privacy, samenwerken, omgangsvormen en media-creatie (bijv. podcast/video).</div>
+                        </div>
+                    </label>
+
+                    <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
+                        <input type="checkbox" name="dgDomeinen" value="Digitale Informatievaardigheden">
+                        <div>
+                            <div class="dg-title">🔍 Informatievaardigheden</div>
+                            <div class="dg-desc">Gericht zoeken, informatie selecteren, presenteren en de betrouwbaarheid van bronnen beoordelen.</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="margin-top: 14px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                        Specifieke lesopdracht of kerndoel (optioneel):
+                    </label>
+                    <input type="text" id="specifiekeOpdrachtInput" class="form-control-text" placeholder="Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt">
+                </div>
+            </div>
+
+            <!-- VRAAG 4: FOTO'S & MEDIA VAN HET PROJECT -->
+            <div class="section-box">
+                <h3>📸 4. Foto's & Resultaten delen (Optioneel)</h3>
+                <p class="section-desc">
+                    Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat. 
+                    <br><span style="font-size: 11.5px; color: var(--slate-500); font-style: italic;">* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school.</span>
+                </p>
+
+                <div class="foto-upload-dropzone" onclick="document.getElementById('feedbackFotoUploadInput').click()">
+                    <div style="font-size: 32px; margin-bottom: 6px;">📷</div>
+                    <strong style="color: var(--slate-900); font-size: 14px;">Klik hier om foto's toe te voegen</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--slate-500);">Kies foto's vanaf je computer, tablet of direct via je camera</p>
+                    <input type="file" id="feedbackFotoUploadInput" accept="image/*" multiple style="display: none;" onchange="window.handleFotoUpload(event)">
+                </div>
+
+                <div id="fotoPreviewsContainer" class="foto-previews-grid"></div>
+
+                <div style="margin-top: 18px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                        Of deel een link naar jullie school SharePoint / OneDrive foto-map:
+                    </label>
+                    <input type="url" id="onedriveLinkInput" class="form-control-text" placeholder="https://wonderwijs-my.sharepoint.com/...">
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                        Quote van een leerling of gouden tip (optioneel):
+                    </label>
+                    <input type="text" id="quoteInput" class="form-control-text" placeholder="Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'">
+                </div>
+            </div>
+
+            <!-- VERZENDEN -->
+            <button type="submit" id="btnSubmitFeedback" class="btn-submit-feedback">
+                <span>🚀</span> Verstuur Feedback naar het Verwonderlab
+            </button>
+        </form>
+    </div>
+
+    <!-- SUCCES BEDANKSCHERM -->
+    <div id="feedbackSuccessView" class="success-card">
+        <div class="success-icon-badge">✓</div>
+        <span class="feedback-badge" style="background:#dcfce7; color:#15803d;">Ontvangen & Opgeslagen</span>
+        <h2 style="font-size: 28px; font-weight: 800; color: var(--slate-950); margin: 12px 0 8px 0;">
+            Hartelijk dank voor je feedback!
+        </h2>
+        <p style="font-size: 15px; color: var(--slate-600); max-width: 540px; margin: 0 auto 30px auto; line-height: 1.6;">
+            We hebben jouw ervaringen, tips en eventuele foto's succesvol ontvangen. Mede dankzij jouw input kunnen we het lesmateriaal in het Verwonderlab continu verbeteren en collega's binnen Wonderwijs inspireren!
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="index.html" class="btn-green-action" style="padding: 12px 26px; font-size: 14px;">
+                <span>🏠</span> Terug naar het Dashboard
+            </a>
+            <a href="lesideeen.html" class="pill-btn secondary" style="padding: 12px 22px; font-size: 14px;">
+                <span>💡</span> Bekijk meer lesideeën
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// FEEDBACK FORMULIER LOGICA
+// ==========================================
+const urlParams = new URLSearchParams(window.location.search);
+const paramResId = urlParams.get('resId') || '';
+const paramKist = urlParams.get('kist') || 'Verwonderlab Lesmateriaal';
+const paramPeriode = urlParams.get('periode') || 'Afgelopen periode';
+const paramDocent = urlParams.get('docent') || (localStorage.getItem('ww_huidige_leerkracht') || 'Collega');
+const paramEmail = urlParams.get('email') || (localStorage.getItem('ww_huidige_email') || '');
+const paramSchool = urlParams.get('school') || '';
+
+// Vul de context kaart direct in
+document.getElementById('displayKistNaam').innerText = paramKist;
+document.getElementById('displayPeriodeNaam').innerText = paramPeriode;
+document.getElementById('displayDocentEnSchool').innerText = `${paramDocent}${paramSchool ? ' • ' + paramSchool : ''}`;
+
+// Sterren beoordeling logica
+let gekozenSterren = 5;
+const starBtns = document.querySelectorAll('.star-btn');
+const starLabel = document.getElementById('starRatingLabel');
+const sterrenInput = document.getElementById('sterrenInput');
+
+const starTexts = {
+    1: "1 ster • Veel verbeterpunten",
+    2: "2 sterren • Matig bevallen",
+    3: "3 sterren • Voldoende & leerzaam",
+    4: "4 sterren • Erg leuk en aanrader!",
+    5: "5 sterren • Fantastisch project!"
+};
+
+function setStars(val) {
+    gekozenSterren = val;
+    sterrenInput.value = val;
+    starBtns.forEach(btn => {
+        const btnVal = parseInt(btn.getAttribute('data-val'));
+        btn.classList.toggle('active', btnVal <= val);
+    });
+    starLabel.innerText = starTexts[val] || `${val} sterren`;
+}
+
+starBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        setStars(parseInt(btn.getAttribute('data-val')));
+    });
+});
+setStars(5);
+
+// Pill selectie helper
+window.selectPill = function(labelEl, groupName) {
+    const group = document.getElementById(groupName);
+    if (!group) return;
+    group.querySelectorAll('.choice-pill-label').forEach(el => el.classList.remove('selected'));
+    labelEl.classList.add('selected');
+    const radio = labelEl.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+};
+
+// DG Domein kaart toggle
+window.toggleDgCard = function(cardEl) {
+    const cb = cardEl.querySelector('input[type="checkbox"]');
+    setTimeout(() => {
+        cardEl.classList.toggle('selected', cb.checked);
+    }, 10);
+};
+
+// Foto uploads & previews
+let geuploadeFotosBase64 = [];
+
+window.handleFotoUpload = function(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            geuploadeFotosBase64.push(e.target.result);
+            renderFotoPreviews();
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
+function renderFotoPreviews() {
+    const container = document.getElementById('fotoPreviewsContainer');
+    if (!container) return;
+
+    container.innerHTML = geuploadeFotosBase64.map((imgSrc, idx) => `
+        <div class="foto-preview-card">
+            <img src="${imgSrc}" alt="Projectfoto">
+            <button type="button" class="foto-preview-remove" onclick="window.removeFoto(${idx})" title="Verwijder foto">&times;</button>
+        </div>
+    `).join('');
+}
+
+window.removeFoto = function(idx) {
+    geuploadeFotosBase64.splice(idx, 1);
+    renderFotoPreviews();
+};
+
+// Formulier Verzenden
+document.getElementById('feedbackMainForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('btnSubmitFeedback');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> Bezig met opslaan...';
+
+    const geselecteerdeDomeinen = Array.from(document.querySelectorAll('input[name="dgDomeinen"]:checked')).map(el => el.value);
+    const geselecteerdEnthousiasme = document.querySelector('input[name="enthousiasme"]:checked') ? document.querySelector('input[name="enthousiasme"]:checked').value : 'Zeer enthousiast';
+    const geselecteerdeCompleetheid = document.querySelector('input[name="compleetStatus"]:checked') ? document.querySelector('input[name="compleetStatus"]:checked').value : 'Helemaal compleet en klaar';
+
+    const feedbackData = {
+        id: Date.now(),
+        resId: paramResId,
+        kist: paramKist,
+        periode: paramPeriode,
+        docent: paramDocent,
+        email: paramEmail,
+        school: paramSchool,
+        sterren: gekozenSterren,
+        enthousiasme: geselecteerdEnthousiasme,
+        compleetheid: geselecteerdeCompleetheid,
+        toelichting: document.getElementById('toelichtingInput').value.trim(),
+        dgDomeinen: geselecteerdeDomeinen,
+        specifiekeOpdracht: document.getElementById('specifiekeOpdrachtInput').value.trim(),
+        onedriveLink: document.getElementById('onedriveLinkInput').value.trim(),
+        quote: document.getElementById('quoteInput').value.trim(),
+        fotos: geuploadeFotosBase64,
+        datum: new Date().toISOString()
+    };
+
+    // 1. Opslaan in lokaal geheugen
+    try {
+        let lokaleFeedback = JSON.parse(localStorage.getItem('ww_feedback_v1') || '[]');
+        lokaleFeedback.push(feedbackData);
+        localStorage.setItem('ww_feedback_v1', JSON.stringify(lokaleFeedback));
+
+        // Update de reservering lokaal indien aanwezig
+        let reserveringen = JSON.parse(localStorage.getItem('ww_reserveringen_v11') || '[]');
+        const resIdx = reserveringen.findIndex(r => r.id == paramResId);
+        if (resIdx > -1) {
+            reserveringen[resIdx].feedbackOntvangen = true;
+            reserveringen[resIdx].feedbackData = feedbackData;
+            localStorage.setItem('ww_reserveringen_v11', JSON.stringify(reserveringen));
+        }
+    } catch(err) {
+        console.warn("Fout bij lokale feedback opslag:", err);
+    }
+
+    // 2. Opslaan in Firestore Cloud indien Firebase beschikbaar is
+    try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
+        const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
+            authDomain: "verwonderlab-portaal.firebaseapp.com",
+            projectId: "verwonderlab-portaal",
+            storageBucket: "verwonderlab-portaal.firebasestorage.app",
+            messagingSenderId: "778630419427",
+            appId: "1:778630419427:web:02d9ddd753f3efed2846d6"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Feedback document opslaan
+        await setDoc(doc(db, "feedback", feedbackData.id.toString()), feedbackData);
+
+        // Update reservering status in cloud
+        if (paramResId) {
+            await setDoc(doc(db, "reserveringen", paramResId.toString()), {
+                feedbackOntvangen: true,
+                feedbackDatum: feedbackData.datum
+            }, { merge: true });
+        }
+    } catch(cloudErr) {
+        console.warn("Cloud feedback opslag:", cloudErr);
+    }
+
+    // 3. Toon bedankscherm
+    document.getElementById('feedbackFormView').style.display = 'none';
+    document.getElementById('feedbackSuccessView').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
+</body>
+</html>
