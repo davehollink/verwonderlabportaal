@@ -318,18 +318,13 @@
 </div>
 
 <script>
-    // Functionaliteit voor het inloggen als beheerder
+    // Functionaliteit voor het openen van het beheerdersdashboard (zonder wachtwoord, geverifieerd via Microsoft SSO)
     function checkAdminPassword() {
-        const password = prompt("Voer het beheerderswachtwoord in:");
-        if (password === "Verw0nd3rl4b!") {
-            document.getElementById("leerkrachtView").style.display = "none";
-            document.getElementById("beheerdersView").style.display = "block";
-            document.getElementById("adminLoginBtn").style.display = "none";
-            document.getElementById("adminLogoutBtn").style.display = "inline-block";
-            document.getElementById("pageTitle").innerText = "Beheerders Dashboard";
-        } else if (password !== null) {
-            alert("Onjuist wachtwoord. Toegang geweigerd.");
-        }
+        document.getElementById("leerkrachtView").style.display = "none";
+        document.getElementById("beheerdersView").style.display = "block";
+        document.getElementById("adminLoginBtn").style.display = "none";
+        document.getElementById("adminLogoutBtn").style.display = "inline-block";
+        document.getElementById("pageTitle").innerText = "Beheerders Dashboard";
     }
 
     // Functionaliteit om uit te loggen als beheerder

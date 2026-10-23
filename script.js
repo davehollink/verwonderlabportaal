@@ -205,7 +205,54 @@ window.checkLeerkrachtLogin = function() {
         if (typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst();
         if (typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen();
         if (typeof window.reproduceerVinkjes === "function") window.reproduceerVinkjes();
+
+        if (sessionStorage.getItem('ww_open_admin') === 'true' && isBeheerder) {
+            sessionStorage.removeItem('ww_open_admin');
+            if (typeof window.checkAdminPassword === "function") {
+                window.checkAdminPassword();
+            }
+        }
     }, 200);
+};
+
+// Global functies voor beheerdersmodus (zonder wachtwoord, Microsoft SSO geautoriseerd)
+window.checkAdminPassword = function() {
+    const leerkrachtView = document.getElementById("leerkrachtView");
+    const beheerdersView = document.getElementById("beheerdersView");
+
+    // Als we niet op het dashboard zitten, navigeer naar index.html en open admin
+    if (!beheerdersView) {
+        sessionStorage.setItem('ww_open_admin', 'true');
+        window.location.href = 'index.html';
+        return;
+    }
+
+    if (leerkrachtView) leerkrachtView.style.display = "none";
+    beheerdersView.style.display = "block";
+
+    const adminBtn = document.getElementById("adminLoginBtn");
+    const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+    const pageTitle = document.getElementById("pageTitle");
+
+    if (adminBtn) adminBtn.style.display = "none";
+    if (adminLogoutBtn) adminLogoutBtn.style.display = "inline-block";
+    if (pageTitle) pageTitle.innerText = "Beheerders Dashboard";
+};
+
+window.logoutAdmin = function() {
+    const leerkrachtView = document.getElementById("leerkrachtView");
+    const beheerdersView = document.getElementById("beheerdersView");
+    const adminBtn = document.getElementById("adminLoginBtn");
+    const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+    const pageTitle = document.getElementById("pageTitle");
+
+    if (leerkrachtView) leerkrachtView.style.display = "";
+    if (beheerdersView) beheerdersView.style.display = "none";
+    if (adminBtn) adminBtn.style.display = "inline-block";
+    if (adminLogoutBtn) adminLogoutBtn.style.display = "none";
+
+    let huidigeNaam = localStorage.getItem('ww_huidige_leerkracht') || "Gastdocent";
+    if (pageTitle) pageTitle.innerText = "Welkom, " + huidigeNaam + "!";
 };
 
 // ==========================================
