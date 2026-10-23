@@ -62,7 +62,10 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 15px;">
-                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #334155;">E-mailadres (SSO / Account):</label>
+                <label style="display: flex; align-items: center; font-weight: bold; margin-bottom: 5px; color: #334155;">
+                    <span>E-mailadres (Microsoft 365 Account):</span>
+                    <span style="background: #ecfdf5; color: #059669; font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; margin-left: 8px; border: 1px solid #a7f3d0;">🔒 SSO Geverifieerd (@wonderwijs.nl)</span>
+                </label>
                 <input type="email" id="profielEmailInput" readonly style="width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #64748b;">
             </div>
 
@@ -151,6 +154,9 @@
     }
 </script>
 
+<script src="auth-config.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="auth.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

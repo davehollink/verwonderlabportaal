@@ -16,16 +16,6 @@
 </head>
 <body>
 
-<!-- NIEUW: E-mail Login Scherm -->
-<div id="emailLoginScherm" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f8fafc; z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; font-family: 'Ubuntu', sans-serif;">
-    <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" style="max-width: 200px; margin-bottom: 20px;">
-    <h2 style="color: #1e293b;">Welkom bij het Verwonderlab</h2>
-    <p style="color: #64748b; margin-bottom: 20px;">Vul je werk e-mailadres in om je eigen dashboard te openen.</p>
-    <div style="display: flex; gap: 10px;">
-        <input type="email" id="gebruikerEmailInput" placeholder="naam@wonderwijs.nl" style="padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; width: 250px;">
-        <button onclick="window.loginMetEmail()" style="background-color: #8CC63F; padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; color: white; font-weight: bold;">Naar Dashboard</button>
-    </div>
-</div>
 
 <div class="dashboard-container" id="mainApp">
     <aside class="sidebar">
@@ -379,6 +369,9 @@
     }
 </script>
 
+<script src="auth-config.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="auth.js"></script>
 <script src="script.js?v=vercelfix"></script>
 </body>
 </html>

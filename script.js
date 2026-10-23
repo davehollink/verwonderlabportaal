@@ -165,102 +165,66 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 })();
 
 // ==========================================
-// 3. E-MAIL LOGIN EN VEILIGHEID
+// 3. MICROSOFT 365 SSO AUTHENTICATIE & VEILIGHEID
 // ==========================================
 window.toonEmailLogin = function() {
-    let loginScherm = document.getElementById('emailLoginScherm');
-    
-    // Als het formulier niet hard-coded in index.html staat, bouwen we het hier in JS op
-    if (!loginScherm) {
-        loginScherm = document.createElement('div');
-        loginScherm.id = 'emailLoginScherm';
-        document.body.appendChild(loginScherm);
+    if (typeof window.controleerSSOAuthenticatie === "function") {
+        window.controleerSSOAuthenticatie();
     }
-    
-    // Dwing de opmaak af
-    loginScherm.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(241, 245, 249, 0.98); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Ubuntu', sans-serif;";
-    loginScherm.innerHTML = `
-        <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 90%; width: 400px;">
-            <h2 style="color: #1e293b; margin-bottom: 10px;">Welkom bij het Verwonderlab</h2>
-            <p style="color: #64748b; margin-bottom: 20px; font-size: 14px;">Vul je werk e-mailadres in om je persoonlijke dashboard te openen.</p>
-            <div style="display: flex; flex-direction: column; gap: 15px;">
-                <input type="email" id="gebruikerEmailInput" placeholder="bijv. b.jansen@wonderwijs.nl" style="padding: 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; width: 100%; box-sizing: border-box;">
-                <button onclick="window.loginMetEmail()" style="background-color: #8CC63F; padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%;">Inloggen</button>
-            </div>
-        </div>
-    `;
-    
-    // Verberg het dashboard volledig
-    const mainApp = document.querySelector('.dashboard-container') || document.getElementById('mainApp');
-    if (mainApp) mainApp.style.setProperty('display', 'none', 'important');
-};
-
-window.loginMetEmail = function() {
-    const emailInput = document.getElementById('gebruikerEmailInput');
-    const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
-
-    if (!email || !email.includes('@')) {
-        alert("Vul een geldig e-mailadres in om verder te gaan.");
-        return;
-    }
-
-    const naamDeel = email.split('@')[0];
-    const opgemaakteNaam = naamDeel.charAt(0).toUpperCase() + naamDeel.slice(1);
-
-    localStorage.setItem('ww_huidige_leerkracht', opgemaakteNaam);
-    localStorage.setItem('ww_huidige_email', email);
-
-    window.location.reload();
 };
 
 window.checkLeerkrachtLogin = function() {
     let huidigeNaam = localStorage.getItem('ww_huidige_leerkracht');
     let huidigeEmail = localStorage.getItem('ww_huidige_email');
 
-    // Als de browser nog een oud test-account herkent, verwijderen we deze direct
-    if (huidigeEmail === "gast@wonderwijs.nl" || huidigeEmail === "undefined" || !huidigeEmail || huidigeEmail.trim() === "") {
+    const vereistDomein = (window.AUTH_CONFIG && window.AUTH_CONFIG.allowedDomain) ? window.AUTH_CONFIG.allowedDomain.toLowerCase() : "@wonderwijs.nl";
+
+    // Strikte controle: Moet ingelogd zijn én het e-mailadres moet eindigen op @wonderwijs.nl
+    if (!huidigeEmail || !huidigeEmail.toLowerCase().endsWith(vereistDomein)) {
         localStorage.removeItem('ww_huidige_leerkracht');
         localStorage.removeItem('ww_huidige_email');
-        toonEmailLogin();
+        if (typeof window.controleerSSOAuthenticatie === "function") {
+            window.controleerSSOAuthenticatie();
+        }
         return; 
     }
 
-    // Als we wél een geldig e-mailadres hebben:
+    // Gebruiker is geauthenticeerd via Microsoft SSO (@wonderwijs.nl):
     setTimeout(() => {
         const pageTitle = document.getElementById('pageTitle');
-        if(pageTitle) pageTitle.innerText = 'Welkom, ' + huidigeNaam + '!';
+        if (pageTitle) pageTitle.innerText = 'Welkom, ' + huidigeNaam + '!';
 
         // Check Beheerdersrechten
-        const isBeheerder = beheerdersLijst.some(b => b.email === huidigeEmail);
+        const isBeheerder = beheerdersLijst.some(b => b.email && b.email.toLowerCase() === huidigeEmail.toLowerCase());
         const adminBtn = document.getElementById('adminLoginBtn');
-        if(adminBtn) adminBtn.style.display = isBeheerder ? 'inline-block' : 'none';
+        if (adminBtn) adminBtn.style.display = isBeheerder ? 'inline-block' : 'none';
 
         // Inladen van alle lijsten nu we geautoriseerd zijn
-        if(typeof window.renderReserveringsGrid === "function") window.renderReserveringsGrid();
-        if(typeof window.renderLesideeenGrid === "function") window.renderLesideeenGrid();
-        if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst();
-        if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen();
-        if(typeof window.reproduceerVinkjes === "function") window.reproduceerVinkjes();
+        if (typeof window.renderReserveringsGrid === "function") window.renderReserveringsGrid();
+        if (typeof window.renderLesideeenGrid === "function") window.renderLesideeenGrid();
+        if (typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst();
+        if (typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen();
+        if (typeof window.reproduceerVinkjes === "function") window.reproduceerVinkjes();
     }, 200);
-}
-
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('logout')) {
-        e.preventDefault();
-        localStorage.removeItem('ww_huidige_leerkracht');
-        localStorage.removeItem('ww_huidige_email');
-        window.location.reload(); 
-    }
-});
+};
 
 // ==========================================
 // 4. DOMCONTENTLOADED
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    const vereistDomein = (window.AUTH_CONFIG && window.AUTH_CONFIG.allowedDomain) ? window.AUTH_CONFIG.allowedDomain.toLowerCase() : "@wonderwijs.nl";
+    const huidigeEmail = localStorage.getItem('ww_huidige_email');
+    const isAuthenticated = huidigeEmail && huidigeEmail.toLowerCase().endsWith(vereistDomein);
+
     const mainApp = document.querySelector('.dashboard-container') || document.getElementById('mainApp');
     if (mainApp) {
-        mainApp.style.opacity = '1';
-        mainApp.style.visibility = 'visible';
+        if (isAuthenticated) {
+            mainApp.style.opacity = '1';
+            mainApp.style.visibility = 'visible';
+            mainApp.style.removeProperty('display');
+        } else {
+            mainApp.style.setProperty('display', 'none', 'important');
+        }
     }
 
     const currentPage = window.location.pathname.split("/").pop();
