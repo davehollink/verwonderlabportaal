@@ -623,7 +623,83 @@ let actieveDocentFilter = 'Alle';
 let actieveDocentZoekterm = '';
 let currentPdfs = [];
 
-const ictTips = ["Tip: Gebruik Canva Education (gratis voor scholen) om leerlingen zelf presentaties of posters te laten ontwerpen."];
+const ictTips = [
+    "Gebruik Canva Education (gratis voor scholen) om leerlingen zelf interactieve posters of presentaties te laten ontwerpen.",
+    "Laat kleuters bij de Bee-Bot eerst de route met hun eigen voeten lopen: dit 'embodied learning' versterkt het ruimtelijk inzicht.",
+    "Met de greenscreen-methode en de app DoInk nemen leerlingen binnen 15 minuten een live nieuwsjournaal of boekbespreking op.",
+    "Gebruik de Micro:bit versnellingsmeter als een stappenteller tijdens de gymles om bewegen en coderen direct te combineren.",
+    "Met Makey Makey en aluminiumfolie maken leerlingen in groep 5 binnen no-time een werkend drumstel of interactieve quizvloer.",
+    "Laat leerlingen bij LEGO Spike altijd in tweetallen werken met een vaste rol: één 'Bouwmeester' en één 'Programmeur' die per missie wisselen.",
+    "Bij stop-motion animatie met Piximakey geldt de gouden regel: 12 foto's per seconde zorgt voor een vloeiende, magische kinderfilm!",
+    "Bespreek tijdens een podcast-les ook online privacy: wie mag jouw stem horen en welke persoonlijke gegevens deel je liever niet online?"
+];
+
+window.updateAftelkalender = function() {
+    const daysEl = document.getElementById('countdownDaysValue');
+    const unitEl = document.getElementById('countdownDaysUnit');
+    const badgeEl = document.getElementById('countdownTrendBadge');
+    const infoEl = document.getElementById('countdownPeriodeInfo');
+    const barEl = document.getElementById('countdownProgressBar');
+    const startEl = document.getElementById('countdownStartDatum');
+    const eindEl = document.getElementById('countdownEindDatum');
+
+    if (!daysEl) return;
+
+    if (!periodes || periodes.length === 0) {
+        daysEl.innerText = "--";
+        if (infoEl) infoEl.innerText = "Geen actieve uitleenperiode ingesteld.";
+        return;
+    }
+
+    const nu = new Date();
+    // 1. Zoek actieve periode van dit moment
+    let actievePeriode = periodes.find(p => {
+        const s = new Date(p.start);
+        const e = new Date(p.eind);
+        e.setHours(23, 59, 59, 999);
+        return nu >= s && nu <= e;
+    });
+
+    // 2. Zo niet actief, neem eerstvolgende toekomstige periode
+    if (!actievePeriode) {
+        actievePeriode = periodes.filter(p => new Date(p.start) > nu).sort((a,b) => new Date(a.start) - new Date(b.start))[0];
+    }
+    // 3. Fallback naar eerste periode
+    if (!actievePeriode) {
+        actievePeriode = periodes[0];
+    }
+
+    if (actievePeriode) {
+        const startDatum = new Date(actievePeriode.start);
+        const eindDatum = new Date(actievePeriode.eind);
+        eindDatum.setHours(23, 59, 59, 999);
+
+        const totaalDagen = Math.max(1, Math.round((eindDatum - startDatum) / (1000 * 60 * 60 * 24)));
+        const resterendeMs = eindDatum - nu;
+        const resterendeDagen = Math.max(0, Math.ceil(resterendeMs / (1000 * 60 * 60 * 24)));
+        const verstrekenDagen = Math.max(0, Math.min(totaalDagen, totaalDagen - resterendeDagen));
+        const percentageVerstreken = Math.min(100, Math.max(5, Math.round((verstrekenDagen / totaalDagen) * 100)));
+
+        daysEl.innerText = resterendeDagen;
+        if (unitEl) unitEl.innerText = resterendeDagen === 1 ? "dag tot inleverdag" : "dagen tot inleverdag";
+        if (badgeEl) {
+            badgeEl.innerText = resterendeDagen <= 5 ? "⚠️ Inleverweek!" : "⏳ Lopende periode";
+            badgeEl.style.color = resterendeDagen <= 5 ? "#ef4444" : "#166534";
+        }
+        if (infoEl) infoEl.innerText = `Periode: ${actievePeriode.naam} • Breng kisten compleet retour`;
+        if (barEl) barEl.style.width = percentageVerstreken + '%';
+        if (startEl) startEl.innerText = `Start: ${actievePeriode.start}`;
+        if (eindEl) eindEl.innerText = `Inleverdag: ${actievePeriode.eind}`;
+    }
+};
+
+window.toonWillekeurigeTip = function() { 
+    const tipElement = document.getElementById('bentoTipText') || document.getElementById('tipText'); 
+    if (tipElement && typeof ictTips !== 'undefined' && ictTips.length > 0) {
+        const gekozen = ictTips[Math.floor(Math.random() * ictTips.length)];
+        tipElement.innerText = `"${gekozen.replace(/^Tip:\s*/i, '')}"`;
+    } 
+};
 
 function slaDataOp() {
     try {
@@ -668,7 +744,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         };
 
         // Tabellen Ophalen
-        onSnapshot(collection(db, "periodes"), (snapshot) => { if(!snapshot.empty) { periodes = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); } }, checkError);
+        onSnapshot(collection(db, "periodes"), (snapshot) => { if(!snapshot.empty) { periodes = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.updateAftelkalender === "function") window.updateAftelkalender(); } }, checkError);
         onSnapshot(collection(db, "scholen"), (snapshot) => { if(!snapshot.empty) { scholen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "beheerders"), (snapshot) => { if(!snapshot.empty) { beheerdersLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } else { beheerdersLijst = []; slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "leskisten"), (snapshot) => { if(!snapshot.empty) { leskisten = snapshot.docs.map(d => d.data()).sort((a,b) => a.id - b.id); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); } }, checkError);
@@ -859,6 +935,8 @@ window.checkLeerkrachtLogin = function() {
         if (typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst();
         if (typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen();
         if (typeof window.reproduceerVinkjes === "function") window.reproduceerVinkjes();
+        if (typeof window.updateAftelkalender === "function") window.updateAftelkalender();
+        if (typeof window.toonWillekeurigeTip === "function") window.toonWillekeurigeTip();
 
         if (sessionStorage.getItem('ww_open_admin') === 'true' && isBeheerder) {
             sessionStorage.removeItem('ww_open_admin');
@@ -996,6 +1074,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     if(typeof toonWillekeurigeTip === "function") toonWillekeurigeTip();
+    if(typeof window.updateAftelkalender === "function") window.updateAftelkalender();
 
     // Specifieke check voor profiel pagina
     if(window.location.pathname.includes('profiel.html')) {
@@ -2124,58 +2203,209 @@ window.renderStatistiekenTab = function() {
         </div>
     `;
 
-    // 3. Meest Gereserveerde Materialen (Visuele balken)
-    if (sortedKisten.length === 0) {
-        topKistenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen reserveringen geregistreerd.</p>`;
-    } else {
-        const maxCount = sortedKisten[0][1] || 1;
-        topKistenLijst.innerHTML = sortedKisten.slice(0, 8).map(([naam, count], i) => {
-            const perc = Math.round((count / maxCount) * 100);
-            const isTop = i === 0;
-            return `
-            <div style="margin-bottom: 14px;">
-                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 5px;">
-                    <span style="color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">${isTop ? '🏆 ' : ''}${naam}</span>
-                    <span style="color: #8CC63F; font-weight: 700;">${count}x</span>
-                </div>
-                <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
-                    <div style="background: linear-gradient(90deg, #8CC63F, #76ab33); width: ${perc}%; height: 100%; border-radius: 5px; transition: width 0.5s ease;"></div>
-                </div>
-            </div>`;
-        }).join('');
+    // 3. VISUELE GRAFIEKEN & DIAGRAMMEN (Chart.js)
+    if (typeof Chart !== 'undefined') {
+        window._chartInstances = window._chartInstances || {};
+        ['materialen', 'scholen', 'periodes', 'status'].forEach(k => {
+            if (window._chartInstances[k]) {
+                try { window._chartInstances[k].destroy(); } catch(e){}
+                window._chartInstances[k] = null;
+            }
+        });
+
+        // Grafiek 1: Populairste Materialen (Horizontal Bar Chart)
+        const canvasMat = document.getElementById('chartMaterialen');
+        if (canvasMat) {
+            const topKistenSlice = sortedKisten.slice(0, 6);
+            const matLabels = topKistenSlice.map(x => x[0].length > 22 ? x[0].substring(0, 20) + '...' : x[0]);
+            const matCounts = topKistenSlice.map(x => x[1]);
+
+            window._chartInstances.materialen = new Chart(canvasMat.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: matLabels.length > 0 ? matLabels : ['Nog geen data'],
+                    datasets: [{
+                        label: 'Aantal aanvragen',
+                        data: matCounts.length > 0 ? matCounts : [0],
+                        backgroundColor: 'rgba(140, 198, 63, 0.85)',
+                        hoverBackgroundColor: '#8CC63F',
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 11 } },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        y: {
+                            ticks: { font: { family: 'Plus Jakarta Sans', weight: '600', size: 12 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Grafiek 2: Verdeling per School (Doughnut Chart)
+        const canvasScholen = document.getElementById('chartScholen');
+        if (canvasScholen) {
+            const schoolLabels = sortedScholen.slice(0, 6).map(x => x[0]);
+            const schoolData = sortedScholen.slice(0, 6).map(x => x[1]);
+            const palette = ['#8CC63F', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#64748b'];
+
+            window._chartInstances.scholen = new Chart(canvasScholen.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: schoolLabels.length > 0 ? schoolLabels : ['Nog geen scholen'],
+                    datasets: [{
+                        data: schoolData.length > 0 ? schoolData : [1],
+                        backgroundColor: schoolData.length > 0 ? palette.slice(0, schoolLabels.length) : ['#e2e8f0'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 12,
+                                font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+                            }
+                        }
+                    },
+                    cutout: '62%'
+                }
+            });
+        }
+
+        // Grafiek 3: Aanvraagtrend per Periode (Bar Chart)
+        const canvasPeriodes = document.getElementById('chartPeriodes');
+        if (canvasPeriodes) {
+            const pLabels = (periodes || []).map(p => p.naam);
+            const pCounts = (periodes || []).map(p => reserveringen.filter(r => r.periodeId == p.id).length);
+
+            window._chartInstances.periodes = new Chart(canvasPeriodes.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: pLabels.length > 0 ? pLabels : ['Periode 1'],
+                    datasets: [{
+                        label: 'Reserveringen',
+                        data: pCounts.length > 0 ? pCounts : [0],
+                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                        hoverBackgroundColor: '#2563eb',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 11 } },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        x: {
+                            ticks: { font: { family: 'Plus Jakarta Sans', weight: '600', size: 11 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Grafiek 4: Statusverdeling (Doughnut Chart)
+        const canvasStatus = document.getElementById('chartStatus');
+        if (canvasStatus) {
+            const inBehandeling = reserveringen.filter(r => r.status === 'In behandeling' || !r.status).length;
+            const afgewezen = reserveringen.filter(r => r.status === 'Afgewezen').length;
+
+            window._chartInstances.status = new Chart(canvasStatus.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Geaccepteerd', 'In behandeling', 'Afgewezen'],
+                    datasets: [{
+                        data: totaal > 0 ? [geaccepteerd, inBehandeling, afgewezen] : [0, 0, 0],
+                        backgroundColor: ['#8CC63F', '#f59e0b', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 12,
+                                font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+                            }
+                        }
+                    },
+                    cutout: '62%'
+                }
+            });
+        }
     }
 
-    // 4. Meest Actieve Scholen
-    if (sortedScholen.length === 0) {
-        topScholenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen locaties geregistreerd.</p>`;
-    } else {
-        const medailles = ['🥇', '🥈', '🥉'];
-        topScholenLijst.innerHTML = sortedScholen.slice(0, 5).map(([schoolNaam, count], i) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
-                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
-                    <span style="font-size: 16px;">${medailles[i] || '🏫'}</span>
-                    <strong style="font-size: 13px; color: #1e293b; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${schoolNaam}</strong>
+    // 4. Ranglijst Scholen
+    if (topScholenLijst) {
+        if (sortedScholen.length === 0) {
+            topScholenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen locaties geregistreerd.</p>`;
+        } else {
+            const medailles = ['🥇', '🥈', '🥉'];
+            topScholenLijst.innerHTML = sortedScholen.slice(0, 5).map(([schoolNaam, count], i) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                        <span style="font-size: 16px;">${medailles[i] || '🏫'}</span>
+                        <strong style="font-size: 13px; color: #1e293b; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${schoolNaam}</strong>
+                    </div>
+                    <span style="background: rgba(140, 198, 63, 0.15); color: #4d7c0f; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; flex-shrink: 0;">${count}x</span>
                 </div>
-                <span style="background: #8CC63F; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; flex-shrink: 0;">${count} reservering${count > 1 ? 'en' : ''}</span>
-            </div>
-        `).join('');
+            `).join('');
+        }
     }
 
     // 5. Top Aanvragers (Leerkrachten)
-    if (sortedDocenten.length === 0) {
-        topDocentenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen leerkrachten geregistreerd.</p>`;
-    } else {
-        topDocentenLijst.innerHTML = sortedDocenten.slice(0, 5).map(([key, count]) => {
-            const [naam, email] = key.split('###');
-            return `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
-                <div style="overflow: hidden;">
-                    <strong style="font-size: 13px; color: #1e293b; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${naam}</strong>
-                    <span style="font-size: 11px; color: #64748b;">${email || 'Geen email'}</span>
-                </div>
-                <span style="background: #3b82f6; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; flex-shrink: 0;">${count}x</span>
-            </div>`;
-        }).join('');
+    if (topDocentenLijst) {
+        if (sortedDocenten.length === 0) {
+            topDocentenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen leerkrachten geregistreerd.</p>`;
+        } else {
+            topDocentenLijst.innerHTML = sortedDocenten.slice(0, 5).map(([key, count], i) => {
+                const [naam, email] = key.split('###');
+                return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                    <div style="overflow: hidden;">
+                        <strong style="font-size: 13px; color: #1e293b; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${naam}</strong>
+                        <span style="font-size: 11px; color: #64748b;">${email || 'Geen email'}</span>
+                    </div>
+                    <span style="background: rgba(59, 130, 246, 0.12); color: #1d4ed8; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; flex-shrink: 0;">${count}x</span>
+                </div>`;
+            }).join('');
+        }
     }
 
     // 6. Volledig Logboek

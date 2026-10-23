@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261023h">
+    <link rel="stylesheet" href="style.css?v=20261023j">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
@@ -14,6 +14,7 @@
             overflow-y: auto; 
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -73,58 +74,44 @@
                     </div>
                 </div>
 
-                <!-- Bento 2: Beschikbare Materialen -->
-                <div class="bento-card">
+                <!-- Bento 2: Aftelkalender & Inleverdag (Uitleentermijn) -->
+                <div class="bento-countdown-card">
                     <div class="bento-header">
-                        <span class="bento-label">Wonderlab Leskisten</span>
-                        <span class="bento-trend green">↗ 100% Inzetbaar</span>
+                        <span class="bento-label">📅 Inleverdeadline Leskisten</span>
+                        <span class="bento-trend green" id="countdownTrendBadge">⏳ Lopende periode</span>
                     </div>
-                    <div class="bento-metric" id="statLeskistenCount">34</div>
-                    <span class="bento-subtext">Materialen & technieksets beschikbaar</span>
-                    <div class="bento-wave">
-                        <svg viewBox="0 0 100 25" preserveAspectRatio="none">
-                            <path d="M0,20 Q25,5 50,15 T100,5 L100,25 L0,25 Z" fill="rgba(140, 198, 63, 0.2)"></path>
-                            <path d="M0,20 Q25,5 50,15 T100,5" fill="none" stroke="#8CC63F" stroke-width="2"></path>
-                        </svg>
+                    <div class="countdown-visual-box">
+                        <span class="countdown-metric" id="countdownDaysValue">--</span>
+                        <span class="countdown-unit" id="countdownDaysUnit">dagen tot inleverdag</span>
+                    </div>
+                    <span class="bento-subtext" id="countdownPeriodeInfo">Laden van actieve periode...</span>
+                    
+                    <div class="countdown-timeline">
+                        <div class="countdown-progress-bar" id="countdownProgressBar" style="width: 50%;"></div>
+                    </div>
+                    <div class="countdown-meta-row">
+                        <span id="countdownStartDatum">Start: ...</span>
+                        <span id="countdownEindDatum" style="color: #c2410c; font-weight: 700;">Inleverdag: ...</span>
                     </div>
                 </div>
 
-                <!-- Bento 3: Semicircle Gauge (zoals op voorbeeldfoto 2) -->
-                <div class="bento-card compliance-card">
+                <!-- Bento 3: Wist je dat...? (ICT & Technologie Inspiratie) -->
+                <div class="bento-inspiration-card">
                     <div class="bento-header">
-                        <span class="bento-label">Leerlijn Dekking</span>
-                        <span class="bento-dots">•••</span>
+                        <span class="bento-label">💡 Wist je dat...?</span>
+                        <button onclick="window.toonWillekeurigeTip()" class="btn-refresh-tip" title="Toon andere tip">↻ Nieuwe tip</button>
                     </div>
-                    <div class="gauge-container">
-                        <svg viewBox="0 0 120 70" class="semicircle-gauge">
-                            <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round"></path>
-                            <path d="M 15 60 A 45 45 0 0 1 45 25" fill="none" stroke="#f97316" stroke-width="10" stroke-linecap="round"></path>
-                            <path d="M 45 25 A 45 45 0 0 1 85 28" fill="none" stroke="#8CC63F" stroke-width="10" stroke-linecap="round"></path>
-                            <path d="M 85 28 A 45 45 0 0 1 105 60" fill="none" stroke="#3b82f6" stroke-width="10" stroke-linecap="round"></path>
-                        </svg>
-                        <div class="gauge-value">
-                            <span class="gauge-sub">Doelbereik</span>
-                            <strong class="gauge-number">94%</strong>
-                        </div>
+                    <div class="bento-tip-quote" id="bentoTipText">
+                        Laden van inspiratie...
                     </div>
-                    <div class="compliance-list">
-                        <div class="compliance-item">
-                            <span>Praktische vaardigheden (22a)</span>
-                            <span class="badge-status-pill live">Actief</span>
-                        </div>
-                        <div class="compliance-item">
-                            <span>Programmeren (23b)</span>
-                            <span class="badge-status-pill live">Actief</span>
-                        </div>
-                        <div class="compliance-item">
-                            <span>Mediawijsheid & AI (24b)</span>
-                            <span class="badge-status-pill draft">Gereed</span>
-                        </div>
+                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11.5px; color: var(--slate-400);">Wonderwijs Didactiek</span>
+                        <a href="lesideeen.html" class="glass-action-link" style="font-size: 11.5px; padding: 4px 12px;">Bekijk lesideeën →</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Twee Kolommen: Live Reserveringen Stream + Kalender & Wist je dat -->
+            <!-- Twee Kolommen: Live Reserveringen Stream + Kalender -->
             <div class="dashboard-layout" style="margin-top: 30px;">
                 <div class="left-column">
                     <section class="recent-tasks">
@@ -155,12 +142,6 @@
                             <h4>Binnenkort</h4>
                             <div id="upcomingEventsList"></div>
                         </div>
-                    </div>
-                    <div class="inspiration-widget" id="tipContainer">
-                        <div class="inspire-icon">💡</div>
-                        <h3>Wist je dat?</h3>
-                        <p id="tipText">Laden...</p>
-                        <a href="leerlijnen.html" class="inspire-link">Bekijk leerlijnen →</a>
                     </div>
                 </div>
             </div>
@@ -257,34 +238,78 @@
                     <!-- INKOOP- & CAPACITEIT ADVIESBOX -->
                     <div id="statsInkoopAdviesBox" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-left: 5px solid #8CC63F; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #bbf7d0; box-shadow: 0 4px 12px rgba(140, 198, 63, 0.08);"></div>
 
-                    <!-- TWEE KOLOMMEN: POPULAIRE KISTEN & TOP SCHOLEN/DOCENTEN -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 25px; margin-bottom: 35px;">
-                        <!-- Top Kisten -->
-                        <div style="background: white; border-radius: 14px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-                                <h3 style="margin: 0; font-size: 17px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                                    <span>📦</span> Meest Gereserveerde Materialen
+                    <!-- VISUELE GRAFIEKEN & DIAGRAMMEN GRID (Chart.js) -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px; margin-bottom: 30px;">
+                        <!-- Grafiek 1: Populairste Materialen (Bar Chart) -->
+                        <div class="stats-chart-card">
+                            <div class="stats-chart-header">
+                                <h3 class="stats-chart-title">
+                                    <span>📦</span> Top 6 Meest Gereserveerde Materialen
                                 </h3>
-                                <span style="font-size: 12px; color: #64748b; font-weight: 600;">Aantal aanvragen</span>
+                                <span class="stats-chart-badge">Populair</span>
                             </div>
-                            <div id="statsTopKistenLijst"></div>
+                            <div style="position: relative; height: 260px; width: 100%;">
+                                <canvas id="chartMaterialen"></canvas>
+                            </div>
                         </div>
 
-                        <!-- Top Scholen & Docenten -->
-                        <div style="display: flex; flex-direction: column; gap: 25px;">
-                            <div style="background: white; border-radius: 14px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                                <h3 style="margin: 0 0 16px 0; font-size: 17px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                                    <span>🏫</span> Meest Actieve Scholen
+                        <!-- Grafiek 2: Verdeling per School/Locatie (Doughnut Chart) -->
+                        <div class="stats-chart-card">
+                            <div class="stats-chart-header">
+                                <h3 class="stats-chart-title">
+                                    <span>🏫</span> Reserveringen per School
                                 </h3>
-                                <div id="statsTopScholenLijst"></div>
+                                <span class="stats-chart-badge">Verdeling</span>
                             </div>
+                            <div style="position: relative; height: 260px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                                <canvas id="chartScholen"></canvas>
+                            </div>
+                        </div>
+                    </div>
 
-                            <div style="background: white; border-radius: 14px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                                <h3 style="margin: 0 0 16px 0; font-size: 17px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                                    <span>👩‍🏫</span> Top Aanvragers (Leerkrachten)
+                    <!-- VISUELE GRAFIEKEN RIJ 2 (Periodes trend & Status) -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px; margin-bottom: 35px;">
+                        <!-- Grafiek 3: Aanvraagtrend per Periode (Bar Chart) -->
+                        <div class="stats-chart-card">
+                            <div class="stats-chart-header">
+                                <h3 class="stats-chart-title">
+                                    <span>📈</span> Aanvragen & Bezettingsgraad per Periode
                                 </h3>
-                                <div id="statsTopDocentenLijst"></div>
+                                <span class="stats-chart-badge">Tijdlijn</span>
                             </div>
+                            <div style="position: relative; height: 240px; width: 100%;">
+                                <canvas id="chartPeriodes"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Grafiek 4: Statusverdeling van Aanvragen (Doughnut Chart) -->
+                        <div class="stats-chart-card">
+                            <div class="stats-chart-header">
+                                <h3 class="stats-chart-title">
+                                    <span>📊</span> Goedkeuringen & Statusverdeling
+                                </h3>
+                                <span class="stats-chart-badge">Status</span>
+                            </div>
+                            <div style="position: relative; height: 240px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                                <canvas id="chartStatus"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Aanvragers (Leerkrachten) & Scholen overzicht lijstjes -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; margin-bottom: 35px;">
+                        <div style="background: white; border-radius: 14px; padding: 22px; border: 1.5px solid var(--slate-200); box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                            <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                                <span>👩‍🏫</span> Top Aanvragers (Leerkrachten)
+                            </h3>
+                            <div id="statsTopDocentenLijst"></div>
+                        </div>
+
+                        <div style="background: white; border-radius: 14px; padding: 22px; border: 1.5px solid var(--slate-200); box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                            <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                                <span>🏫</span> Ranglijst Scholen
+                            </h3>
+                            <div id="statsTopScholenLijst"></div>
                         </div>
                     </div>
 
@@ -577,6 +602,6 @@
 
 <script src="auth-config.js?v=20261023"></script>
 <script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261023h"></script>
+<script src="script.js?v=20261023j"></script>
 </body>
 </html>

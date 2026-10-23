@@ -699,6 +699,123 @@ body::after {
     color: #c2410c;
 }
 
+/* Bento Aftelkalender (Inleverdeadline) */
+.bento-countdown-card {
+    background: var(--glass-card);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--glass-shadow);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s var(--spring-easing);
+}
+
+.bento-countdown-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--glass-shadow-hover);
+}
+
+.countdown-visual-box {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 8px 0 4px 0;
+}
+
+.countdown-metric {
+    font-size: 44px;
+    font-weight: 800;
+    color: var(--slate-900);
+    line-height: 1;
+    letter-spacing: -1.5px;
+}
+
+.countdown-unit {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ww-green-dark);
+}
+
+.countdown-timeline {
+    margin-top: 14px;
+    background: rgba(241, 245, 249, 0.85);
+    border-radius: var(--radius-full);
+    height: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.countdown-progress-bar {
+    background: linear-gradient(90deg, #8CC63F 0%, #38bdf8 100%);
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.6s var(--spring-easing);
+}
+
+.countdown-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--slate-500);
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+/* Bento Wist je dat...? */
+.bento-inspiration-card {
+    background: var(--glass-card);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--glass-shadow);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.3s var(--spring-easing);
+}
+
+.bento-inspiration-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--glass-shadow-hover);
+}
+
+.bento-tip-quote {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--slate-700);
+    margin: 10px 0 16px 0;
+    flex-grow: 1;
+    background: rgba(254, 240, 138, 0.2);
+    border-left: 3px solid #eab308;
+    padding: 12px 14px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.btn-refresh-tip {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--slate-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-refresh-tip:hover {
+    background: #ffffff;
+    border-color: var(--ww-green);
+    color: var(--ww-green-dark);
+}
+
 /* =========================================================
    7. TWEE KOLOMMEN LAYOUT (LIVE STREAM + KALENDER)
    ========================================================= */
@@ -1582,6 +1699,51 @@ body::after {
     box-shadow: var(--glass-shadow);
 }
 
+/* Statistieken Grafieken & Diagrammen */
+.stats-chart-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    border: 1.5px solid var(--slate-200);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.25s var(--spring-easing);
+}
+
+.stats-chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    border-color: var(--ww-green);
+}
+
+.stats-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.stats-chart-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--slate-900);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.stats-chart-badge {
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(140, 198, 63, 0.12);
+    color: var(--ww-green-dark);
+}
+
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -1644,7 +1806,9 @@ body::after {
 }
 
 .modal-large .modal-content {
-    max-width: 850px;
+    max-width: 1060px;
+    width: 92%;
+    padding: 34px 38px;
 }
 
 .close-btn {
@@ -1674,8 +1838,8 @@ body::after {
    ========================================================= */
 .info-grid {
     display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 28px;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 32px;
     align-items: start;
     margin-top: 15px;
 }
