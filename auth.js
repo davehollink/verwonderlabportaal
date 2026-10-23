@@ -288,7 +288,7 @@
         }
 
         // Bouw de officiële Microsoft OAuth2 / OpenID Connect URL
-        const redirectUri = window.location.origin + window.location.pathname;
+        const redirectUri = config.redirectUri || (window.location.origin + window.location.pathname);
         const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
         const state = Math.random().toString(36).substring(2);
         

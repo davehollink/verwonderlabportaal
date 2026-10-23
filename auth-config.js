@@ -24,7 +24,7 @@
 // ============================================================
 
 window.AUTH_CONFIG = {
-    clientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", // Jouw gekopieerde Client ID
+    clientId: "32d15ddd-248a-4ec0-9c83-5fb320a55423", // Wonderwijs Microsoft 365 Azure Client ID
     authority: "https://login.microsoftonline.com/organizations",
     allowedDomain: "@wonderwijs.nl",
     autoSSO: true
