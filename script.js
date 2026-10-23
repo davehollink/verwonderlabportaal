@@ -1043,26 +1043,53 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 window.renderMijnReserveringen = function() {
     const teacherList = document.getElementById('teacherReservationsList');
+    const ingelogdeEmail = localStorage.getItem('ww_huidige_email');
+    const mijnReserveringen = (reserveringen && ingelogdeEmail) ? reserveringen.filter(r => r.aanvragerEmail === ingelogdeEmail) : [];
+
+    // Dynamische teller updates voor bento KPI kaarten
+    const statCountEl = document.getElementById('statReserveringenCount');
+    if (statCountEl) {
+        statCountEl.innerText = mijnReserveringen.length || 0;
+    }
+    const statKistenEl = document.getElementById('statLeskistenCount');
+    if (statKistenEl && typeof leskisten !== 'undefined') {
+        statKistenEl.innerText = leskisten.length || 34;
+    }
+
     if (!teacherList) return;
 
-    const ingelogdeEmail = localStorage.getItem('ww_huidige_email');
-    if (!ingelogdeEmail) return;
-
-    const mijnReserveringen = reserveringen.filter(r => r.aanvragerEmail === ingelogdeEmail);
-
     if (mijnReserveringen.length === 0) {
-        teacherList.innerHTML = `<p style="padding: 15px; color: #888; font-size: 13px;">Je hebt momenteel geen reserveringen.</p>`;
+        teacherList.innerHTML = `
+        <div style="padding: 28px 20px; text-align: center; background: rgba(248, 250, 252, 0.7); border-radius: var(--radius-md); border: 1.5px dashed rgba(203, 213, 225, 0.8);">
+            <div style="font-size: 28px; margin-bottom: 8px;">📦</div>
+            <p style="color: var(--slate-600); font-size: 14px; font-weight: 600; margin: 0 0 6px 0;">Geen actieve reserveringen</p>
+            <p style="color: var(--slate-400); font-size: 12.5px; margin: 0 0 16px 0;">Kies een leskist of digitaal leermiddel voor jouw klas.</p>
+            <a href="reserveren.html" class="pill-btn pill-btn-primary" style="display: inline-flex; font-size: 12.5px; padding: 8px 18px;">
+                <span>Bekijk leskisten & reserveer</span>
+                <span class="pill-arrow">→</span>
+            </a>
+        </div>`;
     } else {
         teacherList.innerHTML = mijnReserveringen.map(r => {
             const periode = periodes.find(p => p.id == r.periodeId);
-            let statusColor = r.status === "Geaccepteerd" ? "#8CC63F" : (r.status === "Afgewezen" ? "#ef4444" : "#f59e0b");
+            const isGeaccepteerd = r.status === "Geaccepteerd";
+            const isAfgewezen = r.status === "Afgewezen";
+            let statusColor = isGeaccepteerd ? "#6fa62c" : (isAfgewezen ? "#ef4444" : "#d97706");
+            let statusBg = isGeaccepteerd ? "rgba(140, 198, 63, 0.14)" : (isAfgewezen ? "rgba(239, 68, 68, 0.12)" : "rgba(245, 158, 11, 0.14)");
+            let statusBorder = isGeaccepteerd ? "rgba(140, 198, 63, 0.3)" : (isAfgewezen ? "rgba(239, 68, 68, 0.3)" : "rgba(245, 158, 11, 0.3)");
+            let statusIcon = isGeaccepteerd ? "✓" : (isAfgewezen ? "✕" : "⏳");
             return `
-            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${statusColor};">
-                <div>
-                    <strong style="display: block; font-size: 14px; color: #1e293b;">${r.kist}</strong>
-                    <span style="font-size: 12px; color: #64748b;">${periode ? periode.naam : ''}</span>
+            <div class="task-item" style="border-left: 4px solid ${statusColor};">
+                <div class="task-info">
+                    <strong>${r.kist}</strong>
+                    <span>Periode: ${periode ? periode.naam : 'Lopend schooljaar'} • Wonderwijs</span>
                 </div>
-                <span style="background: ${statusColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: bold;">${r.status}</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; font-size: 11.5px; padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                        <span>${statusIcon}</span>
+                        <span>${r.status}</span>
+                    </span>
+                </div>
             </div>`;
         }).join('');
     }

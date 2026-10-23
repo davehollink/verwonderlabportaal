@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261023e">
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20261023g">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
         .modal-content {
@@ -40,50 +40,162 @@
     <main class="main-content">
         <header class="top-bar">
             <div>
-                <h1 id="pageTitle" style="margin-bottom: 2px;">Welkom!</h1>
-                <p id="userEmailSubtitle" style="margin: 0; font-size: 13px; color: var(--text-muted); font-weight: 500;"></p>
+                <div class="pill-badge-live">
+                    <span class="live-dot pulse"></span>
+                    <span>Verwonderlab Portaal 2026 • Wonderwijs</span>
+                </div>
+                <h1 id="pageTitle" style="margin-bottom: 4px;">Welkom terug!</h1>
+                <p id="userEmailSubtitle" class="top-bar-subtitle"></p>
             </div>
-            <div class="top-actions" style="display: flex; gap: 10px; align-items: center;">
-                <button id="adminLoginBtn" class="btn-role" onclick="checkAdminPassword()" style="display: none;">Admin ⚙️</button>
-                <button id="adminLogoutBtn" class="btn-role" onclick="logoutAdmin()" style="display: none;">Verlaat Admin</button>
+            <div class="top-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button class="pill-btn primary" onclick="window.location.href='reserveren.html'"><span>📅</span> Snel reserveren</button>
+                <button class="pill-btn secondary" onclick="window.location.href='mailto:verwonderlab@wonderwijs.nl?subject=Storing Melden&body=Leskist:'"><span>⚠️</span> Storing melden</button>
+                <button id="adminLoginBtn" class="pill-btn admin" onclick="checkAdminPassword()" style="display: none;"><span>⚙️</span> Admin</button>
+                <button id="adminLogoutBtn" class="pill-btn admin-logout" onclick="logoutAdmin()" style="display: none;">Verlaat Admin</button>
             </div>
         </header>
 
-        <div id="leerkrachtView" class="dashboard-layout">
-            <div class="left-column">
-                <p style="color: var(--text-muted); font-size: 16px; margin-bottom: 20px;">Welkom bij het Verwonderlab reserveringssysteem.</p>
-                <section class="quick-actions">
-                    <button class="quick-btn" onclick="window.location.href='reserveren.html'"><span class="quick-icon">📅</span> Snel reserveren</button>
-                    <button class="quick-btn" onclick="window.location.href='mailto:verwonderlab@wonderwijs.nl?subject=Storing Melden&body=Leskist:'"><span class="quick-icon">⚠️️</span> Storing melden</button>
-                </section>
-                <section class="recent-tasks">
-                    <h2>Mijn reserveringen</h2>
-                    <div class="task-list" id="teacherReservationsList"></div>
-                </section>
-            </div>
-            <div class="right-column">
-                <div class="calendar-widget">
-                    <div class="calendar-header">
-                        <h3 id="monthYearText">Laden...</h3>
-                        <div class="calendar-nav">
-                            <span id="prevMonthBtn">&lt;</span>
-                            <span id="nextMonthBtn">&gt;</span>
-                        </div>
+        <div id="leerkrachtView">
+            <!-- Hero Getting Started Card (zoals op voorbeeldfoto 1) -->
+            <div class="getting-started-card">
+                <div class="getting-started-header">
+                    <div>
+                        <h3>Aan de slag in het Verwonderlab</h3>
+                        <p>Volg deze stappen voor een succesvolle inzet van technologie in jouw klas</p>
                     </div>
-                    <div class="calendar-days-grid" id="calendarGrid">
-                        <div class="day-name">Ma</div><div class="day-name">Di</div><div class="day-name">Wo</div>
-                        <div class="day-name">Do</div><div class="day-name">Vr</div><div class="day-name">Za</div><div class="day-name">Zo</div>
-                    </div>
-                    <div class="upcoming-events">
-                        <h4>Binnenkort</h4>
-                        <div id="upcomingEventsList"></div>
+                    <div class="progress-pill">
+                        <span id="onboardingProgressText">75% Voltooid</span>
                     </div>
                 </div>
-                <div class="inspiration-widget" id="tipContainer">
-                    <div class="inspire-icon">💡</div>
-                    <h3>Wist je dat?</h3>
-                    <p id="tipText">Laden...</p>
-                    <a href="leerlijnen.html" class="inspire-link">Bekijk leerlijnen →</a>
+                <div class="progress-track">
+                    <div class="progress-fill" id="onboardingProgressBar" style="width: 75%;"></div>
+                </div>
+                <div class="getting-started-list">
+                    <div class="checklist-item done">
+                        <span class="check-icon">✓</span>
+                        <span>Aangemeld met beveiligd @wonderwijs.nl Microsoft 365 account</span>
+                    </div>
+                    <div class="checklist-item done">
+                        <span class="check-icon">✓</span>
+                        <a href="lesideeen.html">Lesideeën & kant-en-klare lesbrieven bekijken</a>
+                    </div>
+                    <div class="checklist-item done">
+                        <span class="check-icon">✓</span>
+                        <a href="reserveren.html">Leskist reserveren voor de komende periode</a>
+                    </div>
+                    <div class="checklist-item">
+                        <span class="check-icon pending">○</span>
+                        <a href="leerlijnen.html">Doelen afvinken in de Leerlijn Digitale Geletterdheid</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bento Stats Grid (zoals op voorbeeldfoto 1 & 2) -->
+            <div class="bento-stats-grid">
+                <!-- Bento 1: Reserveringen -->
+                <div class="bento-card">
+                    <div class="bento-header">
+                        <span class="bento-label">Mijn Reserveringen</span>
+                        <span class="bento-trend green">↗ Actief</span>
+                    </div>
+                    <div class="bento-metric" id="statReserveringenCount">1</div>
+                    <span class="bento-subtext">Actuele aanvragen in jouw portaal</span>
+                    <div class="bento-equalizer">
+                        <span style="height: 40%;"></span><span style="height: 70%;"></span><span style="height: 55%;"></span><span style="height: 90%;"></span>
+                        <span style="height: 60%;"></span><span style="height: 80%;"></span><span style="height: 45%;"></span><span style="height: 75%;"></span>
+                        <span style="height: 100%;"></span><span style="height: 65%;"></span><span style="height: 50%;"></span><span style="height: 85%;"></span>
+                    </div>
+                </div>
+
+                <!-- Bento 2: Beschikbare Materialen -->
+                <div class="bento-card">
+                    <div class="bento-header">
+                        <span class="bento-label">Wonderlab Leskisten</span>
+                        <span class="bento-trend green">↗ 100% Inzetbaar</span>
+                    </div>
+                    <div class="bento-metric" id="statLeskistenCount">34</div>
+                    <span class="bento-subtext">Materialen & technieksets beschikbaar</span>
+                    <div class="bento-wave">
+                        <svg viewBox="0 0 100 25" preserveAspectRatio="none">
+                            <path d="M0,20 Q25,5 50,15 T100,5 L100,25 L0,25 Z" fill="rgba(140, 198, 63, 0.2)"></path>
+                            <path d="M0,20 Q25,5 50,15 T100,5" fill="none" stroke="#8CC63F" stroke-width="2"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Bento 3: Semicircle Gauge (zoals op voorbeeldfoto 2) -->
+                <div class="bento-card compliance-card">
+                    <div class="bento-header">
+                        <span class="bento-label">Leerlijn Dekking</span>
+                        <span class="bento-dots">•••</span>
+                    </div>
+                    <div class="gauge-container">
+                        <svg viewBox="0 0 120 70" class="semicircle-gauge">
+                            <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round"></path>
+                            <path d="M 15 60 A 45 45 0 0 1 45 25" fill="none" stroke="#f97316" stroke-width="10" stroke-linecap="round"></path>
+                            <path d="M 45 25 A 45 45 0 0 1 85 28" fill="none" stroke="#8CC63F" stroke-width="10" stroke-linecap="round"></path>
+                            <path d="M 85 28 A 45 45 0 0 1 105 60" fill="none" stroke="#3b82f6" stroke-width="10" stroke-linecap="round"></path>
+                        </svg>
+                        <div class="gauge-value">
+                            <span class="gauge-sub">Doelbereik</span>
+                            <strong class="gauge-number">94%</strong>
+                        </div>
+                    </div>
+                    <div class="compliance-list">
+                        <div class="compliance-item">
+                            <span>Praktische vaardigheden (22a)</span>
+                            <span class="badge-status-pill live">Actief</span>
+                        </div>
+                        <div class="compliance-item">
+                            <span>Programmeren (23b)</span>
+                            <span class="badge-status-pill live">Actief</span>
+                        </div>
+                        <div class="compliance-item">
+                            <span>Mediawijsheid & AI (24b)</span>
+                            <span class="badge-status-pill draft">Gereed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Twee Kolommen: Live Reserveringen Stream + Kalender & Wist je dat -->
+            <div class="dashboard-layout" style="margin-top: 30px;">
+                <div class="left-column">
+                    <section class="recent-tasks">
+                        <div class="section-title-bar">
+                            <div class="title-with-live">
+                                <span class="live-dot pulse"></span>
+                                <h2 style="font-size: 19px; margin: 0; color: #0f172a;">Live Reserveringen Overzicht</h2>
+                            </div>
+                            <a href="reserveren.html" class="glass-action-link">Nieuwe aanvraag +</a>
+                        </div>
+                        <div class="task-list" id="teacherReservationsList"></div>
+                    </section>
+                </div>
+                <div class="right-column">
+                    <div class="calendar-widget">
+                        <div class="calendar-header">
+                            <h3 id="monthYearText">Laden...</h3>
+                            <div class="calendar-nav">
+                                <span id="prevMonthBtn">&lt;</span>
+                                <span id="nextMonthBtn">&gt;</span>
+                            </div>
+                        </div>
+                        <div class="calendar-days-grid" id="calendarGrid">
+                            <div class="day-name">Ma</div><div class="day-name">Di</div><div class="day-name">Wo</div>
+                            <div class="day-name">Do</div><div class="day-name">Vr</div><div class="day-name">Za</div><div class="day-name">Zo</div>
+                        </div>
+                        <div class="upcoming-events">
+                            <h4>Binnenkort</h4>
+                            <div id="upcomingEventsList"></div>
+                        </div>
+                    </div>
+                    <div class="inspiration-widget" id="tipContainer">
+                        <div class="inspire-icon">💡</div>
+                        <h3>Wist je dat?</h3>
+                        <p id="tipText">Laden...</p>
+                        <a href="leerlijnen.html" class="inspire-link">Bekijk leerlijnen →</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -499,6 +611,6 @@
 
 <script src="auth-config.js?v=20261023"></script>
 <script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261023f"></script>
+<script src="script.js?v=20261023g"></script>
 </body>
 </html>
