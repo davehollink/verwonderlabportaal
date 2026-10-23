@@ -580,49 +580,194 @@ body { font-family: 'Ubuntu', sans-serif; background-color: var(--bg-color); col
 .lesbrief-drawer {
     display: none;
     margin-top: 20px;
-    padding: 18px;
+    padding: 22px;
     background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    font-size: 13px;
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 13.5px;
     color: #334155;
     line-height: 1.6;
     animation: fadeIn 0.25s ease-out;
 }
 
+.lesbrief-time-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.time-stat-badge {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.time-stat-icon {
+    font-size: 22px;
+}
+
+.time-stat-badge strong {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.5px;
+}
+
+.time-stat-badge span {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
 .lesbrief-section {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .lesbrief-section h4 {
-    margin: 0 0 6px 0;
-    font-size: 14px;
+    margin: 0 0 8px 0;
+    font-size: 14.5px;
     color: #0f172a;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.lesbrief-dg-box {
+    background: #ffffff;
+    border: 1.5px solid #8CC63F;
+    border-left: 5px solid #8CC63F;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 6px rgba(140, 198, 63, 0.08);
+}
+
+.dg-domain-badge {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #166534;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #bbf7d0;
+}
+
+.dg-goals-list {
+    margin: 6px 0 0 0;
+    padding-left: 18px;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.dg-goals-list li {
+    margin-bottom: 4px;
+}
+
+.lesbrief-materials-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.material-col p {
+    margin: 4px 0 0 0;
+    color: #334155;
+    font-size: 13px;
+}
+
+.mat-label {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 12.5px;
+}
+
+.prep-note {
+    background: #f8fafc;
+    border-left: 3px solid #0284c7;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: #0369a1;
 }
 
 .lesbrief-step-card {
     background: white;
-    padding: 10px 14px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    border-left: 3px solid #8CC63F;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #8CC63F;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
 }
 
-.lesbrief-step-card strong {
-    color: #0f172a;
+.lesbrief-step-card.step-inleiding { border-left-color: #3b82f6; }
+.lesbrief-step-card.step-kern { border-left-color: #8CC63F; }
+.lesbrief-step-card.step-afsluiting { border-left-color: #f59e0b; }
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.step-num {
+    background: #0f172a;
+    color: white;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.step-content {
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.lesbrief-diff-card {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: #92400e;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.diff-star {
+    border-bottom: 1px dashed #fcd34d;
+    padding-bottom: 6px;
 }
 
 .lesbrief-cta {
     background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 10px;
-    padding: 14px;
+    border: 1.5px solid #8CC63F;
+    border-radius: 12px;
+    padding: 18px;
     margin-top: 15px;
     text-align: center;
+    box-shadow: 0 4px 12px rgba(140, 198, 63, 0.12);
 }
 /* =========================================================
    10. DESKTOP SPECIFIEKE LAYOUT (Schermen breder dan 768px)
