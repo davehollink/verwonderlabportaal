@@ -2,7 +2,7 @@
 // MICROSOFT 365 SSO AUTHENTICATIE MODULE (WonderWijs)
 // ============================================================
 // Volledig zelfstandige Microsoft 365 SSO module met
-// PKCE Authorization Code flow (standaard voor Microsoft Entra SPA).
+// PKCE Authorization Code redirect flow (standaard voor Microsoft Entra SPA).
 // ============================================================
 
 (function() {
@@ -92,7 +92,18 @@
 
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error_description || errorData.error || `HTTP ${res.status}`);
+            const rawErr = errorData.error_description || errorData.error || `HTTP ${res.status}`;
+            if (rawErr.includes('AADSTS9002326')) {
+                throw new Error(`<strong>Platform-instelling in Microsoft Entra moet op 'SPA' staan:</strong><br>
+                In Microsoft Entra ID staat de Omleidings-URI nu onder het platform <strong>"Web"</strong> in plaats van <strong>"Single-page application" (SPA)</strong>.<br><br>
+                <strong>Oplossing:</strong><br>
+                1. Ga naar het tabblad <em>Microsoft Entra admin center</em>.<br>
+                2. Ga in de App-registratie naar <strong>Authenticatie</strong> (Authentication).<br>
+                3. Klik op <strong>+ Een platform toevoegen</strong> en kies <strong>Single-page application (SPA)</strong>.<br>
+                4. Vul de Omleidings-URI in: <code>${redirectUri}</code>.<br>
+                5. Verwijder het oude platform <strong>Web</strong> (via het prullenbakje) en klik op <strong>Opslaan</strong>.`);
+            }
+            throw new Error(rawErr);
         }
 
         return await res.json();
@@ -177,6 +188,12 @@
             </div>
         ` : '';
 
+        const statusMeldingHtml = opties.statusMelding ? `
+            <div style="background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; padding: 14px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5; margin-bottom: 20px; text-align: center;">
+                ${opties.statusMelding}
+            </div>
+        ` : '';
+
         loginOverlay.innerHTML = `
             <div style="background: white; width: 100%; max-width: 440px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e2e8f0; text-align: center;">
                 <div style="height: 6px; background: #8CC63F; width: 100%;"></div>
@@ -188,6 +205,7 @@
                     <p style="color: #64748b; font-size: 14px; margin: 0 0 20px 0;">Portaal voor Leskisten & Digitale Geletterdheid</p>
                     
                     ${foutmeldingHtml}
+                    ${statusMeldingHtml}
 
                     <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #334155; font-size: 13px; font-weight: 500;">
@@ -252,7 +270,7 @@
         }
     }
 
-    // Publieke functie: Inloggen met Microsoft 365 via PKCE
+    // Publieke functie: Inloggen met Microsoft 365 via directe redirect (betrouwbaarst voor alle browsers)
     window.loginMetMicrosoft = async function() {
         const config = window.AUTH_CONFIG || {};
         const clientId = config.clientId ? config.clientId.trim() : "";
@@ -274,20 +292,21 @@
         const btn = document.getElementById('msLoginBtn');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = `<span>⏳ Verifiëren bij Microsoft 365...</span>`;
+            btn.innerHTML = `<span>⏳ Doorsturen naar Microsoft 365...</span>`;
         }
 
         try {
+            // Zorg voor een eenduidige redirect URI (exact zoals in Azure Entra ID geregistreerd)
             const redirectUri = config.redirectUri || (window.location.origin + window.location.pathname);
             const state = Math.random().toString(36).substring(2);
             const codeVerifier = generateCodeVerifier();
             const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-            sessionStorage.setItem('ww_ms_code_verifier', codeVerifier);
-            sessionStorage.setItem('ww_ms_redirect_uri', redirectUri);
-            sessionStorage.setItem('ww_ms_auth_state', state);
+            // Sla PKCE gegevens op in localStorage (blijft altijd behouden bij redirect)
+            localStorage.setItem('ww_ms_code_verifier', codeVerifier);
+            localStorage.setItem('ww_ms_redirect_uri', redirectUri);
+            localStorage.setItem('ww_ms_auth_state', state);
 
-            // Gebruik response_type="code" met PKCE (standaard voor Microsoft Entra SPA)
             const params = new URLSearchParams({
                 client_id: clientId,
                 response_type: "code",
@@ -304,74 +323,8 @@
             const authority = config.authority || "https://login.microsoftonline.com/organizations";
             const authUrl = `${authority.replace(/\/$/, '')}/oauth2/v2.0/authorize?${params.toString()}`;
 
-            const width = 500;
-            const height = 650;
-            const left = (window.screen.width - width) / 2;
-            const top = (window.screen.height - height) / 2;
-
-            const popup = window.open(authUrl, "ms_login_popup", `width=${width},height=${height},top=${top},left=${left}`);
-            if (!popup || popup.closed || typeof popup.closed === "undefined") {
-                // Popup geblokkeerd, val terug op redirect
-                window.location.href = authUrl;
-                return;
-            }
-
-            // Monitor popup
-            const timer = setInterval(async () => {
-                try {
-                    if (popup.closed) {
-                        clearInterval(timer);
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.innerHTML = `
-                                <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-                                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-                                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-                                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-                                </svg>
-                                <span>Aanmelden met Microsoft 365</span>
-                            `;
-                        }
-                        return;
-                    }
-
-                    if (popup.location.href.includes(redirectUri)) {
-                        const search = popup.location.search;
-                        const hash = popup.location.hash;
-                        popup.close();
-                        clearInterval(timer);
-
-                        const searchParams = new URLSearchParams(search);
-                        const code = searchParams.get('code');
-
-                        if (code) {
-                            try {
-                                const tokenData = await wisselCodeOmVoorToken(code, codeVerifier, redirectUri);
-                                if (tokenData && tokenData.id_token) {
-                                    const payload = decodeerJwtToken(tokenData.id_token);
-                                    verwerkMicrosoftToken(payload);
-                                }
-                            } catch (tokenErr) {
-                                toonLoginScherm({ foutmelding: `<strong>Token ophalen mislukt:</strong><br>${tokenErr.message}` });
-                            }
-                        } else if (searchParams.get('error')) {
-                            const desc = searchParams.get('error_description') || searchParams.get('error');
-                            toonLoginScherm({ foutmelding: `<strong>Aanmelden mislukt:</strong><br>${desc}` });
-                        } else if (hash && hash.includes('id_token=')) {
-                            // Fallback voor implicit flow indien actief
-                            const hashParams = new URLSearchParams(hash.substring(1));
-                            const idToken = hashParams.get('id_token');
-                            if (idToken) {
-                                const payload = decodeerJwtToken(idToken);
-                                verwerkMicrosoftToken(payload);
-                            }
-                        }
-                    }
-                } catch (e) {
-                    // Cross-origin tijdens inloggen op Microsoft domein
-                }
-            }, 500);
+            // Directe navigatie naar Microsoft (werkt 100% gegarandeerd, geen pop-up blockers)
+            window.location.href = authUrl;
 
         } catch (err) {
             console.error("Fout tijdens Microsoft 365 login:", err);
@@ -389,21 +342,29 @@
         localStorage.removeItem('ww_huidige_email');
         localStorage.removeItem('ww_standaard_school');
         localStorage.removeItem('ww_auth_provider');
+        localStorage.removeItem('ww_ms_code_verifier');
+        localStorage.removeItem('ww_ms_redirect_uri');
+        localStorage.removeItem('ww_ms_auth_state');
 
         window.location.reload();
     };
 
-    // Controleer redirect (code of id_token in huidige URL)
+    // Controleer redirect (code of id_token in huidige URL na terugkeer van Microsoft)
     async function controleerRedirect() {
-        // Controleer search params (?code=...)
+        // 1. Controleer search params (?code=...)
         if (window.location.search && window.location.search.includes('code=')) {
+            toonLoginScherm({ statusMelding: '⏳ Sessie afronden en inloggen bij Wonderwijs...' });
+
             const searchParams = new URLSearchParams(window.location.search);
             const code = searchParams.get('code');
-            const codeVerifier = sessionStorage.getItem('ww_ms_code_verifier');
-            const redirectUri = sessionStorage.getItem('ww_ms_redirect_uri') || (window.location.origin + window.location.pathname);
+            const codeVerifier = localStorage.getItem('ww_ms_code_verifier');
+            const redirectUri = localStorage.getItem('ww_ms_redirect_uri') || (window.location.origin + window.location.pathname);
+
+            // Ruim query string direct op uit de browser balk
+            history.replaceState(null, '', window.location.pathname);
 
             if (code && codeVerifier) {
-                history.replaceState(null, '', window.location.pathname);
+                localStorage.removeItem('ww_ms_code_verifier');
                 try {
                     const tokenData = await wisselCodeOmVoorToken(code, codeVerifier, redirectUri);
                     if (tokenData && tokenData.id_token) {
@@ -415,10 +376,22 @@
                     toonLoginScherm({ foutmelding: `<strong>Aanmelden mislukt:</strong><br>${e.message}` });
                     return false;
                 }
+            } else if (!codeVerifier) {
+                toonLoginScherm({ foutmelding: '<strong>Sessie verlopen:</strong> Kon verificatiecode niet koppelen. Klik opnieuw op "Aanmelden met Microsoft 365".' });
+                return false;
             }
         }
 
-        // Controleer hash (#id_token=...)
+        // 2. Foutmelding van Microsoft in query params (?error=...)
+        if (window.location.search && window.location.search.includes('error=')) {
+            const searchParams = new URLSearchParams(window.location.search);
+            const desc = searchParams.get('error_description') || searchParams.get('error');
+            history.replaceState(null, '', window.location.pathname);
+            toonLoginScherm({ foutmelding: `<strong>Aanmelden geannuleerd of mislukt:</strong><br>${decodeURIComponent(desc)}` });
+            return false;
+        }
+
+        // 3. Fallback: Controleer hash (#id_token=...) indien implicit flow actief is
         if (window.location.hash && window.location.hash.includes('id_token=')) {
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const idToken = hashParams.get('id_token');
@@ -433,7 +406,7 @@
 
     // Hoofdfunctie voor authenticatiecontrole
     window.controleerSSOAuthenticatie = async function() {
-        // Controleer redirect response
+        // Controleer eerst of we net terugkeren van een Microsoft redirect
         const viaRedirect = await controleerRedirect();
         if (viaRedirect) {
             return true;
@@ -461,6 +434,23 @@
     } else {
         window.controleerSSOAuthenticatie();
     }
+
+    // Zorg dat de login knop altijd actief is (ook bij terugnavigeren of paginaherstel)
+    window.addEventListener('pageshow', () => {
+        const btn = document.getElementById('msLoginBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#00a4ef"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#ffb900"/>
+                </svg>
+                <span>Aanmelden met Microsoft 365</span>
+            `;
+        }
+    });
 
     // Vang alle kliks op '.logout' knoppen af
     document.addEventListener('click', (e) => {
