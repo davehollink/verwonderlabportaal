@@ -20,6 +20,98 @@ function safeGetLocal(key, defaultData) {
     return defaultData;
 }
 
+window.openInOutlook = function(to, subject, body) {
+    const cleanTo = (to || "").trim();
+    const encodedTo = encodeURIComponent(cleanTo);
+    const encodedSubject = encodeURIComponent(subject || "");
+    const encodedBody = encodeURIComponent(body || "");
+
+    // 1. Direct Outlook Web Deeplink voor Microsoft 365 (Stichting Wonderwijs)
+    const outlookWebUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`;
+
+    // Probeer direct Outlook Web te openen in een nieuw tabblad
+    const outlookWindow = window.open(outlookWebUrl, '_blank');
+
+    // 2. Fallback: als pop-up venster wordt geblokkeerd of lokale Outlook client actief is
+    if (!outlookWindow || outlookWindow.closed || typeof outlookWindow.closed === 'undefined') {
+        window.location.href = `mailto:${cleanTo}?subject=${encodedSubject}&body=${encodedBody}`;
+    }
+};
+
+window.detecteerKistNaam = function(titel, beschrijving) {
+    const text = ((titel || '') + ' ' + (beschrijving || '')).toLowerCase();
+    if (text.includes('bee-bot') || text.includes('beebot')) return 'Bee-Bot';
+    if (text.includes('blue-bot') || text.includes('bluebot')) return 'Blue-Bot';
+    if (text.includes('green screen studio') || text.includes('greenscreen studio')) return 'Green Screen Studio';
+    if (text.includes('green screen') || text.includes('greenscreen')) return 'Green Screen Studio';
+    if (text.includes('makey makey') || text.includes('makeymakey')) return 'Makey Makey';
+    if (text.includes('micro:bit') || text.includes('microbit')) return 'Micro:bit';
+    if (text.includes('ozobot')) return 'Ozobot';
+    if (text.includes('classvr') || text.includes('vr bril') || text.includes('virtual reality') || text.includes('vr')) return 'VR Brillen';
+    if (text.includes('spike essential') || text.includes('lego essential')) return 'LEGO Spike Essential';
+    if (text.includes('spike prime') || text.includes('lego spike')) return 'LEGO Spike Prime';
+    if (text.includes('lego bricq') || text.includes('bricq')) return 'LEGO BricQ Motion';
+    if (text.includes('podcast')) return 'Podcast Studio';
+    if (text.includes('3d pen') || text.includes('3dpennen')) return '3D Pennen';
+    if (text.includes('3d printer') || text.includes('3dprinter')) return '3D Printer';
+    if (text.includes('piximakey') || text.includes('stop-motion') || text.includes('animatie')) return 'Piximakey';
+    if (text.includes('mtiny')) return 'mTiny';
+    if (text.includes('dash')) return 'Dash & Dot Robot';
+    if (text.includes('cue')) return 'Cue Robot';
+    if (text.includes('drone')) return 'Drones';
+    if (text.includes('duplo')) return 'DUPLO Coding Express';
+    if (text.includes('easiscope') || text.includes('microscoop')) return 'Easi-Scope Microscoop';
+    if (text.includes('infento pro')) return 'Infento Pro Kit';
+    if (text.includes('infento')) return 'Infento Talent Kit';
+    if (text.includes('intelino') || text.includes('trein')) return 'Intelino Slimme Trein';
+    if (text.includes('osmo')) return 'Osmo';
+    if (text.includes('kiene klanken')) return 'Kiene Klanken';
+    if (text.includes('sphero indi') || text.includes('indi')) return 'Sphero Indi';
+    if (text.includes('sphero mini') || text.includes('sphero')) return 'Sphero Mini';
+    if (text.includes('virtual-tee') || text.includes('virtuali-tee')) return 'Virtuali-Tee';
+    if (text.includes('plugo')) return 'Plugo';
+    if (text.includes('photon')) return 'Photon';
+    if (text.includes('ipad') || text.includes('tablet')) return 'iPad Kist';
+    return 'Wonderlab Leskist';
+};
+
+window.getAfbeeldingVoorKist = function(naam) {
+    const clean = (naam || '').toLowerCase();
+    if (clean.includes('bee-bot') || clean.includes('beebot')) return 'img/beebot.jpg';
+    if (clean.includes('blue-bot') || clean.includes('bluebot')) return 'img/bluebot.jpg';
+    if (clean.includes('green screen studio') || clean.includes('greenscreen studio') || clean.includes('greenscreenstudio')) return 'img/greenscreenstudio.jpg';
+    if (clean.includes('green screen') || clean.includes('greenscreen')) return 'img/greenscreen.jpg';
+    if (clean.includes('makey makey') || clean.includes('makeymakey')) return 'img/makeymakey.jpg';
+    if (clean.includes('micro:bit') || clean.includes('microbit')) return 'img/microbit.jpg';
+    if (clean.includes('ozobot')) return 'img/ozobot.jpg';
+    if (clean.includes('classvr') || clean.includes('vr bril') || clean.includes('virtual reality') || clean.includes('vr')) return 'img/vrbrillen.jpg';
+    if (clean.includes('spike essential') || clean.includes('lego essential')) return 'img/legoessential.jpg';
+    if (clean.includes('spike prime') || clean.includes('lego spike')) return 'img/legospike.jpg';
+    if (clean.includes('lego bricq') || clean.includes('bricq')) return 'img/legobricq.jpg';
+    if (clean.includes('podcast')) return 'img/podcaststudio.jpg';
+    if (clean.includes('3d pen') || clean.includes('3dpennen')) return 'img/3dpennen.jpg';
+    if (clean.includes('3d printer') || clean.includes('3dprinter')) return 'img/3dprinter.jpg';
+    if (clean.includes('piximakey') || clean.includes('stop-motion') || clean.includes('animatie')) return 'img/piximakey.jpg';
+    if (clean.includes('mtiny')) return 'img/mtiny.jpg';
+    if (clean.includes('dash')) return 'img/dashrobot.jpg';
+    if (clean.includes('cue')) return 'img/cuerobot.jpg';
+    if (clean.includes('drone')) return 'img/drones.jpg';
+    if (clean.includes('duplo')) return 'img/duplocodingexpress.jpg';
+    if (clean.includes('easiscope') || clean.includes('microscoop')) return 'img/easiscope.jpg';
+    if (clean.includes('infento pro')) return 'img/infentoprokit.jpg';
+    if (clean.includes('infento')) return 'img/infentotalentkit.jpg';
+    if (clean.includes('intelino') || clean.includes('trein')) return 'img/intelinotrein.jpg';
+    if (clean.includes('osmo')) return 'img/osmo.jpg';
+    if (clean.includes('kiene klanken')) return 'img/kieneklanken.jpg';
+    if (clean.includes('sphero indi') || clean.includes('indi')) return 'img/spheroindi.jpg';
+    if (clean.includes('sphero mini') || clean.includes('sphero')) return 'img/spheromini.jpg';
+    if (clean.includes('virtual-tee') || clean.includes('virtuali-tee')) return 'img/virtualtee.jpg';
+    if (clean.includes('plugo')) return 'img/plugo.jpg';
+    if (clean.includes('photon')) return 'img/photon.jpg';
+    if (clean.includes('ipad') || clean.includes('tablet')) return 'img/ipad.jpg';
+    return 'Verwonderlab.jpg';
+};
+
 let periodes = safeGetLocal('ww_periodes_v11', [{ id: 1, naam: "Periode 1 schooljaar 2026/2027", start: "2026-08-31", eind: "2026-09-20" }]);
 let scholen = safeGetLocal('ww_scholen_v1', [{ id: 1, naam: "Binnenstebuiten" }, { id: 2, naam: "De Wegwijzer" }]);
 let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
@@ -517,6 +609,17 @@ window.checkLeerkrachtLogin = function() {
     }
 
     // Gebruiker is geauthenticeerd via Microsoft SSO (@wonderwijs.nl):
+    const mainApp = document.querySelector('.dashboard-container') || document.getElementById('mainApp');
+    if (mainApp) {
+        mainApp.style.removeProperty('display');
+        mainApp.style.opacity = '1';
+        mainApp.style.visibility = 'visible';
+    }
+    const loginOverlay = document.getElementById('wwSsoLoginOverlay');
+    if (loginOverlay) {
+        loginOverlay.style.display = 'none';
+    }
+
     setTimeout(() => {
         const pageTitle = document.getElementById('pageTitle');
         if (pageTitle) pageTitle.innerText = 'Welkom, ' + huidigeNaam + '!';
@@ -810,80 +913,6 @@ window.renderReserveringsGrid = function() {
     if (typeof window.checkUrlReservationParam === "function") {
         window.checkUrlReservationParam();
     }
-};
-
-window.detecteerKistNaam = function(titel, beschrijving) {
-    const text = ((titel || '') + ' ' + (beschrijving || '')).toLowerCase();
-    if (text.includes('bee-bot') || text.includes('beebot')) return 'Bee-Bot';
-    if (text.includes('blue-bot') || text.includes('bluebot')) return 'Blue-Bot';
-    if (text.includes('green screen studio') || text.includes('greenscreen studio')) return 'Green Screen Studio';
-    if (text.includes('green screen') || text.includes('greenscreen')) return 'Green Screen Studio';
-    if (text.includes('makey makey') || text.includes('makeymakey')) return 'Makey Makey';
-    if (text.includes('micro:bit') || text.includes('microbit')) return 'Micro:bit';
-    if (text.includes('ozobot')) return 'Ozobot';
-    if (text.includes('classvr') || text.includes('vr bril') || text.includes('virtual reality') || text.includes('vr')) return 'VR Brillen';
-    if (text.includes('spike essential') || text.includes('lego essential')) return 'LEGO Spike Essential';
-    if (text.includes('spike prime') || text.includes('lego spike')) return 'LEGO Spike Prime';
-    if (text.includes('lego bricq') || text.includes('bricq')) return 'LEGO BricQ Motion';
-    if (text.includes('podcast')) return 'Podcast Studio';
-    if (text.includes('3d pen') || text.includes('3dpennen')) return '3D Pennen';
-    if (text.includes('3d printer') || text.includes('3dprinter')) return '3D Printer';
-    if (text.includes('piximakey') || text.includes('stop-motion') || text.includes('animatie')) return 'Piximakey';
-    if (text.includes('mtiny')) return 'mTiny';
-    if (text.includes('dash')) return 'Dash & Dot Robot';
-    if (text.includes('cue')) return 'Cue Robot';
-    if (text.includes('drone')) return 'Drones';
-    if (text.includes('duplo')) return 'DUPLO Coding Express';
-    if (text.includes('easiscope') || text.includes('microscoop')) return 'Easi-Scope Microscoop';
-    if (text.includes('infento pro')) return 'Infento Pro Kit';
-    if (text.includes('infento')) return 'Infento Talent Kit';
-    if (text.includes('intelino') || text.includes('trein')) return 'Intelino Slimme Trein';
-    if (text.includes('osmo')) return 'Osmo';
-    if (text.includes('kiene klanken')) return 'Kiene Klanken';
-    if (text.includes('sphero indi') || text.includes('indi')) return 'Sphero Indi';
-    if (text.includes('sphero mini') || text.includes('sphero')) return 'Sphero Mini';
-    if (text.includes('virtual-tee') || text.includes('virtuali-tee')) return 'Virtuali-Tee';
-    if (text.includes('plugo')) return 'Plugo';
-    if (text.includes('photon')) return 'Photon';
-    if (text.includes('ipad') || text.includes('tablet')) return 'iPad Kist';
-    return 'Wonderlab Leskist';
-};
-
-window.getAfbeeldingVoorKist = function(naam) {
-    const clean = (naam || '').toLowerCase();
-    if (clean.includes('bee-bot') || clean.includes('beebot')) return 'img/beebot.jpg';
-    if (clean.includes('blue-bot') || clean.includes('bluebot')) return 'img/bluebot.jpg';
-    if (clean.includes('green screen studio') || clean.includes('greenscreen studio') || clean.includes('greenscreenstudio')) return 'img/greenscreenstudio.jpg';
-    if (clean.includes('green screen') || clean.includes('greenscreen')) return 'img/greenscreen.jpg';
-    if (clean.includes('makey makey') || clean.includes('makeymakey')) return 'img/makeymakey.jpg';
-    if (clean.includes('micro:bit') || clean.includes('microbit')) return 'img/microbit.jpg';
-    if (clean.includes('ozobot')) return 'img/ozobot.jpg';
-    if (clean.includes('classvr') || clean.includes('vr bril') || clean.includes('virtual reality') || clean.includes('vr')) return 'img/vrbrillen.jpg';
-    if (clean.includes('spike essential') || clean.includes('lego essential')) return 'img/legoessential.jpg';
-    if (clean.includes('spike prime') || clean.includes('lego spike')) return 'img/legospike.jpg';
-    if (clean.includes('lego bricq') || clean.includes('bricq')) return 'img/legobricq.jpg';
-    if (clean.includes('podcast')) return 'img/podcaststudio.jpg';
-    if (clean.includes('3d pen') || clean.includes('3dpennen')) return 'img/3dpennen.jpg';
-    if (clean.includes('3d printer') || clean.includes('3dprinter')) return 'img/3dprinter.jpg';
-    if (clean.includes('piximakey') || clean.includes('stop-motion') || clean.includes('animatie')) return 'img/piximakey.jpg';
-    if (clean.includes('mtiny')) return 'img/mtiny.jpg';
-    if (clean.includes('dash')) return 'img/dashrobot.jpg';
-    if (clean.includes('cue')) return 'img/cuerobot.jpg';
-    if (clean.includes('drone')) return 'img/drones.jpg';
-    if (clean.includes('duplo')) return 'img/duplocodingexpress.jpg';
-    if (clean.includes('easiscope') || clean.includes('microscoop')) return 'img/easiscope.jpg';
-    if (clean.includes('infento pro')) return 'img/infentoprokit.jpg';
-    if (clean.includes('infento')) return 'img/infentotalentkit.jpg';
-    if (clean.includes('intelino') || clean.includes('trein')) return 'img/intelinotrein.jpg';
-    if (clean.includes('osmo')) return 'img/osmo.jpg';
-    if (clean.includes('kiene klanken')) return 'img/kieneklanken.jpg';
-    if (clean.includes('sphero indi') || clean.includes('indi')) return 'img/spheroindi.jpg';
-    if (clean.includes('sphero mini') || clean.includes('sphero')) return 'img/spheromini.jpg';
-    if (clean.includes('virtual-tee') || clean.includes('virtuali-tee')) return 'img/virtualtee.jpg';
-    if (clean.includes('plugo')) return 'img/plugo.jpg';
-    if (clean.includes('photon')) return 'img/photon.jpg';
-    if (clean.includes('ipad') || clean.includes('tablet')) return 'img/ipad.jpg';
-    return 'Verwonderlab.jpg';
 };
 
 window.filterLesideeen = function(cat) {
@@ -2057,24 +2086,6 @@ window.beoordeelReservering = async function(id, nieuweStatus) {
     const per = periodes.find(p => p.id == r?.periodeId);
     if (nieuweStatus === 'Geaccepteerd' && r) {
         await window.verstuurGoedkeuringsMail(r, per);
-    }
-};
-
-window.openInOutlook = function(to, subject, body) {
-    const cleanTo = (to || "").trim();
-    const encodedTo = encodeURIComponent(cleanTo);
-    const encodedSubject = encodeURIComponent(subject || "");
-    const encodedBody = encodeURIComponent(body || "");
-
-    // 1. Direct Outlook Web Deeplink voor Microsoft 365 (Stichting Wonderwijs)
-    const outlookWebUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`;
-
-    // Probeer Outlook Web direct te openen in een nieuw tabblad
-    const outlookWindow = window.open(outlookWebUrl, '_blank');
-
-    // 2. Fallback: als pop-up venster wordt geblokkeerd of lokale Outlook client actief is
-    if (!outlookWindow || outlookWindow.closed || typeof outlookWindow.closed === 'undefined') {
-        window.location.href = `mailto:${cleanTo}?subject=${encodedSubject}&body=${encodedBody}`;
     }
 };
 
