@@ -27,10 +27,299 @@ let beheerdersLijst = safeGetLocal('ww_beheerders_v1', []);
 let mijnFavorieten = safeGetLocal('ww_favorieten_v1', []); 
 let meldingen = safeGetLocal('ww_meldingen_v1', []); 
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
-let lesideeen = safeGetLocal('ww_lesideeen_v15', []);
+const standaardLesideeen = [
+    {
+        id: 1,
+        titel: "Bee-Bot: Schattenjacht & Kaartlezen op de Boerderij",
+        categorie: "Programmeren",
+        bouw: "Groep 1-2 (Onderbouw)",
+        afbeelding: "img/beebot.jpg",
+        kistNaam: "Bee-Bot",
+        beschrijving: "Laat kleuters spelenderwijs kennismaken met algoritmes en richtingen. De Bee-Bot volgt de commando's van de leerlingen om de schat op de boerderijmat te vinden.",
+        link: "https://www.kennisnet.nl/leren-met-ict/digitale-geletterdheid/computational-thinking/",
+        lesbrief: {
+            doelen: "Leerlingen leren een stappenplan formuleren (algoritmisch denken), ruimtelijke begrippen toepassen (links, rechts, vooruit, achteruit) en fouten opsporen en herstellen (debuggen).",
+            tijd: "45 minuten",
+            organisatie: "Groepjes van 3 à 4 leerlingen per Bee-Bot",
+            kistMateriaal: "Bee-Bot robots, laadstation, boerderij vloermat, richtingkaarten",
+            klasMateriaal: "Houten blokjes (als obstakels), schatkaartjes/fiches",
+            voorbereidingTijd: "5 minuten",
+            voorbereiding: "Laad de Bee-Bots vooraf op en leg de vloermatten klaar op een vlakke vloer.",
+            inleidingTijd: "10 min",
+            inleiding: "Verzamel de klas in de kring. Introduceer de Bee-Bot als een 'robotbijtje' dat niet zelf kan nadenken, maar alleen doet wat wij hem vertellen. Demonstreer klassikaal met 2 stappen vooruit. Laat een kind 'menselijke robot' spelen die luistert naar stappencommando's.",
+            kernTijd: "25 min",
+            kern: "1. Leerlingen leggen een schatkaartje op een vak en een obstakel (bijv. de modderpoel).<br>2. Ze overleggen samen welke route de Bee-Bot moet nemen.<br>3. Ze leggen eerst de fysieke richtingkaarten neer (het algoritme ontwerpen).<br>4. Één leerling toetst de route in en drukt op GO.<br>5. Ging het mis? Samen ontdekken waar het bijtje verkeerd ging, wissen ('X') en opnieuw programmeren (debuggen).",
+            afsluitingTijd: "10 min",
+            afsluiting: "Kringgesprek: Waarom is het belangrijk om eerst de 'X' (wissen) in te drukken? Wat gebeurt er als je één stap vergeet? Koppel dit aan hoe computers werken.",
+            tips: "Voor leerlingen die meer uitdaging aankunnen: laat ze voor een ander groepje een geheime code intoetsen en laat hen raden waar de Bee-Bot uitkomt."
+        }
+    },
+    {
+        id: 2,
+        titel: "Green Screen: Levende Geschiedenis & Wonderwijs Journaal",
+        categorie: "Mediawijsheid",
+        bouw: "Groep 5-8 (Bovenbouw)",
+        afbeelding: "img/greenscreenstudio.jpg",
+        kistNaam: "Green Screen Studio",
+        beschrijving: "Leerlingen stappen in een tijdmachine! Ze schrijven een historisch nieuwsbericht en presenteren dit alsof ze live verslag doen vanuit de Romeinse tijd of middeleeuwen.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen begrijpen hoe chroma-key en beeldbewerking werken, leren kritisch kijken naar gemanipuleerde media en oefenen met spreken, presenteren en scriptschrijven.",
+            tijd: "60 - 75 minuten",
+            organisatie: "Groepjes van 3: 1 presentator, 1 cameraman, 1 regisseur/technicus",
+            kistMateriaal: "Green Screen doek / studio frame, statief, tabletklem, microfoons",
+            klasMateriaal: "iPads/tablets met Green Screen app (bijv. Do Ink of CapCut), rekwisieten/kleding",
+            voorbereidingTijd: "10 minuten",
+            voorbereiding: "Span het groene doek kreukvrij op en zorg voor gelijkmatige belichting zonder harde schaduwen.",
+            inleidingTijd: "15 min",
+            inleiding: "Toon een bekend fragment uit het Jeugdjournaal weerbericht of een film (bijv. Star Wars). Vraag: staat de weerman echt voor een bewegende kaart? Leg uit hoe de app alles wat groen is vervangt door een foto of video.",
+            kernTijd: "40 min",
+            kern: "1. Elk groepje kiest een historische gebeurtenis en zoekt een passende rechtenvrije achtergrondfoto.<br>2. Ze schrijven een kort script van maximaal 1 minuut.<br>3. Ze nemen de video op voor het groene scherm (let op: geen groene kleding dragen!).<br>4. In de app monteren ze de achtergrond en voegen ze een nieuwstitel toe.",
+            afsluitingTijd: "15 min",
+            afsluiting: "Bekijk elkaars journaals op het digibord. Reflecteer op mediawijsheid: Hoe betrouwbaar zijn beelden die je online ziet op TikTok of Instagram?",
+            tips: "Laat leerlingen experimenteren met een groen laken over iemand heen om 'onzichtbare' effecten te creëren."
+        }
+    },
+    {
+        id: 3,
+        titel: "Makey Makey: Het Zingende Fruitorkest & Gamecontrollers",
+        categorie: "Creatief",
+        bouw: "Groep 3-6 (Middenbouw)",
+        afbeelding: "img/makeymakey.jpg",
+        kistNaam: "Makey Makey",
+        beschrijving: "Verander bananen, appels en klei in een functionerende piano of gamecontroller. Leerlingen ontdekken hoe gesloten stroomkringen en geleiding werken.",
+        link: "https://makeymakey.com/pages/apps",
+        lesbrief: {
+            doelen: "Leerlingen ontdekken het principe van gesloten elektrische stroomkringen, leren het verschil tussen geleiders en isolatoren en koppelen fysieke interactie aan software.",
+            tijd: "50 minuten",
+            organisatie: "Groepjes van 3 à 4 leerlingen per Makey Makey set",
+            kistMateriaal: "Makey Makey bordjes, USB-kabels, krokodillenklemmen",
+            klasMateriaal: "Laptops/Chromebooks met de Makey Makey Piano webapp of Scratch, bananen, appels, aluminiumfolie, potloodgrafiet, klei",
+            voorbereidingTijd: "5 minuten",
+            voorbereiding: "Sluit de Makey Makey sets aan op de laptops en open de online piano (makeymakey.com/pages/apps).",
+            inleidingTijd: "10 min",
+            inleiding: "Vraag de klas: kan een banaan muziek maken? Houd een banaan omhoog en tik erop. Geen geluid. Sluit de Makey Makey aan, pak de aarde-draad vast, tik op de banaan en speel een noot! Leg uit dat een klein, veilig stroompje door ons lichaam gaat om het circuit te sluiten.",
+            kernTijd: "30 min",
+            kern: "1. Leerlingen sluiten 4 stuks fruit aan op de pijltjestoetsen en spatiebalk van de Makey Makey.<br>2. Één leerling houdt de 'Earth' (aarde) klem vast.<br>3. Ze spelen samen eenvoudige liedjes (bijv. 'Kortjakje' of 'Vader Jacob').<br>4. Onderzoekscircuit: Welke andere voorwerpen in de klas geleiden stroom? Laat ze testen met metalen linialen, gummen, nat papier en potloodtekeningen.",
+            afsluitingTijd: "10 min",
+            afsluiting: "Welke materialen bleken onverwacht geleidend? Bespreek hoe gewone computertoetsenborden en gamecontrollers met precies dezelfde gesloten schakelaars werken.",
+            tips: "Laat gevorderde leerlingen in Scratch een eigen geluideneffecten-bordje programmeren (bijv. dierengeluiden)."
+        }
+    },
+    {
+        id: 4,
+        titel: "Micro:bit: Slimme Stappenteller & Boodschappenspel",
+        categorie: "Programmeren",
+        bouw: "Groep 6-8 (Bovenbouw)",
+        afbeelding: "img/microbit.jpg",
+        kistNaam: "Micro:bit",
+        beschrijving: "Programmeer een minicomputer met sensoren. Leerlingen bouwen hun eigen stappenteller met de ingebouwde versnellingsmeter en testen hem op het schoolplein.",
+        link: "https://makecode.microbit.org/",
+        lesbrief: {
+            doelen: "Leerlingen leren programmeren met variabelen, gebeurtenissen (events) en sensoren, en begrijpen hoe wearables en smartwatches data registreren.",
+            tijd: "60 minuten",
+            organisatie: "Tweetallen per laptop/Micro:bit",
+            kistMateriaal: "Micro:bit bordjes, batterijhouders met 2x AAA batterijen, micro-USB kabels",
+            klasMateriaal: "Chromebooks/laptops met internet (MakeCode), elastiek of schilderstape om Micro:bit aan de enkel te binden",
+            voorbereidingTijd: "5 minuten",
+            voorbereiding: "Zorg dat MakeCode (makecode.microbit.org) klaarstaat op de Chromebooks.",
+            inleidingTijd: "10 min",
+            inleiding: "Laat een smartwatch of fitbit zien. Hoe weet dit horloge hoeveel stappen je zet? Toon de Micro:bit en wijs op de versnellingsmeter (accelerometer chip) die beweging meet.",
+            kernTijd: "35 min",
+            kern: "1. Open MakeCode en maak een variabele 'stappen'.<br>2. Programmeer: 'bij opstarten' -> stel stappen in op 0.<br>3. Programmeer: 'wanneer geschud' -> verander stappen met 1, en toon getal 'stappen'.<br>4. Voeg een resetfunctie toe op Knop A.<br>5. Download de .hex code naar de Micro:bit, sluit de batterijhouder aan en bind de Micro:bit om de schoen of enkel.<br>6. Test: loop 50 stappen op het plein en controleer de nauwkeurigheid.",
+            afsluitingTijd: "15 min",
+            afsluiting: "Vergelijk de scores. Waarom telde de Micro:bit soms te veel of te weinig? Hoe lossen programmeurs 'valse' bewegingen op?",
+            tips: "Extra uitdaging: programmeer een beloning! Als stappen > 100, toon dan een feestelijke animatie of een muziekje."
+        }
+    },
+    {
+        id: 5,
+        titel: "Ozobot Evo: Kleurencodes & De Slimme Koeriersdienst",
+        categorie: "Programmeren",
+        bouw: "Groep 4-6 (Middenbouw)",
+        afbeelding: "img/ozobot.jpg",
+        kistNaam: "Ozobot",
+        beschrijving: "Teken met speciale viltstiften routes en kleurcodes op papier. De Ozobot herkent de kleurencombinaties en voert acties uit zoals turboversnelling, omkeren en dansen.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen leren logisch redeneren, sensorherkenning begrijpen en algoritmes toepassen door middel van kleurvolgordes.",
+            tijd: "50 minuten",
+            organisatie: "Tweetallen per Ozobot",
+            kistMateriaal: "Ozobots, kleurstiften (zwart, rood, groen, blauw), kleurencode referentiebladen",
+            klasMateriaal: "Witte A3 tekenvellen, linialen",
+            voorbereidingTijd: "5 minuten",
+            voorbereiding: "Kalibreer de Ozobots vooraf op de zwarte stip en controleer of de stiften goed vloeien.",
+            inleidingTijd: "10 min",
+            inleiding: "Demonstreer de Ozobot op een voorbeeldblad: laat zien hoe de optische sensoren onderop de lijn volgen en hoe hij versnelt bij de code [blauw-zwart-blauw].",
+            kernTijd: "30 min",
+            kern: "1. De Challenge: De Ozobot is een slimme postbezorger die een brief moet bezorgen in Dorp A, B en C.<br>2. Leerlingen tekenen een wegennetwerk met zwarte lijnen (5mm dik).<br>3. Op kruispunten plaatsen ze kleurcodes voor richting (bijv. linksaf, rechtsaf) en snelheid.<br>4. Testen en debuggen: als de lijn te dun is of de kleuren vlekken, herkent de robot de code niet.",
+            afsluitingTijd: "10 min",
+            afsluiting: "Laat de robots rijden op elkaars banen. Wat was de moeilijkste bocht en hoe is dat opgelost?",
+            tips: "Houd een wit correctie-stickertje bij de hand om fout getekende kleurcodes snel te overplakken zonder het hele vel opnieuw te tekenen."
+        }
+    },
+    {
+        id: 6,
+        titel: "ClassVR: Virtuele Expeditie door het Menselijk Lichaam",
+        categorie: "Mediawijsheid",
+        bouw: "Groep 6-8 (Bovenbouw)",
+        afbeelding: "img/vrbrillen.jpg",
+        kistNaam: "VR Brillen",
+        beschrijving: "Stap fysiek in de bloedbaan of sta bovenop een vulkaan. Leerlingen ervaren Virtual Reality en leren hoe meeslepende simulaties werken.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen ervaren hoe Virtual Reality de werkelijkheid simuleert, verkennen anatomie en natuurverschijnselen in 3D en leren mediawijze kijkdiscipline.",
+            tijd: "50 minuten",
+            organisatie: "Tweetallen: om en om 10 minuten de bril op en 10 minuten verslaglegging",
+            kistMateriaal: "ClassVR brillenset in koffer, leerkracht tablet voor het beheerportaal",
+            klasMateriaal: "Werkblad 'Expeditie Menselijk Lichaam', potloden",
+            voorbereidingTijd: "10 minuten",
+            voorbereiding: "Zet de brillen aan, controleer de wifi-verbinding en open de gewenste VR-playlist in het ClassVR portaal.",
+            inleidingTijd: "10 min",
+            inleiding: "Veiligheidsafspraken: altijd zittend kijken, bril met twee handen vasthouden, hand opsteken bij duizeligheid. Leg uit hoe gyroscopen en twee lenzen een 3D-illusie wekken.",
+            kernTijd: "30 min",
+            kern: "1. De leerkracht activeert de VR-ervaring 'Het Kloppende Hart'.<br>2. Leerlingen 'staan' midden in de linker hartkamer en zien rode bloedcellen langs suizen.<br>3. Opdracht op werkblad: Welke taak hebben de hartkleppen? Waar stroomt zuurstofrijk bloed heen?<br>4. Na 10 minuten wisselt de rol van kijker en verslaggever met de schoudermaat.",
+            afsluitingTijd: "10 min",
+            afsluiting: "Klassikale nabespreking: Hoe voelde het om 'in' een orgaan te staan? Waarvoor gebruiken artsen en piloten deze techniek?",
+            tips: "Gebruik de leerkracht-tablet om 'hotspots' aan te wijzen op het digibord zodat leerlingen weten waar ze naar moeten kijken."
+        }
+    },
+    {
+        id: 7,
+        titel: "LEGO Spike Essential: De Slimme Afvalscheider Robot",
+        categorie: "Techniek",
+        bouw: "Groep 3-5 (Middenbouw)",
+        afbeelding: "img/legoessential.jpg",
+        kistNaam: "LEGO Spike Essential",
+        beschrijving: "Bouw met LEGO motoren, tandwielen en sensoren een slimme machine die helpt bij het opruimen van plastic afval in de stad.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen leren mechanische constructies bouwen (overbrengingen met tandwielen), sensoren programmeren op kleur en ontwerpend leren toepassen.",
+            tijd: "60 minuten",
+            organisatie: "Vaste duo's per LEGO Spike set en tablet",
+            kistMateriaal: "LEGO Spike Essential sets, sorteerbakken",
+            klasMateriaal: "iPads/tablets met de officiële LEGO SPIKE app",
+            voorbereidingTijd: "5 minuten",
+            voorbereiding: "Controleer of de hubs opgeladen zijn via USB en gekoppeld met Bluetooth aan de tablets.",
+            inleidingTijd: "10 min",
+            inleiding: "Toon een korte video over plastic afval en recyclingfabrieken. Hoe kunnen slimme machines afval veel sneller scheiden dan mensen met de hand?",
+            kernTijd: "40 min",
+            kern: "1. Leerlingen volgen het interactieve bouwplan in de Spike app en bouwen de sorteerarm.<br>2. Ze sluiten de kleursensor en de motor aan op de hub.<br>3. Ze programmeren met blokken: 'Als kleursensor geel ziet (plastic), draai 90 graden naar rechts. Als sensor groen ziet (glas), draai 90 graden naar links.'<br>4. Testen met gekleurde LEGO stenen.",
+            afsluitingTijd: "10 min",
+            afsluiting: "Demonstratie: welk duo heeft een perfect werkende afvalsorteerder? Wat kan er nog verbeterd worden aan de snelheid of constructie?",
+            tips: "Laat leerlingen zelf een opvangbakje bouwen van overgebleven LEGO stenen."
+        }
+    },
+    {
+        id: 8,
+        titel: "Podcast Studio: De Wonderwijs Schoolradio & Interviewen",
+        categorie: "Mediawijsheid",
+        bouw: "Groep 6-8 (Bovenbouw)",
+        afbeelding: "img/podcaststudio.jpg",
+        kistNaam: "Podcast Studio",
+        beschrijving: "Richt een professionele audio-opnamestudio in de klas in. Leerlingen interviewen de directeur, een meester of elkaar over actuele onderwerpen en monteren geluidseffecten.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen oefenen met journalistieke vaardigheden (open vragen formuleren, luisteren), microfoondiscipline en de impact van geluid en framing in media.",
+            tijd: "75 minuten (of 2 dagdelen)",
+            organisatie: "Redactiegroepjes van 4: 2 presentatoren, 1 technicus/jingle-bediener, 1 editor",
+            kistMateriaal: "Røde mengpaneel / microfoons op arm, professionele koptelefoons, kabels",
+            klasMateriaal: "Laptop met Audacity of Soundtrap, kladblok voor het draaiboek",
+            voorbereidingTijd: "10 minuten",
+            voorbereiding: "Zet de mengtafel klaar op een rustige tafel in een aparte hoek of lokaal.",
+            inleidingTijd: "15 min",
+            inleiding: "Luister naar een intro van 1 minuut van een jeugdpodcast. Bespreek: waarom trekt het geluid van een jingle je aandacht? Wat is het verschil tussen een open en een gesloten vraag?",
+            kernTijd: "45 min",
+            kern: "1. Leerlingen maken een format: Jingle -> Welkom -> Interview -> Dilemma van de week -> Uitsmijter.<br>2. Ze stellen 5 prikkelende open vragen op aan hun gast.<br>3. Repetitie en geluidscheck: let op 'plop'-geluiden en afstand tot de microfoon.<br>4. Live opname van max. 5 minuten met realtime jingles.",
+            afsluitingTijd: "15 min",
+            afsluiting: "Luister de opname klassikaal terug. Beoordeel elkaars interviewstijl en radiostem.",
+            tips: "Leg vooraf geluidseffecten (applaus, lachband, bel) klaar onder de gekleurde pads van het mengpaneel."
+        }
+    },
+    {
+        id: 9,
+        titel: "3D Pennen: Dragende Bruggen & Ruimtelijke Monumenten",
+        categorie: "Creatief",
+        bouw: "Groep 5-8 (Middenbouw & Bovenbouw)",
+        afbeelding: "img/3dpennen.jpg",
+        kistNaam: "3D Pennen",
+        beschrijving: "Teken in 3D in de lucht! Leerlingen ontwerpen dragende constructies en testen welke brug het meeste gewicht kan dragen.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen ontwikkelen ruimtelijk inzicht, leren over materiaaleigenschappen (smelten en stollen van thermoplastisch bioplastic) en passen constructieprincipes toe.",
+            tijd: "60 minuten",
+            organisatie: "Duo's per 3D pen en tekenmat",
+            kistMateriaal: "3D Pennen, hittebestendige tekenmatten, vingertopbeschermers, adapters",
+            klasMateriaal: "PLA filament in diverse kleuren, gewichtjes om te testen",
+            voorbereidingTijd: "5 minuten",
+            voorbereiding: "Sluit de adapters aan op veilige stekkerdozen en leg de hittebestendige matjes klaar.",
+            inleidingTijd: "10 min",
+            inleiding: "Veiligheid: de metalen printkop wordt 190°C! Raak deze nooit aan. Demonstreer hoe je van 2D naar 3D gaat: teken twee platte zijkanten en verbind ze met stutbalken in de lucht.",
+            kernTijd: "40 min",
+            kern: "1. De Challenge: Bouw een brug met een overspanning van minstens 15 cm die minstens 200 gram kan dragen.<br>2. Leerlingen schetsen eerst hun constructie (driehoeksverbanden zijn het sterkst!).<br>3. Ze tekenen de vlakken met de 3D pen op de mat.<br>4. Na afkoelen 'lassen' ze met een drupje filament de losse onderdelen aan elkaar.",
+            afsluitingTijd: "10 min",
+            afsluiting: "De Krachtmeting: test de bruggen tussen twee tafels met gewichten. Welke vorm hield het langst stand?",
+            tips: "Zorg dat leerlingen langzaam tekenen en het filament 2 seconden de tijd geven om te stollen voordat ze loslaten."
+        }
+    },
+    {
+        id: 10,
+        titel: "Piximakey: Magische Stop-Motion Klei-animatie",
+        categorie: "Creatief",
+        bouw: "Groep 3-8 (Alle groepen)",
+        afbeelding: "img/piximakey.jpg",
+        kistNaam: "Piximakey",
+        beschrijving: "Breng kleipoppetjes en legofiguurtjes tot leven beeldje voor beeldje. Leerlingen creëren hun eigen animatiefilm met de houten Piximakey koffer.",
+        link: "",
+        lesbrief: {
+            doelen: "Leerlingen begrijpen hoe filmische illusie en framerate werken (10-12 foto's per seconde), leren een visueel storyboard ontwerpen en werken samen aan een creatief mediaproduct.",
+            tijd: "60 - 90 minuten",
+            organisatie: "Groepjes van 3: regisseur, animator, cameraman",
+            kistMateriaal: "Piximakey houten studio koffers, houten tabletstandaards",
+            klasMateriaal: "Tablets/smartphones met Piximakey app, plasticine boetseerklei, achtergrondkarton",
+            voorbereidingTijd: "10 minuten",
+            voorbereiding: "Klap de houten koffers open op de tafels en installeer de Piximakey app.",
+            inleidingTijd: "10 min",
+            inleiding: "Toon een kort fragment van Wallace & Gromit of Shaun the Sheep. Vraag: hoe kunnen kleipoppen lopen? Leg uit dat film een reeks stilstaande foto's is die heel snel achter elkaar worden getoond.",
+            kernTijd: "45 min",
+            kern: "1. Bedenk een simpel verhaaltje van max. 20 seconden met een begin, probleem en oplossing.<br>2. Boetseer 1 of 2 personages van klei.<br>3. Zet de tablet in de houder: zorg dat de camera niet wiebelt!<br>4. Belangrijke regel: beweeg het poppetje 1 millimeter, haal je handen weg, en druk op de knop.<br>5. Gebruik 'onion skinning' (de schaduw van de vorige foto) voor vloeiende beweging.",
+            afsluitingTijd: "15 min",
+            afsluiting: "Bioscoop in de klas: bekijk alle gemaakte filmpjes op het digibord. Geef elkaar tops en tips over tempo en cameravoering.",
+            tips: "Plak de houten koffer met een stukje schilderstape vast aan de tafel zodat de achtergrond niet verschuift."
+        }
+    }
+];
+
+window.verrijkLesideeen = function(ideeenLijst) {
+    if (!ideeenLijst || ideeenLijst.length === 0) {
+        return [...standaardLesideeen];
+    }
+    return ideeenLijst.map(idee => {
+        const match = standaardLesideeen.find(s => 
+            s.id == idee.id || 
+            (idee.titel && s.titel.toLowerCase().includes(idee.titel.toLowerCase())) ||
+            (idee.titel && s.kistNaam && idee.titel.toLowerCase().includes(s.kistNaam.toLowerCase()))
+        );
+        const kistNaam = idee.kistNaam || (match ? match.kistNaam : window.detecteerKistNaam(idee.titel, idee.beschrijving));
+        const afbeelding = idee.afbeelding || (match ? match.afbeelding : window.getAfbeeldingVoorKist(kistNaam));
+        const lesbrief = idee.lesbrief || (match ? match.lesbrief : null);
+        const bouw = idee.bouw || (match ? match.bouw : "Alle groepen");
+
+        return {
+            ...idee,
+            kistNaam: kistNaam,
+            afbeelding: afbeelding,
+            lesbrief: lesbrief,
+            bouw: bouw
+        };
+    });
+};
+
+let lesideeen = window.verrijkLesideeen(safeGetLocal('ww_lesideeen_v15', standaardLesideeen));
 
 window.cloudLeerlijnen = []; 
 let actieveLesideeFilter = 'Alle';
+let actieveLesideeZoekterm = '';
 let actieveDocentFilter = 'Alle';
 let actieveDocentZoekterm = '';
 let currentPdfs = [];
@@ -84,15 +373,30 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "scholen"), (snapshot) => { if(!snapshot.empty) { scholen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "beheerders"), (snapshot) => { if(!snapshot.empty) { beheerdersLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } else { beheerdersLijst = []; slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "leskisten"), (snapshot) => { if(!snapshot.empty) { leskisten = snapshot.docs.map(d => d.data()).sort((a,b) => a.id - b.id); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); } }, checkError);
-        onSnapshot(collection(db, "lesideeen"), (snapshot) => { if(!snapshot.empty) { lesideeen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderLesideeenGrid) window.renderLesideeenGrid(); } }, checkError);
+        onSnapshot(collection(db, "lesideeen"), (snapshot) => { 
+            if(!snapshot.empty) { 
+                const cloudIdeeen = snapshot.docs.map(d => d.data());
+                // Zorg dat cloud-lesideeën altijd verrijkt zijn met passende afbeeldingen en complete lesbrieven
+                lesideeen = window.verrijkLesideeen(cloudIdeeen);
+                slaDataOp(); 
+                if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+                if(window.renderLesideeenGrid) window.renderLesideeenGrid(); 
+            } 
+        }, checkError);
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); } }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
-// Voortgang realtime ophalen en direct toepassen op de vinkjes
+
+        // Voortgang realtime ophalen en direct toepassen op de vinkjes
         onSnapshot(collection(db, "voortgang"), (snapshot) => { 
             let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
             if (huidigeEmail) { 
-                const veiligId = huidigeEmail.replace(/[@.]/g, '_');
-                const docSnap = snapshot.docs.find(d => d.id === veiligId); 
+                const cleanEmail = huidigeEmail.trim().toLowerCase();
+                const veiligId = cleanEmail.replace(/[@.]/g, '_');
+                const docSnap = snapshot.docs.find(d => 
+                    d.id === veiligId || 
+                    d.id === cleanEmail || 
+                    (d.data() && d.data().email && d.data().email.toLowerCase() === cleanEmail)
+                ); 
                 if(docSnap && docSnap.data().vinkjes) { 
                     localStorage.setItem('ww_vinkjes', docSnap.data().vinkjes); 
                     if(typeof window.reproduceerVinkjes === "function") {
@@ -104,15 +408,39 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
         // Functie om de voortgang waterdicht op te slaan in Firebase
         window.saveVoortgangToCloud = async function(email, vinkjes) { 
+            if (!email) return;
             try {
-                const veiligId = email.replace(/[@.]/g, '_');
+                const cleanEmail = email.trim().toLowerCase();
+                const veiligId = cleanEmail.replace(/[@.]/g, '_');
                 await setDoc(doc(db, "voortgang", veiligId), { 
-                    email: email, 
+                    email: cleanEmail, 
                     vinkjes: vinkjes,
                     laatsteUpdate: new Date().toISOString()
                 }, { merge: true }); 
             } catch(e) {
                 console.error("Opslaan voortgang in cloud mislukt:", e);
+            }
+        };
+
+        // Directe sync functie bij inloggen of openen op een ander device
+        window.syncVoortgangVanCloud = async function(email) {
+            if (!email) return;
+            try {
+                const cleanEmail = email.trim().toLowerCase();
+                const veiligId = cleanEmail.replace(/[@.]/g, '_');
+                const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+                let snap = await getDoc(doc(db, "voortgang", veiligId));
+                if (!snap.exists()) {
+                    snap = await getDoc(doc(db, "voortgang", cleanEmail));
+                }
+                if (snap.exists() && snap.data().vinkjes) {
+                    localStorage.setItem('ww_vinkjes', snap.data().vinkjes);
+                    if (typeof window.reproduceerVinkjes === "function") {
+                        window.reproduceerVinkjes();
+                    }
+                }
+            } catch(err) {
+                console.warn("Direct voortgang ophalen:", err);
             }
         };
         
@@ -155,7 +483,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.addReserveringToCloud = async function(newData) { await setDoc(doc(db, "reserveringen", newData.id.toString()), newData); };
         window.updateChecklistInCloud = async function(id, dataObj) { await setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }); };
         window.deleteReserveringFromCloud = async function(id) { await deleteDoc(doc(db, "reserveringen", id.toString())); };
-        window.saveVoortgangToCloud = async function(leerkracht, vinkjes) { await setDoc(doc(db, "voortgang", leerkracht), { vinkjes: vinkjes }); };
         window.deleteMeldingFromCloud = async function(id) { await deleteDoc(doc(db, "meldingen", id.toString())); };
         window.updateMeldingStatusInCloud = async function(id, status) { await setDoc(doc(db, "meldingen", id.toString()), {status: status}, {merge: true}); };
 
@@ -207,6 +534,14 @@ window.checkLeerkrachtLogin = function() {
         const isBeheerder = beheerdersLijst.some(b => b.email && b.email.toLowerCase() === huidigeEmail.toLowerCase());
         const adminBtn = document.getElementById('adminLoginBtn');
         if (adminBtn) adminBtn.style.display = isBeheerder ? 'inline-block' : 'none';
+
+        const leerlijnBadge = document.getElementById('leerlijnAccountBadge');
+        if (leerlijnBadge && huidigeEmail) {
+            leerlijnBadge.innerHTML = `👤 Voortgang gekoppeld aan: <strong>${huidigeEmail}</strong>`;
+        }
+        if (typeof window.syncVoortgangVanCloud === "function") {
+            window.syncVoortgangVanCloud(huidigeEmail);
+        }
 
         // Inladen van alle lijsten nu we geautoriseerd zijn
         if (typeof window.renderReserveringsGrid === "function") window.renderReserveringsGrid();
@@ -472,6 +807,219 @@ window.renderReserveringsGrid = function() {
             </div>
         </div>`;
     }).join('');
+    if (typeof window.checkUrlReservationParam === "function") {
+        window.checkUrlReservationParam();
+    }
+};
+
+window.detecteerKistNaam = function(titel, beschrijving) {
+    const text = ((titel || '') + ' ' + (beschrijving || '')).toLowerCase();
+    if (text.includes('bee-bot') || text.includes('beebot')) return 'Bee-Bot';
+    if (text.includes('blue-bot') || text.includes('bluebot')) return 'Blue-Bot';
+    if (text.includes('green screen studio') || text.includes('greenscreen studio')) return 'Green Screen Studio';
+    if (text.includes('green screen') || text.includes('greenscreen')) return 'Green Screen Studio';
+    if (text.includes('makey makey') || text.includes('makeymakey')) return 'Makey Makey';
+    if (text.includes('micro:bit') || text.includes('microbit')) return 'Micro:bit';
+    if (text.includes('ozobot')) return 'Ozobot';
+    if (text.includes('classvr') || text.includes('vr bril') || text.includes('virtual reality') || text.includes('vr')) return 'VR Brillen';
+    if (text.includes('spike essential') || text.includes('lego essential')) return 'LEGO Spike Essential';
+    if (text.includes('spike prime') || text.includes('lego spike')) return 'LEGO Spike Prime';
+    if (text.includes('lego bricq') || text.includes('bricq')) return 'LEGO BricQ Motion';
+    if (text.includes('podcast')) return 'Podcast Studio';
+    if (text.includes('3d pen') || text.includes('3dpennen')) return '3D Pennen';
+    if (text.includes('3d printer') || text.includes('3dprinter')) return '3D Printer';
+    if (text.includes('piximakey') || text.includes('stop-motion') || text.includes('animatie')) return 'Piximakey';
+    if (text.includes('mtiny')) return 'mTiny';
+    if (text.includes('dash')) return 'Dash & Dot Robot';
+    if (text.includes('cue')) return 'Cue Robot';
+    if (text.includes('drone')) return 'Drones';
+    if (text.includes('duplo')) return 'DUPLO Coding Express';
+    if (text.includes('easiscope') || text.includes('microscoop')) return 'Easi-Scope Microscoop';
+    if (text.includes('infento pro')) return 'Infento Pro Kit';
+    if (text.includes('infento')) return 'Infento Talent Kit';
+    if (text.includes('intelino') || text.includes('trein')) return 'Intelino Slimme Trein';
+    if (text.includes('osmo')) return 'Osmo';
+    if (text.includes('kiene klanken')) return 'Kiene Klanken';
+    if (text.includes('sphero indi') || text.includes('indi')) return 'Sphero Indi';
+    if (text.includes('sphero mini') || text.includes('sphero')) return 'Sphero Mini';
+    if (text.includes('virtual-tee') || text.includes('virtuali-tee')) return 'Virtuali-Tee';
+    if (text.includes('plugo')) return 'Plugo';
+    if (text.includes('photon')) return 'Photon';
+    if (text.includes('ipad') || text.includes('tablet')) return 'iPad Kist';
+    return 'Wonderlab Leskist';
+};
+
+window.getAfbeeldingVoorKist = function(naam) {
+    const clean = (naam || '').toLowerCase();
+    if (clean.includes('bee-bot') || clean.includes('beebot')) return 'img/beebot.jpg';
+    if (clean.includes('blue-bot') || clean.includes('bluebot')) return 'img/bluebot.jpg';
+    if (clean.includes('green screen studio') || clean.includes('greenscreen studio') || clean.includes('greenscreenstudio')) return 'img/greenscreenstudio.jpg';
+    if (clean.includes('green screen') || clean.includes('greenscreen')) return 'img/greenscreen.jpg';
+    if (clean.includes('makey makey') || clean.includes('makeymakey')) return 'img/makeymakey.jpg';
+    if (clean.includes('micro:bit') || clean.includes('microbit')) return 'img/microbit.jpg';
+    if (clean.includes('ozobot')) return 'img/ozobot.jpg';
+    if (clean.includes('classvr') || clean.includes('vr bril') || clean.includes('virtual reality') || clean.includes('vr')) return 'img/vrbrillen.jpg';
+    if (clean.includes('spike essential') || clean.includes('lego essential')) return 'img/legoessential.jpg';
+    if (clean.includes('spike prime') || clean.includes('lego spike')) return 'img/legospike.jpg';
+    if (clean.includes('lego bricq') || clean.includes('bricq')) return 'img/legobricq.jpg';
+    if (clean.includes('podcast')) return 'img/podcaststudio.jpg';
+    if (clean.includes('3d pen') || clean.includes('3dpennen')) return 'img/3dpennen.jpg';
+    if (clean.includes('3d printer') || clean.includes('3dprinter')) return 'img/3dprinter.jpg';
+    if (clean.includes('piximakey') || clean.includes('stop-motion') || clean.includes('animatie')) return 'img/piximakey.jpg';
+    if (clean.includes('mtiny')) return 'img/mtiny.jpg';
+    if (clean.includes('dash')) return 'img/dashrobot.jpg';
+    if (clean.includes('cue')) return 'img/cuerobot.jpg';
+    if (clean.includes('drone')) return 'img/drones.jpg';
+    if (clean.includes('duplo')) return 'img/duplocodingexpress.jpg';
+    if (clean.includes('easiscope') || clean.includes('microscoop')) return 'img/easiscope.jpg';
+    if (clean.includes('infento pro')) return 'img/infentoprokit.jpg';
+    if (clean.includes('infento')) return 'img/infentotalentkit.jpg';
+    if (clean.includes('intelino') || clean.includes('trein')) return 'img/intelinotrein.jpg';
+    if (clean.includes('osmo')) return 'img/osmo.jpg';
+    if (clean.includes('kiene klanken')) return 'img/kieneklanken.jpg';
+    if (clean.includes('sphero indi') || clean.includes('indi')) return 'img/spheroindi.jpg';
+    if (clean.includes('sphero mini') || clean.includes('sphero')) return 'img/spheromini.jpg';
+    if (clean.includes('virtual-tee') || clean.includes('virtuali-tee')) return 'img/virtualtee.jpg';
+    if (clean.includes('plugo')) return 'img/plugo.jpg';
+    if (clean.includes('photon')) return 'img/photon.jpg';
+    if (clean.includes('ipad') || clean.includes('tablet')) return 'img/ipad.jpg';
+    return 'Verwonderlab.jpg';
+};
+
+window.filterLesideeen = function(cat) {
+    actieveLesideeFilter = cat;
+    window.renderLesideeenGrid();
+};
+
+window.zoekLesideeen = function(val) {
+    actieveLesideeZoekterm = (val || '').toLowerCase().trim();
+    window.renderLesideeenGrid();
+};
+
+window.toggleLesbrief = function(detailId, btn) {
+    const drawer = document.getElementById(detailId);
+    if (!drawer) return;
+    const isHidden = drawer.style.display === 'none' || drawer.style.display === '';
+    drawer.style.display = isHidden ? 'block' : 'none';
+    if (btn) {
+        btn.innerHTML = isHidden 
+            ? '<span>▲ Lesbrief inklappen</span>' 
+            : '<span>📖 Bekijk complete lesbrief</span> <span class="arrow-indicator">▼</span>';
+        btn.style.background = isHidden ? '#e2e8f0' : '#f8fafc';
+        btn.style.borderColor = isHidden ? '#8CC63F' : '#cbd5e1';
+    }
+};
+
+window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
+    const lb = idee.lesbrief;
+    if (!lb) {
+        return `
+        <div style="padding: 10px 0;">
+            <p><strong>Over deze les:</strong> ${idee.beschrijving || 'Geen uitgebreide lesbrief beschikbaar.'}</p>
+            ${idee.link ? `<p><a href="${idee.link}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: none;">🌐 Bekijk online lesmateriaal →</a></p>` : ''}
+            <div class="lesbrief-cta">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">Direct aan de slag met deze les?</p>
+                <a href="${reserveerUrl}" class="btn-direct-reserve" style="display: inline-flex; width: auto; padding: 10px 22px;">📅 Reserveer direct '${kistNaam}'</a>
+            </div>
+        </div>`;
+    }
+
+    return `
+    <div style="padding: 5px 0;">
+        <div class="lesbrief-section">
+            <h4>🎯 Kerndoelen & Wat leerlingen leren</h4>
+            <div style="background: white; padding: 10px 14px; border-radius: 8px; border-left: 3px solid #8CC63F; font-size: 13px; line-height: 1.6;">
+                ${lb.doelen}
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 16px;">
+            <div style="background: white; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <strong style="color: #0f172a; display: block; margin-bottom: 2px;">⏱️ Tijdsduur</strong>
+                <span style="color: #64748b;">${lb.tijd || '50 minuten'}</span>
+            </div>
+            <div style="background: white; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <strong style="color: #0f172a; display: block; margin-bottom: 2px;">👥 Organisatie</strong>
+                <span style="color: #64748b;">${lb.organisatie || 'In tweetallen / groepjes'}</span>
+            </div>
+        </div>
+
+        <div class="lesbrief-section">
+            <h4>🧰 Benodigdheden & Voorbereiding</h4>
+            <div style="background: white; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <p style="margin: 0 0 6px 0;"><strong>Uit de leskist:</strong> ${lb.kistMateriaal || kistNaam}</p>
+                <p style="margin: 0 0 6px 0;"><strong>In het lokaal:</strong> ${lb.klasMateriaal || 'Digibord, tafels vrijmaken'}</p>
+                <p style="margin: 0; color: #64748b; font-size: 12px;"><em>💡 Voorbereiding (${lb.voorbereidingTijd || '5 min'}): ${lb.voorbereiding}</em></p>
+            </div>
+        </div>
+
+        <div class="lesbrief-section">
+            <h4>🚀 Lesverloop in 3 fasen</h4>
+            <div class="lesbrief-step-card">
+                <strong>1. Inleiding (${lb.inleidingTijd || '10 min'}):</strong>
+                <p style="margin: 4px 0 0 0; color: #475569;">${lb.inleiding}</p>
+            </div>
+            <div class="lesbrief-step-card">
+                <strong>2. Kernactiviteit & Opdracht (${lb.kernTijd || '30 min'}):</strong>
+                <p style="margin: 4px 0 0 0; color: #475569;">${lb.kern}</p>
+            </div>
+            <div class="lesbrief-step-card">
+                <strong>3. Afsluiting & Reflectie (${lb.afsluitingTijd || '10 min'}):</strong>
+                <p style="margin: 4px 0 0 0; color: #475569;">${lb.afsluiting}</p>
+            </div>
+        </div>
+
+        ${lb.tips ? `
+        <div class="lesbrief-section">
+            <h4>💡 Tips & Differentiatie</h4>
+            <div style="background: #fffbeb; padding: 10px 14px; border-radius: 8px; border-left: 3px solid #f59e0b; color: #92400e; font-size: 12.5px;">
+                ${lb.tips}
+            </div>
+        </div>` : ''}
+
+        ${idee.link ? `
+        <div style="margin-top: 10px; margin-bottom: 15px;">
+            <a href="${idee.link}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; color: #2563eb; font-weight: 600; text-decoration: none; font-size: 12.5px;">
+                <span>🌐 Extra online lesmateriaal & printbladen bekijken →</span>
+            </a>
+        </div>` : ''}
+
+        <div class="lesbrief-cta">
+            <p style="margin: 0 0 10px 0; font-weight: 700; color: #166534; font-size: 14px;">Direct enthousiast om deze les te geven?</p>
+            <a href="${reserveerUrl}" class="btn-direct-reserve" style="display: inline-flex; width: auto; padding: 11px 26px; font-size: 13px;">
+                <span>📅 Reserveer direct '${kistNaam}'</span>
+            </a>
+        </div>
+    </div>`;
+};
+
+window.checkUrlReservationParam = function() {
+    const params = new URLSearchParams(window.location.search);
+    const kistParam = params.get('kist');
+    if (!kistParam || !leskisten || leskisten.length === 0) return;
+
+    const term = decodeURIComponent(kistParam).toLowerCase().trim();
+    const gevonden = leskisten.find(k => 
+        k.id.toString() === term || 
+        (k.naam && k.naam.toLowerCase().includes(term)) ||
+        (k.naam && term.includes(k.naam.toLowerCase()))
+    );
+
+    if (gevonden) {
+        setTimeout(() => {
+            if (typeof window.openLeskistInfo === 'function') {
+                window.openLeskistInfo(gevonden.id);
+            }
+            const cards = document.querySelectorAll('.leskist-card');
+            cards.forEach(card => {
+                if (card.innerText.toLowerCase().includes(gevonden.naam.toLowerCase())) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.style.border = '2px solid #8CC63F';
+                    card.style.boxShadow = '0 0 0 4px rgba(140, 198, 63, 0.25), 0 10px 25px rgba(0,0,0,0.1)';
+                }
+            });
+        }, 350);
+    }
 };
 
 window.renderLesideeenGrid = function() {
@@ -480,55 +1028,94 @@ window.renderLesideeenGrid = function() {
     
     container.style.display = 'block';
     if(lesideeen.length === 0) {
-        container.innerHTML = "<p style='color:#64748b; padding: 20px 0;'>Er staan nog geen lesideeën in de database.</p>";
-        return;
+        lesideeen = window.verrijkLesideeen([]);
+        slaDataOp();
     }
 
-    const uniekeCategorieen = ['Alle', ...new Set(lesideeen.map(i => i.categorie))];
-    let filterHtml = '<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px;">';
+    // Filter balk
+    const uniekeCategorieen = ['Alle', ...new Set(lesideeen.map(i => i.categorie || 'Inspiratie'))];
+    let filterHtml = `
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 25px; align-items: center; justify-content: space-between; background: white; padding: 14px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">`;
+    
     uniekeCategorieen.forEach(cat => {
         const isActive = actieveLesideeFilter === cat;
-        const bg = isActive ? '#8CC63F' : '#f1f5f9';
-        const color = isActive ? 'white' : '#64748b';
-        filterHtml += `<button onclick="window.filterLesideeen('${cat}')" style="background: ${bg}; color: ${color}; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: ${isActive ? '0 4px 6px rgba(140, 198, 63, 0.3)' : 'none'};">${cat}</button>`;
+        const bg = isActive ? '#8CC63F' : '#ffffff';
+        const color = isActive ? '#ffffff' : '#475569';
+        const border = isActive ? '1px solid #8CC63F' : '1px solid #cbd5e1';
+        filterHtml += `<button onclick="window.filterLesideeen('${cat}')" style="background: ${bg}; color: ${color}; border: ${border}; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: ${isActive ? '0 3px 8px rgba(140, 198, 63, 0.3)' : 'none'};">${cat}</button>`;
     });
-    filterHtml += '</div>';
+    
+    filterHtml += `</div>
+        <div>
+            <input type="text" id="lesideeZoekInput" placeholder="🔍 Zoek op titel, leskist of bouw..." value="${actieveLesideeZoekterm}" onkeyup="window.zoekLesideeen(this.value)" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; font-size: 13px; width: 250px; background: #f8fafc;">
+        </div>
+    </div>`;
 
-    const categoryColors = {
-        "Programmeren": "linear-gradient(135deg, #6366f1, #3b82f6)",
-        "Mediawijsheid": "linear-gradient(135deg, #f59e0b, #ef4444)",
-        "Creatief": "linear-gradient(135deg, #ec4899, #8b5cf6)",
-        "Techniek": "linear-gradient(135deg, #14b8a6, #0ea5e9)",
-        "Standaard": "linear-gradient(135deg, #8CC63F, #22c55e)"
-    };
+    const gefilterdeIdeeen = (actieveLesideeFilter === 'Alle' ? lesideeen : lesideeen.filter(i => i.categorie === actieveLesideeFilter))
+        .filter(i => {
+            if (!actieveLesideeZoekterm) return true;
+            const term = actieveLesideeZoekterm;
+            return (i.titel && i.titel.toLowerCase().includes(term)) ||
+                   (i.beschrijving && i.beschrijving.toLowerCase().includes(term)) ||
+                   (i.kistNaam && i.kistNaam.toLowerCase().includes(term)) ||
+                   (i.categorie && i.categorie.toLowerCase().includes(term)) ||
+                   (i.bouw && i.bouw.toLowerCase().includes(term));
+        });
 
-    const gefilterdeIdeeen = actieveLesideeFilter === 'Alle' ? lesideeen : lesideeen.filter(i => i.categorie === actieveLesideeFilter);
-    let gridHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; width: 100%;">';
+    let gridHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; width: 100%;">';
     
     if(gefilterdeIdeeen.length === 0) {
-        gridHtml += "<p style='color:#64748b; grid-column: 1 / -1;'>Geen lesideeën gevonden.</p>";
+        gridHtml += "<div style='grid-column: 1 / -1; padding: 40px; text-align: center; background: white; border-radius: 12px; color: #64748b; border: 1px solid #e2e8f0;'>Geen lesideeën gevonden voor de huidige selectie.</div>";
     } else {
         gefilterdeIdeeen.forEach(idee => {
-            let linkHtml = idee.link ? `<a href="${idee.link}" target="_blank" class="idea-btn" style="display: inline-block; margin-top: 15px; padding: 8px 15px; background: #f1f5f9; color: #334155; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: bold;">🔗 Bekijk Lesmateriaal</a>` : '';
-            let bgGradient = categoryColors[idee.categorie] || categoryColors["Standaard"];
-            const veiligeBeschrijving = idee.beschrijving || "";
-            
+            const kistNaam = idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving);
+            const foto = idee.afbeelding || window.getAfbeeldingVoorKist(kistNaam);
+            const bouwBadge = idee.bouw || "Alle groepen";
+            const categorieBadge = idee.categorie || "Inspiratie";
+            const reserveerUrl = `reserveren.html?kist=${encodeURIComponent(kistNaam)}`;
+            const detailId = `lesbrief-detail-${idee.id}`;
+
             gridHtml += `
-            <div class="idea-card" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
-                <div class="idea-card-header" style="background: ${bgGradient}; padding: 15px; color: white;">
-                    <span class="idea-badge" style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${idee.categorie}</span>
+            <div class="idea-card" id="idea-card-${idee.id}">
+                <div class="idea-image-wrapper">
+                    <img src="${foto}" alt="${idee.titel}">
+                    <div style="position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; flex-wrap: wrap; z-index: 2;">
+                        <span class="idea-badge">${categorieBadge}</span>
+                        <span class="idea-badge bouw">${bouwBadge}</span>
+                    </div>
                 </div>
-                <div class="idea-card-body" style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
-                    <h3 style="margin-top: 0; font-size: 18px; color: #1e293b; margin-bottom: 10px;">${idee.titel}</h3>
-                    <p style="font-size: 13px; color: #64748b; line-height: 1.5; flex-grow: 1; margin: 0;">${veiligeBeschrijving}</p>
-                    ${linkHtml}
+
+                <div class="idea-card-body">
+                    <h3>${idee.titel}</h3>
+                    
+                    <div class="idea-material-tag">
+                        <span>📦</span> <span>Leskist: <strong>${kistNaam}</strong></span>
+                    </div>
+
+                    <p>${idee.beschrijving || ""}</p>
+
+                    <!-- Actieknoppen rij -->
+                    <div class="idea-actions-row">
+                        <button onclick="window.toggleLesbrief('${detailId}', this)" class="btn-toggle-lesbrief">
+                            <span>📖 Bekijk complete lesbrief</span> <span class="arrow-indicator">▼</span>
+                        </button>
+                        <a href="${reserveerUrl}" class="btn-direct-reserve">
+                            <span>📅 Reserveer kist</span>
+                        </a>
+                    </div>
+
+                    <!-- Uitklapbare complete lesbrief -->
+                    <div id="${detailId}" class="lesbrief-drawer">
+                        ${window.renderLesbriefContent(idee, kistNaam, reserveerUrl)}
+                    </div>
                 </div>
             </div>`;
         });
     }
     gridHtml += '</div>';
     container.innerHTML = filterHtml + gridHtml;
-}
+};
 
 window.renderBeheerdersTabellen = function() {
     const periodesBody = document.getElementById('adminPeriodsBody');
@@ -922,21 +1509,29 @@ async function verwerkFormulier(formId, btnElement) {
         if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; 
         if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; 
         
-        // NIEUW: Maak de e-mail op en open het mailprogramma van de gebruiker
-        const mailOnderwerp = encodeURIComponent(`Storing / Schade: ${kistSelect}`);
-        const mailBody = encodeURIComponent(
-            `Beste beheerder,\n\nEr is zojuist een nieuwe storingsmelding gedaan via het Verwonderlab Portaal.\n\n` +
-            `Materiaal: ${kistSelect}\n` +
-            `Soort melding: ${soortMelding}\n` +
-            `Gemeld door: ${melderNaam} (${melderEmail})\n\n` +
-            `Beschrijving:\n${beschrijving}\n\n` +
-            `(De eventuele foto en huidige status kun je bekijken in het Beheerders Dashboard)`
-        );
-        
-        // Dit opent Outlook/Mail met alles al ingevuld
-        window.location.href = `mailto:verwonderlab@wonderwijs.nl?subject=${mailOnderwerp}&body=${mailBody}`;
+        // Maak de e-mail op en open direct Microsoft 365 Outlook
+        const mailOnderwerp = `Storing / Schade: ${kistSelect}`;
+        const mailBody = 
+`Beste beheerder,
 
-        alert('✅ Je melding is opgeslagen in het systeem en je e-mailprogramma wordt nu geopend om de melding te versturen!'); 
+Er is zojuist een nieuwe storingsmelding gedaan via het Verwonderlab Portaal.
+
+Materiaal: ${kistSelect}
+Soort melding: ${soortMelding}
+Gemeld door: ${melderNaam} (${melderEmail})
+
+Beschrijving:
+${beschrijving}
+
+(De eventuele foto en huidige status kun je bekijken in het Beheerders Dashboard)`;
+        
+        if (typeof window.openInOutlook === 'function') {
+            window.openInOutlook("verwonderlab@wonderwijs.nl", mailOnderwerp, mailBody);
+        } else {
+            window.location.href = `mailto:verwonderlab@wonderwijs.nl?subject=${encodeURIComponent(mailOnderwerp)}&body=${encodeURIComponent(mailBody)}`;
+        }
+
+        alert('✅ Je melding is opgeslagen in het systeem en Outlook wordt nu geopend om de melding te versturen!'); 
     }
     } catch(err) { 
         alert("❌ Er is iets misgegaan tijdens het verwerken: " + err.message); 
@@ -947,7 +1542,6 @@ async function verwerkFormulier(formId, btnElement) {
 }
 
 // Hulpmiddelen
-window.filterLesideeen = function(categorie) { actieveLesideeFilter = categorie; window.renderLesideeenGrid(); }
 window.filterDocentKisten = function(doelgroep) { actieveDocentFilter = doelgroep; document.querySelectorAll('#docentKistFilters .filter-btn').forEach(btn => { btn.style.background = btn.innerText.includes(doelgroep) ? (doelgroep === 'Favorieten' ? '#ef4444' : '#8CC63F') : 'white'; btn.style.color = btn.innerText.includes(doelgroep) ? 'white' : '#64748b'; }); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); };
 window.zoekDocentKisten = function() { const input = document.getElementById('docentKistZoekInput'); if(input) { actieveDocentZoekterm = input.value.toLowerCase(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); } };
 window.toggleFavoriet = function(id, event) { event.stopPropagation(); if(mijnFavorieten.includes(id)) { mijnFavorieten = mijnFavorieten.filter(favId => favId !== id); } else { mijnFavorieten.push(id); } slaDataOp(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); };
@@ -1466,6 +2060,24 @@ window.beoordeelReservering = async function(id, nieuweStatus) {
     }
 };
 
+window.openInOutlook = function(to, subject, body) {
+    const cleanTo = (to || "").trim();
+    const encodedTo = encodeURIComponent(cleanTo);
+    const encodedSubject = encodeURIComponent(subject || "");
+    const encodedBody = encodeURIComponent(body || "");
+
+    // 1. Direct Outlook Web Deeplink voor Microsoft 365 (Stichting Wonderwijs)
+    const outlookWebUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`;
+
+    // Probeer Outlook Web direct te openen in een nieuw tabblad
+    const outlookWindow = window.open(outlookWebUrl, '_blank');
+
+    // 2. Fallback: als pop-up venster wordt geblokkeerd of lokale Outlook client actief is
+    if (!outlookWindow || outlookWindow.closed || typeof outlookWindow.closed === 'undefined') {
+        window.location.href = `mailto:${cleanTo}?subject=${encodedSubject}&body=${encodedBody}`;
+    }
+};
+
 window.verstuurGoedkeuringsMail = async function(r, per) {
     const docentEmail = r.aanvragerEmail;
     const docentNaam = r.leerkracht || "Leerkracht";
@@ -1530,11 +2142,10 @@ Afzender: verwonderlab@wonderwijs.nl`;
     if (isVerzondenViaServer) {
         alert(`✅ Reservering goedgekeurd!\n\nEr is automatisch een bevestigingsmail verstuurd naar ${docentNaam} (${docentEmail}).`);
     } else {
-        // 2. Client fallback: Open het mailprogramma (Outlook) met alles al kant-en-klaar ingevuld
-        const mailToUrl = `mailto:${encodeURIComponent(docentEmail)}?subject=${encodeURIComponent(mailOnderwerp)}&body=${encodeURIComponent(mailTekst)}`;
-        window.location.href = mailToUrl;
+        // 2. Open direct Microsoft 365 Outlook
+        window.openInOutlook(docentEmail, mailOnderwerp, mailTekst);
 
-        alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!\n\nJe e-mailprogramma (Outlook) wordt nu geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).\n\nKlik in Outlook op 'Verzenden' om de mail te versturen.`);
+        alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!\n\nOutlook wordt nu geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).\n\nKlik in Outlook op 'Verzenden' om de mail te versturen.`);
     }
 };
 window.actieReserveringVerwijderen = function(id, event) { event.preventDefault(); if(confirm("Weet je zeker dat je deze reservering definitief wilt verwijderen?")) { reserveringen = reserveringen.filter(r => r.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteReserveringFromCloud) window.deleteReserveringFromCloud(id); } }
@@ -1562,25 +2173,47 @@ document.addEventListener('change', (e) => {
     if (e.target.type === 'checkbox' && e.target.id && e.target.id.startsWith('check-domein')) { 
         let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
         if(!huidigeEmail) {
-            alert("⚠️ Je bent niet ingelogd met een e-mailadres. Je voortgang kan zo niet in de cloud worden opgeslagen.");
+            console.warn("Geen e-mailadres beschikbaar om voortgang op te slaan.");
             return;
         }
         
-        const checkboxStates = JSON.parse(localStorage.getItem('ww_vinkjes')) || {}; 
+        let checkboxStates = {};
+        try {
+            const raw = localStorage.getItem('ww_vinkjes');
+            if (raw) checkboxStates = JSON.parse(raw) || {};
+        } catch(err) {
+            checkboxStates = {};
+        }
+
         checkboxStates[e.target.id] = e.target.checked; 
         const strState = JSON.stringify(checkboxStates); 
         
         localStorage.setItem('ww_vinkjes', strState); 
         
         // Sla direct op in de Firebase cloud gekoppeld aan het e-mailadres
-        if(window.saveVoortgangToCloud) {
+        if(typeof window.saveVoortgangToCloud === 'function') {
             window.saveVoortgangToCloud(huidigeEmail, strState); 
+        }
+
+        // Visuele feedback op de leerlijnen pagina
+        const syncBadge = document.getElementById('cloudSyncStatusPill');
+        if (syncBadge) {
+            syncBadge.innerHTML = '☁️ <span style="color:#15803d; font-weight:700;">Opgeslagen in cloud</span>';
+            clearTimeout(window._syncPillTimer);
+            window._syncPillTimer = setTimeout(() => {
+                syncBadge.innerHTML = '☁️ Automatisch gesynchroniseerd met jouw account';
+            }, 2500);
         }
     } 
 });
 
 window.reproduceerVinkjes = function() { 
-    const savedChecks = JSON.parse(localStorage.getItem('ww_vinkjes')) || {}; 
+    let savedChecks = {}; 
+    try {
+        const raw = localStorage.getItem('ww_vinkjes');
+        if (raw) savedChecks = JSON.parse(raw) || {};
+    } catch(e) { savedChecks = {}; }
+
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => { 
         if (cb.id && cb.id.startsWith('check-domein')) {
             cb.checked = !!savedChecks[cb.id];
@@ -1592,3 +2225,10 @@ window.reproduceerVinkjes = function() {
         }
     }); 
 };
+
+// Start eventuele deep link routering bij het laden
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.checkUrlReservationParam === 'function') {
+        window.checkUrlReservationParam();
+    }
+});

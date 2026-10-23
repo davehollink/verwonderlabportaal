@@ -398,111 +398,231 @@ body { font-family: 'Ubuntu', sans-serif; background-color: var(--bg-color); col
    LESIDEEËN & INSPIRATIE (WAUW-FACTOR)
    ========================================== */
 .hero-lesideeen {
-    background: linear-gradient(135deg, #8CC63F 0%, #0d9488 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-left: 6px solid #8CC63F;
     color: white;
-    padding: 50px 40px;
+    padding: 35px 35px;
     border-radius: 16px;
-    text-align: center;
-    margin-bottom: 40px;
-    box-shadow: 0 10px 25px rgba(14, 148, 136, 0.2);
+    text-align: left;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
     position: relative;
     overflow: hidden;
 }
 
 .hero-lesideeen h1 {
-    font-size: 36px;
-    margin-bottom: 15px;
-    font-weight: 800;
+    font-size: 28px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 700;
     position: relative;
     z-index: 2;
 }
 
 .hero-lesideeen p {
-    font-size: 17px;
-    max-width: 700px;
-    margin: 0 auto;
-    opacity: 0.95;
+    font-size: 15px;
+    max-width: 800px;
+    margin: 0;
+    opacity: 0.9;
     line-height: 1.6;
     position: relative;
     z-index: 2;
 }
 
-/* De strakke nieuwe kaarten */
+/* De strakke nieuwe lesidee kaarten */
 .idea-card {
     background: #ffffff;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     position: relative;
-    border: 1px solid #f1f5f9;
+    border: 1px solid #e2e8f0;
 }
 
 .idea-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 30px rgba(140, 198, 63, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
 }
 
-.idea-card-header {
-    height: 120px;
+.idea-image-wrapper {
     position: relative;
-    display: flex;
-    align-items: flex-end;
-    padding: 20px;
+    height: 190px;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+.idea-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.idea-card:hover .idea-image-wrapper img {
+    transform: scale(1.05);
 }
 
 .idea-card-body {
-    padding: 25px;
+    padding: 22px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
 
 .idea-badge {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.96);
     color: #1e293b;
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.idea-badge.bouw {
+    background: rgba(140, 198, 63, 0.95);
+    color: white;
 }
 
 .idea-card-body h3 {
-    font-size: 20px;
+    font-size: 19px;
     color: #0f172a;
     margin-top: 0;
-    margin-bottom: 12px;
-    line-height: 1.3;
+    margin-bottom: 8px;
+    line-height: 1.35;
+    font-weight: 700;
 }
 
 .idea-card-body p {
     color: #475569;
-    font-size: 14px;
+    font-size: 13.5px;
     line-height: 1.6;
-    margin-bottom: 25px;
+    margin-bottom: 18px;
     flex-grow: 1;
 }
 
-.idea-btn {
-    background: #f8fafc;
-    color: #0f172a;
-    text-align: center;
-    padding: 12px;
+.idea-material-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f1f5f9;
+    color: #334155;
+    padding: 6px 12px;
     border-radius: 8px;
-    text-decoration: none;
+    font-size: 12px;
     font-weight: 600;
-    font-size: 14px;
-    transition: all 0.2s;
+    margin-bottom: 14px;
+    width: fit-content;
     border: 1px solid #e2e8f0;
 }
 
-.idea-btn:hover {
+.idea-actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.btn-toggle-lesbrief {
+    flex: 1;
+    min-width: 140px;
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-toggle-lesbrief:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+}
+
+.btn-direct-reserve {
+    flex: 1;
+    min-width: 140px;
     background: #8CC63F;
     color: white;
-    border-color: #8CC63F;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 2px 6px rgba(140, 198, 63, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-direct-reserve:hover {
+    background: #7bb334;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(140, 198, 63, 0.4);
+}
+
+.lesbrief-drawer {
+    display: none;
+    margin-top: 20px;
+    padding: 18px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.6;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.lesbrief-section {
+    margin-bottom: 16px;
+}
+
+.lesbrief-section h4 {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lesbrief-step-card {
+    background: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 3px solid #8CC63F;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.lesbrief-step-card strong {
+    color: #0f172a;
+}
+
+.lesbrief-cta {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 15px;
+    text-align: center;
 }
 /* =========================================================
    10. DESKTOP SPECIFIEKE LAYOUT (Schermen breder dan 768px)
