@@ -193,6 +193,15 @@ window.checkLeerkrachtLogin = function() {
     setTimeout(() => {
         const pageTitle = document.getElementById('pageTitle');
         if (pageTitle) pageTitle.innerText = 'Welkom, ' + huidigeNaam + '!';
+        const userEmailSubtitle = document.getElementById('userEmailSubtitle');
+        if (userEmailSubtitle) {
+            userEmailSubtitle.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #64748b;">✉️ ${huidigeEmail}</span>`;
+        }
+
+        // Werk ook de gebruikersbadge in de zijbalk bij
+        if (typeof window.updateSidebarUserProfile === "function") {
+            window.updateSidebarUserProfile();
+        }
 
         // Check Beheerdersrechten
         const isBeheerder = beheerdersLijst.some(b => b.email && b.email.toLowerCase() === huidigeEmail.toLowerCase());
@@ -215,6 +224,44 @@ window.checkLeerkrachtLogin = function() {
     }, 200);
 };
 
+// Universele functie om het e-mailadres en de naam van de leerkracht in het zijmenu te tonen
+window.updateSidebarUserProfile = function() {
+    const bottomMenu = document.querySelector('.bottom-menu');
+    if (!bottomMenu) return;
+
+    let huidigeNaam = localStorage.getItem('ww_huidige_leerkracht');
+    let huidigeEmail = localStorage.getItem('ww_huidige_email');
+    if (!huidigeNaam && !huidigeEmail) return;
+
+    let userBadge = document.getElementById('sidebarUserProfileBadge');
+    if (!userBadge) {
+        userBadge = document.createElement('div');
+        userBadge.id = 'sidebarUserProfileBadge';
+        userBadge.style.cssText = `
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            background: rgba(140, 198, 63, 0.12);
+            border: 1px solid rgba(140, 198, 63, 0.25);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        `;
+        const label = bottomMenu.querySelector('.menu-label');
+        if (label && label.nextSibling) {
+            bottomMenu.insertBefore(userBadge, label.nextSibling);
+        } else {
+            bottomMenu.prepend(userBadge);
+        }
+    }
+
+    userBadge.innerHTML = `
+        <div style="font-weight: 700; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${huidigeNaam}">${huidigeNaam || 'Leerkracht'}</div>
+        <div style="font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${huidigeEmail}">✉️ ${huidigeEmail || ''}</div>
+    `;
+};
+
 // Global functies voor beheerdersmodus (zonder wachtwoord, Microsoft SSO geautoriseerd)
 window.checkAdminPassword = function() {
     const leerkrachtView = document.getElementById("leerkrachtView");
@@ -233,10 +280,15 @@ window.checkAdminPassword = function() {
     const adminBtn = document.getElementById("adminLoginBtn");
     const adminLogoutBtn = document.getElementById("adminLogoutBtn");
     const pageTitle = document.getElementById("pageTitle");
+    const userEmailSubtitle = document.getElementById("userEmailSubtitle");
 
     if (adminBtn) adminBtn.style.display = "none";
     if (adminLogoutBtn) adminLogoutBtn.style.display = "inline-block";
     if (pageTitle) pageTitle.innerText = "Beheerders Dashboard";
+    if (userEmailSubtitle) {
+        let huidigeEmail = localStorage.getItem('ww_huidige_email') || "";
+        userEmailSubtitle.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #8CC63F; font-weight: 600;">🛡️ Beheerdersmodus &bull; Ingelogd als: ${huidigeEmail}</span>`;
+    }
 };
 
 window.logoutAdmin = function() {
@@ -245,6 +297,7 @@ window.logoutAdmin = function() {
     const adminBtn = document.getElementById("adminLoginBtn");
     const adminLogoutBtn = document.getElementById("adminLogoutBtn");
     const pageTitle = document.getElementById("pageTitle");
+    const userEmailSubtitle = document.getElementById("userEmailSubtitle");
 
     if (leerkrachtView) leerkrachtView.style.display = "";
     if (beheerdersView) beheerdersView.style.display = "none";
@@ -252,7 +305,11 @@ window.logoutAdmin = function() {
     if (adminLogoutBtn) adminLogoutBtn.style.display = "none";
 
     let huidigeNaam = localStorage.getItem('ww_huidige_leerkracht') || "Gastdocent";
+    let huidigeEmail = localStorage.getItem('ww_huidige_email') || "";
     if (pageTitle) pageTitle.innerText = "Welkom, " + huidigeNaam + "!";
+    if (userEmailSubtitle) {
+        userEmailSubtitle.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #64748b;">✉️ ${huidigeEmail}</span>`;
+    }
 };
 
 // ==========================================
@@ -484,12 +541,27 @@ window.renderBeheerdersTabellen = function() {
                 }
                 
                 let actieMenuHTML = `<button style="background: transparent; border: none; font-size: 18px; cursor: pointer;" onclick="window.actieReserveringVerwijderen(${r.id}, event)">🗑️</button>`;
-                let schoolWeergave = r.school ? `${r.school} - ${r.leerkracht}` : r.leerkracht;
+                
+                const docentNaam = r.leerkracht || "Onbekende leerkracht";
+                const docentEmail = r.aanvragerEmail 
+                    ? `<div style="font-size: 12px; color: #64748b; margin-top: 3px;"><a href="mailto:${r.aanvragerEmail}" style="color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">✉️ ${r.aanvragerEmail}</a></div>` 
+                    : `<div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">(Geen e-mailadres)</div>`;
+                const schoolBadge = r.school 
+                    ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 500;">🏫 ${r.school}</div>` 
+                    : '';
+                
+                let leerkrachtWeergave = `
+                    <div>
+                        <strong style="color: #0f172a; font-size: 14px;">${docentNaam}</strong>
+                        ${docentEmail}
+                        ${schoolBadge}
+                    </div>
+                `;
                 
                 return `
                 <tr style="border-bottom: 1px solid #eee;">
                     <td style="vertical-align: top; padding: 15px;"><strong>${r.kist}</strong></td>
-                    <td style="vertical-align: top; padding: 15px;">${schoolWeergave}</td>
+                    <td style="vertical-align: top; padding: 15px;">${leerkrachtWeergave}</td>
                     <td style="vertical-align: top; padding: 15px;">${periodeNaam}</td>
                     <td style="vertical-align: top; padding: 15px;">${statusHTML}</td>
                     <td style="vertical-align: top; padding: 15px; text-align: center;">${actieMenuHTML}</td>
@@ -889,7 +961,91 @@ window.openLeskistInfo = function(id) {
 }
 
 // Admin Functies (Bewerken/Verwijderen)
-window.beoordeelReservering = async function(id, nieuweStatus) { let r = reserveringen.find(x => x.id == id); if(r) r.status = nieuweStatus; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateChecklistInCloud) { await window.updateChecklistInCloud(id, { status: nieuweStatus }); const per = periodes.find(p => p.id == r?.periodeId); if(nieuweStatus === 'Geaccepteerd' && r && per) alert(`📧 MAIL NAAR LEERKRACHT:\n\nJe reservering voor '${r.kist}' is GEACCEPTEERD voor ${per.naam}.`); } }
+window.beoordeelReservering = async function(id, nieuweStatus) {
+    let r = reserveringen.find(x => x.id == id);
+    if (r) r.status = nieuweStatus;
+    slaDataOp();
+    if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+    if (window.updateChecklistInCloud) {
+        await window.updateChecklistInCloud(id, { status: nieuweStatus });
+    }
+    const per = periodes.find(p => p.id == r?.periodeId);
+    if (nieuweStatus === 'Geaccepteerd' && r) {
+        await window.verstuurGoedkeuringsMail(r, per);
+    }
+};
+
+window.verstuurGoedkeuringsMail = async function(r, per) {
+    const docentEmail = r.aanvragerEmail;
+    const docentNaam = r.leerkracht || "Leerkracht";
+    const kistNaam = r.kist || "Lesmateriaal";
+    const periodeNaam = per ? `${per.naam} (${per.start} t/m ${per.eind})` : "de gereserveerde periode";
+    const schoolNaam = r.school || "de schoollocatie";
+    const beheerderNaam = localStorage.getItem('ww_huidige_leerkracht') || "Beheerder Verwonderlab";
+
+    if (!docentEmail || !docentEmail.includes('@')) {
+        alert(`✅ Reservering voor '${kistNaam}' is geaccepteerd!\n\nLet op: er is geen e-mailadres gekoppeld aan deze aanvraag voor ${docentNaam}. Er is daarom geen e-mail verstuurd.`);
+        return;
+    }
+
+    const mailOnderwerp = `Goedkeuring reservering Verwonderlab: ${kistNaam}`;
+    const mailTekst = 
+`Beste ${docentNaam},
+
+Goed nieuws! Je reserveringsaanvraag voor '${kistNaam}' via het Verwonderlab Portaal is goedgekeurd door de beheerder.
+
+Reserveringsdetails:
+• Lesmateriaal: ${kistNaam}
+• Periode: ${periodeNaam}
+• Locatie / School: ${schoolNaam}
+• Status: Goedgekeurd
+
+Je kunt het materiaal op de afgesproken startdatum ophalen. Zorg ervoor dat het materiaal aan het einde van de periode weer compleet en netjes wordt ingeleverd voor de volgende leerkracht.
+
+Bekijk je reserveringen en tips in het Verwonderlab Portaal:
+https://verwonderlabportaal.vercel.app/
+
+Met vriendelijke groet,
+${beheerderNaam}
+Stichting Wonderwijs - Verwonderlab
+verwonderlab@wonderwijs.nl`;
+
+    // 1. Probeer automatische verzending via Vercel Serverless API (/api/send-email)
+    let isVerzondenViaServer = false;
+    try {
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                to: docentEmail,
+                leerkracht: docentNaam,
+                kist: kistNaam,
+                periode: periodeNaam,
+                school: schoolNaam,
+                approvedBy: beheerderNaam
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.sent) {
+                isVerzondenViaServer = true;
+            }
+        }
+    } catch (apiError) {
+        console.warn("Serverless mail API niet bereikbaar:", apiError);
+    }
+
+    if (isVerzondenViaServer) {
+        alert(`✅ Reservering goedgekeurd!\n\nEr is automatisch een bevestigingsmail verstuurd naar ${docentNaam} (${docentEmail}).`);
+    } else {
+        // 2. Client fallback: Open het mailprogramma (Outlook) met alles al kant-en-klaar ingevuld
+        const mailToUrl = `mailto:${encodeURIComponent(docentEmail)}?subject=${encodeURIComponent(mailOnderwerp)}&body=${encodeURIComponent(mailTekst)}`;
+        window.location.href = mailToUrl;
+
+        alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!\n\nJe e-mailprogramma (Outlook) wordt nu geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).\n\nKlik in Outlook op 'Verzenden' om de mail te versturen.`);
+    }
+};
 window.actieReserveringVerwijderen = function(id, event) { event.preventDefault(); if(confirm("Weet je zeker dat je deze reservering definitief wilt verwijderen?")) { reserveringen = reserveringen.filter(r => r.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteReserveringFromCloud) window.deleteReserveringFromCloud(id); } }
 window.updateChecklist = async function(id, veld, waarde) { let r = reserveringen.find(x => x.id == id); if(r) r[veld] = waarde; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateChecklistInCloud) window.updateChecklistInCloud(id, { [veld]: waarde }); }
 window.toggleMeldingStatus = async function(id) { let m = meldingen.find(x => x.id == id); if(m) { m.status = m.status === 'Open' ? 'Opgelost' : 'Open'; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateMeldingStatusInCloud) await window.updateMeldingStatusInCloud(id, m.status); } }
