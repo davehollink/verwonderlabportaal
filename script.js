@@ -85,7 +85,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "beheerders"), (snapshot) => { if(!snapshot.empty) { beheerdersLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } else { beheerdersLijst = []; slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "leskisten"), (snapshot) => { if(!snapshot.empty) { leskisten = snapshot.docs.map(d => d.data()).sort((a,b) => a.id - b.id); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); } }, checkError);
         onSnapshot(collection(db, "lesideeen"), (snapshot) => { if(!snapshot.empty) { lesideeen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderLesideeenGrid) window.renderLesideeenGrid(); } }, checkError);
-        onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); } }, checkError);
+        onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); } }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
 // Voortgang realtime ophalen en direct toepassen op de vinkjes
         onSnapshot(collection(db, "voortgang"), (snapshot) => { 
@@ -313,9 +313,50 @@ window.logoutAdmin = function() {
 };
 
 // ==========================================
-// 4. DOMCONTENTLOADED
+// 4. MOBIELE NAVIGATIE & DOMCONTENTLOADED
 // ==========================================
+window.initMobileNavigation = function() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    if (document.getElementById('mobileNavToggle')) return;
+
+    const logoDiv = sidebar.querySelector('.logo');
+    if (logoDiv) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'mobileNavToggle';
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'mobile-menu-btn';
+        toggleBtn.innerHTML = '<span>☰ Menu</span>';
+        toggleBtn.setAttribute('aria-label', 'Menu in- of uitklappen');
+
+        toggleBtn.onclick = function(e) {
+            e.stopPropagation();
+            sidebar.classList.toggle('mobile-menu-open');
+            const isOpen = sidebar.classList.contains('mobile-menu-open');
+            toggleBtn.innerHTML = isOpen ? '<span>✕ Sluiten</span>' : '<span>☰ Menu</span>';
+        };
+
+        logoDiv.appendChild(toggleBtn);
+
+        // Sluit mobiel menu automatisch als de gebruiker op een menu-link tikt
+        sidebar.querySelectorAll('.menu-item').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('mobile-menu-open');
+                    toggleBtn.innerHTML = '<span>☰ Menu</span>';
+                }
+            });
+        });
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialiseer mobiele navigatie voor alle smartphones
+    if (typeof window.initMobileNavigation === "function") {
+        window.initMobileNavigation();
+    }
+
     const vereistDomein = (window.AUTH_CONFIG && window.AUTH_CONFIG.allowedDomain) ? window.AUTH_CONFIG.allowedDomain.toLowerCase() : "@wonderwijs.nl";
     const huidigeEmail = localStorage.getItem('ww_huidige_email');
     const isAuthenticated = huidigeEmail && huidigeEmail.toLowerCase().endsWith(vereistDomein);
@@ -350,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(typeof laadProfielPagina === "function") laadProfielPagina();
     }
 
+    if(typeof window.updateSidebarUserProfile === "function") window.updateSidebarUserProfile();
     if(typeof checkLeerkrachtLogin === "function") checkLeerkrachtLogin(); 
     if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
 });
@@ -510,10 +552,62 @@ window.renderBeheerdersTabellen = function() {
 
     const reserveringenBody = document.getElementById('adminReservationsBody');
     if (reserveringenBody) {
-        if (reserveringen.length === 0) {
-            reserveringenBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #888;">Geen reserveringen in het systeem.</td></tr>`;
+        // Vul dropdown filters dynamisch bij indien nog niet gevuld
+        const filterPeriodeSelect = document.getElementById('adminFilterPeriode');
+        if (filterPeriodeSelect && filterPeriodeSelect.options.length <= 1 && periodes.length > 0) {
+            const huidigeVal = filterPeriodeSelect.value;
+            filterPeriodeSelect.innerHTML = '<option value="Alle">Alle Periodes</option>';
+            periodes.forEach(p => {
+                filterPeriodeSelect.innerHTML += `<option value="${p.id}">${p.naam} (${p.start} t/m ${p.eind})</option>`;
+            });
+            if (huidigeVal) filterPeriodeSelect.value = huidigeVal;
+        }
+
+        const filterSchoolSelect = document.getElementById('adminFilterSchool');
+        if (filterSchoolSelect && filterSchoolSelect.options.length <= 1 && scholen.length > 0) {
+            const huidigeSchoolVal = filterSchoolSelect.value;
+            filterSchoolSelect.innerHTML = '<option value="Alle">Alle Locaties / Scholen</option>';
+            scholen.forEach(s => {
+                filterSchoolSelect.innerHTML += `<option value="${s.naam}">${s.naam}</option>`;
+            });
+            if (huidigeSchoolVal) filterSchoolSelect.value = huidigeSchoolVal;
+        }
+
+        // Lees actieve filters uit
+        const gekozenPeriode = filterPeriodeSelect ? filterPeriodeSelect.value : 'Alle';
+        const gekozenStatus = document.getElementById('adminFilterStatus') ? document.getElementById('adminFilterStatus').value : 'Alle';
+        const gekozenSchool = filterSchoolSelect ? filterSchoolSelect.value : 'Alle';
+        const zoekTerm = document.getElementById('adminFilterZoek') ? document.getElementById('adminFilterZoek').value.toLowerCase().trim() : '';
+
+        // Filter de reserveringen
+        let gefilterdeReserveringen = reserveringen.filter(r => {
+            let matchP = (gekozenPeriode === 'Alle' || r.periodeId == gekozenPeriode);
+            let matchStatus = (gekozenStatus === 'Alle' || r.status === gekozenStatus);
+            let matchSchool = (gekozenSchool === 'Alle' || (r.school && r.school === gekozenSchool));
+            let matchZoek = true;
+            if (zoekTerm) {
+                const kistNaam = (r.kist || '').toLowerCase();
+                const docentNaam = (r.leerkracht || '').toLowerCase();
+                const docentMail = (r.aanvragerEmail || '').toLowerCase();
+                const schoolNaam = (r.school || '').toLowerCase();
+                matchZoek = kistNaam.includes(zoekTerm) || docentNaam.includes(zoekTerm) || docentMail.includes(zoekTerm) || schoolNaam.includes(zoekTerm);
+            }
+            return matchP && matchStatus && matchSchool && matchZoek;
+        });
+
+        // Werk aantal tekst bij
+        const aantalTekst = document.getElementById('reserveringenAantalTekst');
+        if (aantalTekst) {
+            aantalTekst.innerText = `Toont ${gefilterdeReserveringen.length} van de ${reserveringen.length} reservering(en)`;
+        }
+
+        // Bewaar voor PDF export
+        window._laatstGefilterdeReserveringen = gefilterdeReserveringen;
+
+        if (gefilterdeReserveringen.length === 0) {
+            reserveringenBody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: #888;">Geen reserveringen gevonden die voldoen aan de filters.</td></tr>`;
         } else {
-            reserveringenBody.innerHTML = reserveringen.map(r => {
+            reserveringenBody.innerHTML = gefilterdeReserveringen.map(r => {
                 const periode = periodes.find(p => p.id == r.periodeId);
                 const periodeNaam = periode ? periode.naam : "Verwijderde periode";
                 let statusHTML = '';
@@ -859,7 +953,404 @@ window.zoekDocentKisten = function() { const input = document.getElementById('do
 window.toggleFavoriet = function(id, event) { event.stopPropagation(); if(mijnFavorieten.includes(id)) { mijnFavorieten = mijnFavorieten.filter(favId => favId !== id); } else { mijnFavorieten.push(id); } slaDataOp(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); };
 window.sluitAlleModals = function() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); const vid = document.getElementById('modalVideo'); if(vid) vid.src = ""; }; 
 window.onclick = function(event) { if (event.target.classList.contains('modal')) window.sluitAlleModals(); };
-window.switchAdminTab = function(tabId, btnElement) { document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none'); document.getElementById(tabId).style.display = 'block'; document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active')); if(btnElement) btnElement.classList.add('active'); }
+window.switchAdminTab = function(tabId, btnElement) { 
+    document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none'); 
+    const target = document.getElementById(tabId);
+    if(target) target.style.display = 'block'; 
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => btn.classList.remove('active')); 
+    if(btnElement) btnElement.classList.add('active'); 
+    
+    if (tabId === 'tab-statistieken' && typeof window.renderStatistiekenTab === 'function') {
+        window.renderStatistiekenTab();
+    }
+    if (tabId === 'tab-reserveringen' && typeof window.renderBeheerdersTabellen === 'function') {
+        window.renderBeheerdersTabellen();
+    }
+};
+
+// ==========================================
+// RESERVERINGEN FILTERING & PDF EXPORT
+// ==========================================
+window.filterAdminReserveringen = function() {
+    if (typeof window.renderBeheerdersTabellen === 'function') {
+        window.renderBeheerdersTabellen();
+    }
+};
+
+window.resetAdminReserveringFilters = function() {
+    const p = document.getElementById('adminFilterPeriode');
+    const s = document.getElementById('adminFilterStatus');
+    const sch = document.getElementById('adminFilterSchool');
+    const z = document.getElementById('adminFilterZoek');
+    if (p) p.value = 'Alle';
+    if (s) s.value = 'Alle';
+    if (sch) sch.value = 'Alle';
+    if (z) z.value = '';
+    window.filterAdminReserveringen();
+};
+
+window.downloadReserveringenPDF = function() {
+    const list = window._laatstGefilterdeReserveringen || reserveringen;
+    if (!list || list.length === 0) {
+        alert("⚠️ Er zijn momenteel geen reserveringen om als PDF te exporteren.");
+        return;
+    }
+
+    const filterPeriodeSelect = document.getElementById('adminFilterPeriode');
+    const periodeFilterVal = (filterPeriodeSelect && filterPeriodeSelect.selectedIndex >= 0) ? filterPeriodeSelect.options[filterPeriodeSelect.selectedIndex].text : 'Alle Periodes';
+    const statusFilterVal = document.getElementById('adminFilterStatus') ? document.getElementById('adminFilterStatus').value : 'Alle';
+    const schoolFilterVal = document.getElementById('adminFilterSchool') ? document.getElementById('adminFilterSchool').value : 'Alle';
+    
+    let filterOmschrijving = [];
+    if (periodeFilterVal && !periodeFilterVal.includes('Alle Periodes')) filterOmschrijving.push(`Periode: ${periodeFilterVal}`);
+    if (statusFilterVal && statusFilterVal !== 'Alle') filterOmschrijving.push(`Status: ${statusFilterVal}`);
+    if (schoolFilterVal && schoolFilterVal !== 'Alle') filterOmschrijving.push(`Locatie: ${schoolFilterVal}`);
+    const filterSubtitel = filterOmschrijving.length > 0 ? filterOmschrijving.join(' &bull; ') : 'Alle periodes en locaties';
+
+    const datumNu = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    let rowsHtml = list.map((r, idx) => {
+        const per = periodes.find(p => p.id == r.periodeId);
+        const perTekst = per ? `<strong>${per.naam}</strong><br><span style="font-size: 11px; color: #64748b;">${per.start} t/m ${per.eind}</span>` : 'Onbekend';
+        
+        let statusKleur = r.status === 'Geaccepteerd' ? '#16a34a' : (r.status === 'Afgewezen' ? '#dc2626' : '#d97706');
+        let statusBadge = `<span style="background: ${statusKleur}; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; display: inline-block;">${r.status}</span>`;
+
+        let checklistItems = [];
+        if (r.klaar) checklistItems.push('📦 Klaargezet');
+        if (r.opgehaald) checklistItems.push('🤝 Opgehaald');
+        if (r.ingeleverd) checklistItems.push('🔙 Ingeleverd');
+        if (r.compleet) checklistItems.push('✅ Compleet');
+        if (r.schade) checklistItems.push('⚠️ Schade');
+        let checklistTekst = checklistItems.length > 0 ? `<div style="font-size: 11px; color: #334155; margin-top: 3px;">${checklistItems.join(' &bull; ')}</div>` : '';
+        let toelichtingTekst = r.toelichting ? `<div style="font-size: 11px; color: #64748b; font-style: italic; margin-top: 2px;">"${r.toelichting}"</div>` : '';
+
+        return `
+        <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+            <td style="padding: 10px 12px; font-weight: bold; color: #1e293b; vertical-align: top;">${r.kist}</td>
+            <td style="padding: 10px 12px; vertical-align: top;">
+                <div style="font-weight: 600; color: #0f172a;">${r.leerkracht || 'Onbekend'}</div>
+                <div style="font-size: 11px; color: #64748b;">${r.aanvragerEmail || ''}</div>
+            </td>
+            <td style="padding: 10px 12px; color: #334155; vertical-align: top;">${r.school || '-'}</td>
+            <td style="padding: 10px 12px; vertical-align: top;">${perTekst}</td>
+            <td style="padding: 10px 12px; vertical-align: top;">
+                ${statusBadge}
+                ${checklistTekst}
+                ${toelichtingTekst}
+            </td>
+        </tr>`;
+    }).join('');
+
+    const printHtml = `
+    <!DOCTYPE html>
+    <html lang="nl">
+    <head>
+        <meta charset="utf-8">
+        <title>Verwonderlab Reserveringen Overzicht (PDF)</title>
+        <style>
+            @page { size: A4 landscape; margin: 10mm 12mm; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .header-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; border-bottom: 3px solid #8CC63F; padding-bottom: 12px; }
+            .logo-img { height: 46px; width: auto; object-fit: contain; }
+            h1 { font-size: 22px; color: #432918; margin: 0 0 4px 0; }
+            .subtitle { font-size: 13px; color: #64748b; margin: 0; }
+            .meta-box { font-size: 12px; color: #475569; text-align: right; }
+            .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+            .data-table th { background: #8CC63F; color: white; text-align: left; padding: 9px 12px; font-weight: bold; border-top: 1px solid #76ab33; }
+            .summary-bar { margin-top: 20px; padding: 12px 15px; background: #f1f5f9; border-radius: 8px; display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #334155; }
+            @media print {
+                body { padding: 0; }
+                .no-print { display: none !important; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="no-print" style="margin-bottom: 18px; padding: 12px 16px; background: #fef9c3; border: 1px solid #fde047; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span>💡 <strong>PDF Opslaan:</strong> Kies in het printvenster bij <em>Bestemming / Destination</em> voor <strong>"Opslaan als PDF"</strong>.</span>
+            <button onclick="window.print()" style="background: #8CC63F; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">Direct Printen / Opslaan</button>
+        </div>
+
+        <table class="header-table">
+            <tr>
+                <td style="vertical-align: middle;">
+                    <h1>Overzicht Verwonderlab Reserveringen</h1>
+                    <p class="subtitle">Stichting Wonderwijs &bull; ${filterSubtitel}</p>
+                </td>
+                <td class="meta-box" style="vertical-align: middle;">
+                    <img src="Verwonderlab.jpg" class="logo-img" alt="Verwonderlab Logo"><br>
+                    <span>Gegenereerd op: ${datumNu}</span>
+                </td>
+            </tr>
+        </table>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 22%;">Lesmateriaal</th>
+                    <th style="width: 25%;">Leerkracht & E-mail</th>
+                    <th style="width: 20%;">School / Locatie</th>
+                    <th style="width: 18%;">Periode</th>
+                    <th style="width: 15%;">Status / Voortgang</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        </table>
+
+        <div class="summary-bar">
+            <span>Totaal weergegeven: ${list.length} reservering(en)</span>
+            <span>Verwonderlab Dashboard &bull; verwonderlab@wonderwijs.nl</span>
+        </div>
+
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 400);
+            };
+        </script>
+    </body>
+    </html>`;
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    } else {
+        alert("⚠️ Sta pop-ups toe in je browser om het PDF overzicht te openen.");
+    }
+};
+
+// ==========================================
+// STATISTIEKEN & INZICHTEN LOGBOEK
+// ==========================================
+window.renderStatistiekenTab = function() {
+    const kpiGrid = document.getElementById('statsKpiGrid');
+    const inkoopAdviesBox = document.getElementById('statsInkoopAdviesBox');
+    const topKistenLijst = document.getElementById('statsTopKistenLijst');
+    const topScholenLijst = document.getElementById('statsTopScholenLijst');
+    const topDocentenLijst = document.getElementById('statsTopDocentenLijst');
+
+    if (!kpiGrid || !reserveringen) return;
+
+    const totaal = reserveringen.length;
+    const geaccepteerd = reserveringen.filter(r => r.status === 'Geaccepteerd').length;
+
+    // Reserveringen per lesmateriaal
+    const kistCounts = {};
+    reserveringen.forEach(r => {
+        if (!r.kist) return;
+        kistCounts[r.kist] = (kistCounts[r.kist] || 0) + 1;
+    });
+    const sortedKisten = Object.entries(kistCounts).sort((a,b) => b[1] - a[1]);
+    const populairsteKist = sortedKisten.length > 0 ? sortedKisten[0][0] : "Geen";
+    const populairsteKistAantal = sortedKisten.length > 0 ? sortedKisten[0][1] : 0;
+
+    // Reserveringen per school
+    const schoolCounts = {};
+    reserveringen.forEach(r => {
+        const sch = r.school || "Onbekende school";
+        schoolCounts[sch] = (schoolCounts[sch] || 0) + 1;
+    });
+    const sortedScholen = Object.entries(schoolCounts).sort((a,b) => b[1] - a[1]);
+    const topSchool = sortedScholen.length > 0 ? sortedScholen[0][0] : "Geen";
+    const topSchoolAantal = sortedScholen.length > 0 ? sortedScholen[0][1] : 0;
+
+    // Reserveringen per leerkracht
+    const docentCounts = {};
+    reserveringen.forEach(r => {
+        const naam = r.leerkracht || "Onbekend";
+        const email = r.aanvragerEmail || "";
+        const key = `${naam}###${email}`;
+        docentCounts[key] = (docentCounts[key] || 0) + 1;
+    });
+    const sortedDocenten = Object.entries(docentCounts).sort((a,b) => b[1] - a[1]);
+    const uniekeDocentenAantal = Object.keys(docentCounts).length;
+
+    // 1. KPI Kaarten
+    kpiGrid.innerHTML = `
+        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Totaal Reserveringen</span>
+                <div style="font-size: 26px; font-weight: 800; color: #0f172a; line-height: 1.1;">${totaal}</div>
+                <span style="font-size: 11px; color: #16a34a; font-weight: 600;">${geaccepteerd} goedgekeurd</span>
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">⭐</div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Meest Populair</span>
+                <div style="font-size: 15px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;" title="${populairsteKist}">${populairsteKist}</div>
+                <span style="font-size: 11px; color: #d97706; font-weight: 600;">${populairsteKistAantal}x aangevraagd</span>
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">🏫</div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Actiefste School</span>
+                <div style="font-size: 15px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;" title="${topSchool}">${topSchool}</div>
+                <span style="font-size: 11px; color: #2563eb; font-weight: 600;">${topSchoolAantal} reservering${topSchoolAantal > 1 ? 'en' : ''}</span>
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 15px;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(168, 85, 247, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">👩‍🏫</div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Actieve Docenten</span>
+                <div style="font-size: 26px; font-weight: 800; color: #0f172a; line-height: 1.1;">${uniekeDocentenAantal}</div>
+                <span style="font-size: 11px; color: #9333ea; font-weight: 600;">Unieke aanvragers</span>
+            </div>
+        </div>
+    `;
+
+    // 2. Slim Inkoop- & Capaciteitsadvies
+    let adviesItems = [];
+    if (sortedKisten.length > 0) {
+        sortedKisten.slice(0, 3).forEach(([naam, aantal]) => {
+            if (aantal >= 2) {
+                adviesItems.push(`<li>🔥 <strong>${naam}</strong> is al <strong>${aantal} keer</strong> aangevraagd. <em>Inkoopadvies:</em> Overweeg een extra exemplaar/groepsset aan te schaffen voor Stichting Wonderwijs zodat scholen sneller aan de beurt zijn.</li>`);
+            }
+        });
+    }
+
+    const ongebruikteKisten = leskisten.filter(k => !kistCounts[k.naam]);
+    if (ongebruikteKisten.length > 0) {
+        adviesItems.push(`<li>🌱 Er zijn momenteel <strong>${ongebruikteKisten.length} leskisten</strong> nog niet gereserveerd (zoals <em>${ongebruikteKisten.slice(0, 2).map(k=>k.naam).join(', ')}</em>). Tip: Breng deze extra onder de aandacht bij de scholen via een inspiratie-lesidee!</li>`);
+    }
+
+    if (adviesItems.length === 0) {
+        adviesItems.push(`<li>Zodra er reserveringen binnenkomen, analyseert het systeem automatisch de bezettingsgraad en ontvang je hier concrete inkoopadviezen.</li>`);
+    }
+
+    inkoopAdviesBox.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 15px;">
+            <div style="font-size: 30px;">💡</div>
+            <div>
+                <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #1e293b;">Slim Inkoop- & Capaciteitsadvies</h3>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155; line-height: 1.6;">
+                    ${adviesItems.join('')}
+                </ul>
+            </div>
+        </div>
+    `;
+
+    // 3. Meest Gereserveerde Materialen (Visuele balken)
+    if (sortedKisten.length === 0) {
+        topKistenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen reserveringen geregistreerd.</p>`;
+    } else {
+        const maxCount = sortedKisten[0][1] || 1;
+        topKistenLijst.innerHTML = sortedKisten.slice(0, 8).map(([naam, count], i) => {
+            const perc = Math.round((count / maxCount) * 100);
+            const isTop = i === 0;
+            return `
+            <div style="margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 5px;">
+                    <span style="color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">${isTop ? '🏆 ' : ''}${naam}</span>
+                    <span style="color: #8CC63F; font-weight: 700;">${count}x</span>
+                </div>
+                <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #8CC63F, #76ab33); width: ${perc}%; height: 100%; border-radius: 5px; transition: width 0.5s ease;"></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // 4. Meest Actieve Scholen
+    if (sortedScholen.length === 0) {
+        topScholenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen locaties geregistreerd.</p>`;
+    } else {
+        const medailles = ['🥇', '🥈', '🥉'];
+        topScholenLijst.innerHTML = sortedScholen.slice(0, 5).map(([schoolNaam, count], i) => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <span style="font-size: 16px;">${medailles[i] || '🏫'}</span>
+                    <strong style="font-size: 13px; color: #1e293b; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${schoolNaam}</strong>
+                </div>
+                <span style="background: #8CC63F; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; flex-shrink: 0;">${count} reservering${count > 1 ? 'en' : ''}</span>
+            </div>
+        `).join('');
+    }
+
+    // 5. Top Aanvragers (Leerkrachten)
+    if (sortedDocenten.length === 0) {
+        topDocentenLijst.innerHTML = `<p style="color: #888; font-size: 13px;">Nog geen leerkrachten geregistreerd.</p>`;
+    } else {
+        topDocentenLijst.innerHTML = sortedDocenten.slice(0, 5).map(([key, count]) => {
+            const [naam, email] = key.split('###');
+            return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                <div style="overflow: hidden;">
+                    <strong style="font-size: 13px; color: #1e293b; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${naam}</strong>
+                    <span style="font-size: 11px; color: #64748b;">${email || 'Geen email'}</span>
+                </div>
+                <span style="background: #3b82f6; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; flex-shrink: 0;">${count}x</span>
+            </div>`;
+        }).join('');
+    }
+
+    // 6. Volledig Logboek
+    window.renderStatsLogboekTabel(reserveringen);
+};
+
+window.renderStatsLogboekTabel = function(items) {
+    const logboekBody = document.getElementById('statsLogboekBody');
+    if (!logboekBody) return;
+
+    if (!items || items.length === 0) {
+        logboekBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 25px; color: #888;">Geen gegevens gevonden in het logboek.</td></tr>`;
+        return;
+    }
+
+    const gesorteerd = [...items].sort((a,b) => b.id - a.id);
+
+    logboekBody.innerHTML = gesorteerd.map((r, idx) => {
+        const per = periodes.find(p => p.id == r.periodeId);
+        const datumTekst = new Date(r.id).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        let statusKleur = r.status === "Geaccepteerd" ? "#8CC63F" : (r.status === "Afgewezen" ? "#ef4444" : "#f59e0b");
+
+        return `
+        <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+            <td style="padding: 10px 12px; font-family: monospace; font-size: 12px; color: #64748b;">${datumTekst}</td>
+            <td style="padding: 10px 12px; font-weight: bold; color: #0f172a;">${r.kist}</td>
+            <td style="padding: 10px 12px;">
+                <div style="font-weight: 600; color: #1e293b;">${r.leerkracht || 'Onbekend'}</div>
+                <div style="font-size: 11px; color: #64748b;">${r.aanvragerEmail || ''}</div>
+            </td>
+            <td style="padding: 10px 12px; color: #334155;">${r.school || '-'}</td>
+            <td style="padding: 10px 12px;">${per ? per.naam : 'Onbekend'}</td>
+            <td style="padding: 10px 12px;">
+                <span style="background: ${statusKleur}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">${r.status}</span>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+window.filterStatsLog = function() {
+    const input = document.getElementById('statsLogZoek');
+    if (!input) return;
+    const term = input.value.toLowerCase().trim();
+    if (!term) {
+        window.renderStatsLogboekTabel(reserveringen);
+        return;
+    }
+    const gefilterd = reserveringen.filter(r => {
+        return (r.kist && r.kist.toLowerCase().includes(term)) ||
+               (r.leerkracht && r.leerkracht.toLowerCase().includes(term)) ||
+               (r.aanvragerEmail && r.aanvragerEmail.toLowerCase().includes(term)) ||
+               (r.school && r.school.toLowerCase().includes(term));
+    });
+    window.renderStatsLogboekTabel(gefilterd);
+};
+
+window.printStatistiekenRapport = function() {
+    window.downloadReserveringenPDF();
+};
 
 window.openLeskistInfo = function(id) {
     const kist = leskisten.find(k => k.id == id);
@@ -988,7 +1479,7 @@ window.verstuurGoedkeuringsMail = async function(r, per) {
         return;
     }
 
-    const mailOnderwerp = `Goedkeuring reservering Verwonderlab: ${kistNaam}`;
+    const mailOnderwerp = `✅ Goedgekeurd: Reservering ${kistNaam} - Verwonderlab Wonderwijs`;
     const mailTekst = 
 `Beste ${docentNaam},
 
@@ -1007,8 +1498,8 @@ https://verwonderlabportaal.vercel.app/
 
 Met vriendelijke groet,
 ${beheerderNaam}
-Stichting Wonderwijs - Verwonderlab
-verwonderlab@wonderwijs.nl`;
+Verwonderlab Wonderwijs
+Afzender: verwonderlab@wonderwijs.nl`;
 
     // 1. Probeer automatische verzending via Vercel Serverless API (/api/send-email)
     let isVerzondenViaServer = false;
