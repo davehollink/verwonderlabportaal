@@ -596,6 +596,7 @@ window.verrijkLesideeen = function(ideeenLijst) {
         const titel = match ? match.titel : idee.titel;
         const beschrijving = match ? match.beschrijving : idee.beschrijving;
         const categorie = match ? match.categorie : (idee.categorie || "Programmeren");
+        const moeilijkheid = match && match.moeilijkheid ? match.moeilijkheid : (idee.moeilijkheid || (bouw.includes("1-2") ? "Beginner ⭐" : (bouw.includes("7-8") ? "Uitdagend ⭐⭐⭐" : "Gemiddeld ⭐⭐")));
 
         return {
             ...idee,
@@ -606,6 +607,8 @@ window.verrijkLesideeen = function(ideeenLijst) {
             afbeelding: afbeelding,
             lesbrief: lesbrief,
             bouw: bouw,
+            doelgroep: bouw,
+            moeilijkheid: moeilijkheid,
             categorie: categorie
         };
     });
@@ -954,47 +957,13 @@ window.logoutAdmin = function() {
     }
 };
 
-// ==========================================
-// 4. MOBIELE NAVIGATIE & DOMCONTENTLOADED
-// ==========================================
 window.initMobileNavigation = function() {
-    const sidebar = document.querySelector('.sidebar');
-    if (!sidebar) return;
-
-    if (document.getElementById('mobileNavToggle')) return;
-
-    const logoDiv = sidebar.querySelector('.logo');
-    if (logoDiv) {
-        const toggleBtn = document.createElement('button');
-        toggleBtn.id = 'mobileNavToggle';
-        toggleBtn.type = 'button';
-        toggleBtn.className = 'mobile-menu-btn';
-        toggleBtn.innerHTML = '<span>☰ Menu</span>';
-        toggleBtn.setAttribute('aria-label', 'Menu in- of uitklappen');
-
-        toggleBtn.onclick = function(e) {
-            e.stopPropagation();
-            sidebar.classList.toggle('mobile-menu-open');
-            const isOpen = sidebar.classList.contains('mobile-menu-open');
-            toggleBtn.innerHTML = isOpen ? '<span>✕ Sluiten</span>' : '<span>☰ Menu</span>';
-        };
-
-        logoDiv.appendChild(toggleBtn);
-
-        // Sluit mobiel menu automatisch als de gebruiker op een menu-link tikt
-        sidebar.querySelectorAll('.menu-item').forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('mobile-menu-open');
-                    toggleBtn.innerHTML = '<span>☰ Menu</span>';
-                }
-            });
-        });
-    }
+    // Menu knop verwijderd op verzoek van gebruiker
+    const existing = document.getElementById('mobileNavToggle');
+    if (existing) existing.remove();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialiseer mobiele navigatie voor alle smartphones
     if (typeof window.initMobileNavigation === "function") {
         window.initMobileNavigation();
     }
@@ -1172,6 +1141,9 @@ window.toggleLesbrief = function(detailId, btn) {
 
 window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
     const lb = idee.lesbrief;
+    const doelgroep = idee.doelgroep || idee.bouw || 'Alle groepen';
+    const moeilijkheid = idee.moeilijkheid || (doelgroep.includes('1-2') ? 'Beginner ⭐' : (doelgroep.includes('7-8') ? 'Uitdagend ⭐⭐⭐' : 'Gemiddeld ⭐⭐'));
+
     if (!lb) {
         return `
         <div style="padding: 10px 0;">
@@ -1188,79 +1160,74 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
     const dg = lb.dgDoelen || {};
 
     return `
-    <div style="padding: 5px 0;">
-        <!-- Tijdsinvestering & Organisatie Overzicht -->
-        <div class="lesbrief-time-overview">
-            <div class="time-stat-badge">
-                <span class="time-stat-icon">⏱️</span>
-                <div>
-                    <strong>Totale lesduur</strong>
-                    <span>${lb.tijd || '60 minuten'}</span>
-                </div>
+    <div style="padding: 8px 0;">
+        <!-- Belangrijkste leskenmerken: Doelgroep, Moeilijkheidsgraad & Tijd -->
+        <div style="background: rgba(248, 250, 252, 0.95); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Doelgroep</span>
+                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">🎯 ${doelgroep}</strong>
             </div>
-            <div class="time-stat-badge">
-                <span class="time-stat-icon">⏳</span>
-                <div>
-                    <strong>Voorbereiding</strong>
-                    <span>${tijdOpbouw.voorbereiding || lb.voorbereidingTijd || '10 min'}</span>
-                </div>
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Moeilijkheidsgraad</span>
+                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">⚡ ${moeilijkheid}</strong>
             </div>
-            <div class="time-stat-badge">
-                <span class="time-stat-icon">👥</span>
-                <div>
-                    <strong>Organisatie</strong>
-                    <span>${lb.organisatie || 'In tweetallen / groepjes'}</span>
-                </div>
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Tijdsinvestering</span>
+                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">⏱️ ${lb.tijd || '60 min'} (${tijdOpbouw.voorbereiding || '10 min'} voorb.)</strong>
+            </div>
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Organisatie</span>
+                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">👥 ${lb.organisatie || 'In tweetallen'}</strong>
             </div>
         </div>
 
         <!-- Doelen Digitale Geletterdheid (Wonderwijs) -->
         <div class="lesbrief-section">
-            <h4>🎯 Doelen Digitale Geletterdheid (Wonderwijs Leerlijn)</h4>
+            <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🧠 Raakvlakken met de Wonderwijs Leerlijn Digitale Geletterdheid</h4>
             <div class="lesbrief-dg-box">
                 <div class="dg-domain-badge">
-                    <span>${dg.domein || 'Digitale Geletterdheid'}</span>
+                    <span>${dg.domein || 'Wonderwijs Digitale Geletterdheid'}</span>
                 </div>
                 ${dg.kerndoelenWonderwijs && Array.isArray(dg.kerndoelenWonderwijs) ? `
                 <div style="margin-top: 10px;">
-                    <strong style="color: #0f172a; font-size: 13px;">Gekoppelde Wonderwijs kerndoelen:</strong>
+                    <strong style="color: #0f172a; font-size: 13px;">Gekoppelde kerndoelen & domeinen uit de leerlijn:</strong>
                     <ul class="dg-goals-list">
                         ${dg.kerndoelenWonderwijs.map(k => `<li>${k}</li>`).join('')}
                     </ul>
                 </div>` : ''}
                 ${dg.leerlingDoelen ? `
                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                    <strong style="color: #166534; font-size: 13px;">Wat leert de leerling?</strong>
-                    <p style="margin: 4px 0 0 0; color: #334155; font-size: 13px; line-height: 1.5;">${dg.leerlingDoelen}</p>
+                    <strong style="color: #166534; font-size: 13px;">Wat leert de leerling tijdens deze les?</strong>
+                    <p style="margin: 4px 0 0 0; color: #334155; font-size: 13px; line-height: 1.55;">${dg.leerlingDoelen}</p>
                 </div>` : (lb.doelen ? `
                 <div style="margin-top: 8px;">
-                    <p style="margin: 0; color: #334155; font-size: 13px; line-height: 1.5;">${lb.doelen}</p>
+                    <p style="margin: 0; color: #334155; font-size: 13px; line-height: 1.55;">${lb.doelen}</p>
                 </div>` : '')}
             </div>
         </div>
 
         <!-- Benodigdheden & Praktische Voorbereiding -->
         <div class="lesbrief-section">
-            <h4>🧰 Benodigdheden & Voorbereiding</h4>
+            <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🧰 Benodigdheden & Voorbereiding</h4>
             <div class="lesbrief-materials-card">
                 <div class="material-col">
-                    <span class="mat-label">📦 Uit het Verwonderlab (leskist):</span>
+                    <span class="mat-label">📦 Uit het Verwonderlab (deze leskist):</span>
                     <p>${lb.kistMateriaal || kistNaam}</p>
                 </div>
                 <div class="material-col">
-                    <span class="mat-label">🏫 In het eigen klaslokaal:</span>
-                    <p>${lb.klasMateriaal || 'Tablets, digibord, stiften'}</p>
+                    <span class="mat-label">🏫 In het eigen klaslokaal aanwezig:</span>
+                    <p>${lb.klasMateriaal || 'Tablets of computers, digibord, schrijfspullen'}</p>
                 </div>
                 <div class="prep-note">
-                    <strong>💡 Praktische voorbereiding (${tijdOpbouw.voorbereiding || lb.voorbereidingTijd || '10 min'}):</strong>
-                    <span>${lb.voorbereiding || 'Zet de materialen klaar voor de les.'}</span>
+                    <strong>💡 Praktische voorbereiding leerkracht (${tijdOpbouw.voorbereiding || lb.voorbereidingTijd || '10 min'}):</strong>
+                    <span>${lb.voorbereiding || 'Zet de materialen klaar en controleer de acculading.'}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Lesverloop in 3 fasen -->
+        <!-- Lesverloop in fasen -->
         <div class="lesbrief-section">
-            <h4>🚀 Lesverloop in 3 fasen</h4>
+            <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🚀 Volledig Stapsgewijs Lesverloop</h4>
             <div class="lesbrief-step-card step-inleiding">
                 <div class="step-header">
                     <span class="step-num">1</span>
@@ -1278,7 +1245,7 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
             <div class="lesbrief-step-card step-afsluiting">
                 <div class="step-header">
                     <span class="step-num">3</span>
-                    <strong style="color: #78350f;">Presentatie, Demonstratie & Reflectie (${tijdOpbouw.afsluiting || lb.afsluitingTijd || '15 min'})</strong>
+                    <strong style="color: #78350f;">Demonstratie, Evaluatie & Reflectie (${tijdOpbouw.afsluiting || lb.afsluitingTijd || '15 min'})</strong>
                 </div>
                 <div class="step-content">${lb.afsluiting}</div>
             </div>
@@ -1287,7 +1254,7 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
         <!-- Differentiatie & Tips -->
         ${(lb.differentiatie || lb.tips) ? `
         <div class="lesbrief-section">
-            <h4>🌟 Differentiatie & Verdieping</h4>
+            <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🌟 Differentiatie & Verdieping</h4>
             <div class="lesbrief-diff-card">
                 ${lb.differentiatie && lb.differentiatie.uitdaging ? `<div class="diff-star">${lb.differentiatie.uitdaging}</div>` : ''}
                 ${lb.differentiatie && lb.differentiatie.ondersteuning ? `<div class="diff-support">${lb.differentiatie.ondersteuning}</div>` : ''}
@@ -1306,7 +1273,7 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
         <div class="lesbrief-cta">
             <p style="margin: 0 0 10px 0; font-weight: 700; color: #166534; font-size: 15px;">Meteen enthousiast om deze les te geven?</p>
             <a href="${reserveerUrl}" class="btn-direct-reserve" style="display: inline-flex; width: auto; padding: 12px 28px; font-size: 14px; text-decoration: none;">
-                <span>📅 Reserveer direct '${kistNaam}'</span>
+                <span>📅 Reserveer direct '${kistNaam}' voor jouw klas</span>
             </a>
         </div>
     </div>`;
@@ -1367,7 +1334,7 @@ window.renderLesideeenGrid = function() {
     
     filterHtml += `</div>
         <div>
-            <input type="text" id="lesideeZoekInput" placeholder="🔍 Zoek op titel, leskist of bouw..." value="${actieveLesideeZoekterm}" onkeyup="window.zoekLesideeen(this.value)" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; font-size: 13px; width: 250px; background: #f8fafc;">
+            <input type="text" id="lesideeZoekInput" placeholder="🔍 Zoek op titel, leskist of doelgroep..." value="${actieveLesideeZoekterm}" onkeyup="window.zoekLesideeen(this.value)" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 20px; outline: none; font-size: 13px; width: 260px; background: #f8fafc;">
         </div>
     </div>`;
 
@@ -1382,42 +1349,46 @@ window.renderLesideeenGrid = function() {
                    (i.bouw && i.bouw.toLowerCase().includes(term));
         });
 
-    let gridHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; width: 100%;">';
+    let gridHtml = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; width: 100%;">';
     
     if(gefilterdeIdeeen.length === 0) {
         gridHtml += "<div style='grid-column: 1 / -1; padding: 40px; text-align: center; background: white; border-radius: 12px; color: #64748b; border: 1px solid #e2e8f0;'>Geen lesideeën gevonden voor de huidige selectie.</div>";
     } else {
         gefilterdeIdeeen.forEach(idee => {
             const kistNaam = idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving);
-            const foto = idee.afbeelding || window.getAfbeeldingVoorKist(kistNaam);
-            const bouwBadge = idee.bouw || "Alle groepen";
+            const bouwBadge = idee.doelgroep || idee.bouw || "Alle groepen";
             const categorieBadge = idee.categorie || "Inspiratie";
+            const moeilijkheid = idee.moeilijkheid || (bouwBadge.includes("1-2") ? "Beginner ⭐" : (bouwBadge.includes("7-8") ? "Uitdagend ⭐⭐⭐" : "Gemiddeld ⭐⭐"));
+            
+            let diffClass = "gemiddeld";
+            if (moeilijkheid.includes("Beginner") || bouwBadge.includes("1-2") || bouwBadge.includes("3-4")) diffClass = "beginner";
+            else if (moeilijkheid.includes("Uitdagend") || bouwBadge.includes("7-8")) diffClass = "uitdagend";
+
             const reserveerUrl = `reserveren.html?kist=${encodeURIComponent(kistNaam)}`;
             const detailId = `lesbrief-detail-${idee.id}`;
 
             gridHtml += `
             <div class="idea-card" id="idea-card-${idee.id}">
-                <div class="idea-image-wrapper">
-                    <img src="${foto}" alt="${idee.titel}">
-                    <div style="position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; flex-wrap: wrap; z-index: 2;">
-                        <span class="idea-badge">${categorieBadge}</span>
-                        <span class="idea-badge bouw">${bouwBadge}</span>
+                <div class="idea-card-body" style="padding: 24px;">
+                    <!-- Badges balk: Categorie, Doelgroep en Moeilijkheidsgraad (Geen afbeelding!) -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center;">
+                        <span class="idea-badge" style="background: rgba(15, 23, 42, 0.05); color: var(--slate-700);">${categorieBadge}</span>
+                        <span class="idea-badge bouw">🎯 ${bouwBadge}</span>
+                        <span class="idea-badge moeilijkheid ${diffClass}">⚡ ${moeilijkheid}</span>
                     </div>
-                </div>
 
-                <div class="idea-card-body">
-                    <h3>${idee.titel}</h3>
+                    <h3 style="font-size: 18px; font-weight: 800; color: var(--slate-950); margin: 0 0 10px 0; line-height: 1.35;">${idee.titel}</h3>
                     
-                    <div class="idea-material-tag">
+                    <div class="idea-material-tag" style="margin-bottom: 12px;">
                         <span>📦</span> <span>Leskist: <strong>${kistNaam}</strong></span>
                     </div>
 
-                    <p>${idee.beschrijving || ""}</p>
+                    <p style="color: var(--slate-600); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; flex-grow: 1;">${idee.beschrijving || ""}</p>
 
                     <!-- Actieknoppen rij -->
                     <div class="idea-actions-row">
                         <button onclick="window.toggleLesbrief('${detailId}', this)" class="btn-toggle-lesbrief">
-                            <span>📖 Bekijk complete lesbrief</span> <span class="arrow-indicator">▼</span>
+                            <span>📖 Bekijk uitgebreide lesinstructie</span> <span class="arrow-indicator">▼</span>
                         </button>
                         <a href="${reserveerUrl}" class="btn-direct-reserve">
                             <span>📅 Reserveer kist</span>
@@ -2472,12 +2443,6 @@ window.toonWillekeurigeTip = function() { const tipElement = document.getElement
 // ==========================================
 document.addEventListener('change', (e) => { 
     if (e.target.type === 'checkbox' && e.target.id && e.target.id.startsWith('check-domein')) { 
-        let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
-        if(!huidigeEmail) {
-            console.warn("Geen e-mailadres beschikbaar om voortgang op te slaan.");
-            return;
-        }
-        
         let checkboxStates = {};
         try {
             const raw = localStorage.getItem('ww_vinkjes');
@@ -2488,11 +2453,10 @@ document.addEventListener('change', (e) => {
 
         checkboxStates[e.target.id] = e.target.checked; 
         const strState = JSON.stringify(checkboxStates); 
-        
         localStorage.setItem('ww_vinkjes', strState); 
         
-        // Sla direct op in de Firebase cloud gekoppeld aan het e-mailadres
-        if(typeof window.saveVoortgangToCloud === 'function') {
+        let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
+        if(huidigeEmail && typeof window.saveVoortgangToCloud === 'function') {
             window.saveVoortgangToCloud(huidigeEmail, strState); 
         }
 

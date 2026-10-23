@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Leerlijnen Digitale Geletterdheid</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261023g">
+    <link rel="stylesheet" href="style.css?v=20261023h">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Specifieke styling voor de uitklapbare domeinen (Accordions) */
@@ -478,14 +478,16 @@ function laadLeerlijn(bouw, knop) {
         `;
 
         domeinInfo.kerndoelen.forEach((doel, doelIndex) => {
-            let actiesHTML = doel.acties.map((actie, actieIndex) => `
-                <li class="checkbox-item" style="display:flex; align-items:start; gap:10px; margin-bottom:8px;">
-                    <input type="checkbox" id="check-${domeinId}-${doelIndex}-${actieIndex}" 
-                           onclick="event.stopPropagation();" 
-                           onchange="updateVoortgang('${domeinId}')">
-                    <label for="check-${domeinId}-${doelIndex}-${actieIndex}">${actie}</label>
-                </li>
-            `).join('');
+            let actiesHTML = doel.acties.map((actie, actieIndex) => {
+                const cbId = `check-${domeinId}-${doelIndex}-${actieIndex}`;
+                return `
+                <li class="checkbox-item" onclick="window.toggleCheckboxFromRow(event, '${cbId}', '${domeinId}')">
+                    <input type="checkbox" id="${cbId}" 
+                           onchange="handleCheckboxToggle(this, '${domeinId}')" 
+                           onclick="event.stopPropagation();">
+                    <label for="${cbId}" onclick="event.stopPropagation();">${actie}</label>
+                </li>`;
+            }).join('');
 
             let voorbeeldenJSON = encodeURIComponent(JSON.stringify(doel.voorbeelden || [])).replace(/'/g, "%27");
             let materialenJSON = encodeURIComponent(JSON.stringify(doel.materialen || [])).replace(/'/g, "%27");
@@ -526,6 +528,51 @@ function laadLeerlijn(bouw, knop) {
         updateVoortgang('domein-' + bouw + '-' + domeinIndex);
     });
 }
+
+// Directe en robuuste checkbox afhandeling
+window.toggleCheckboxFromRow = function(e, cbId, domeinId) {
+    if (e.target.tagName.toLowerCase() === 'input') return;
+    const cb = document.getElementById(cbId);
+    if (cb) {
+        cb.checked = !cb.checked;
+        handleCheckboxToggle(cb, domeinId);
+    }
+};
+
+window.handleCheckboxToggle = function(cb, domeinId) {
+    if (!cb) return;
+
+    // 1. Direct opslaan in localStorage
+    let checkboxStates = {};
+    try {
+        const raw = localStorage.getItem('ww_vinkjes');
+        if (raw) checkboxStates = JSON.parse(raw) || {};
+    } catch(err) {
+        checkboxStates = {};
+    }
+    checkboxStates[cb.id] = cb.checked;
+    const strState = JSON.stringify(checkboxStates);
+    localStorage.setItem('ww_vinkjes', strState);
+
+    // 2. Direct visuele voortgang van het domein herberekenen
+    updateVoortgang(domeinId);
+
+    // 3. Direct synchroniseren naar Firestore Cloud
+    let huidigeEmail = localStorage.getItem('ww_huidige_email');
+    if (huidigeEmail && typeof window.saveVoortgangToCloud === 'function') {
+        window.saveVoortgangToCloud(huidigeEmail, strState);
+    }
+
+    // 4. Feedback badge updaten
+    const syncBadge = document.getElementById('cloudSyncStatusPill');
+    if (syncBadge) {
+        syncBadge.innerHTML = '☁️ <span style="color:#15803d; font-weight:700;">Voortgang opgeslagen in cloud</span>';
+        clearTimeout(window._syncPillTimer);
+        window._syncPillTimer = setTimeout(() => {
+            syncBadge.innerHTML = '☁️ Automatisch gesynchroniseerd met jouw account';
+        }, 2200);
+    }
+};
 
 // Open/sluit het domein (Accordion)
 function toggleDomein(id) {
@@ -583,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script src="auth-config.js?v=20261023"></script>
 <script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261023g"></script>
+<script src="script.js?v=20261023h"></script>
 
 </body>
 </html>
