@@ -633,6 +633,7 @@ const ictTips = [
     "Bij stop-motion animatie met Piximakey geldt de gouden regel: 12 foto's per seconde zorgt voor een vloeiende, magische kinderfilm!",
     "Bespreek tijdens een podcast-les ook online privacy: wie mag jouw stem horen en welke persoonlijke gegevens deel je liever niet online?"
 ];
+window.ictTips = ictTips;
 
 window.updateAftelkalender = function() {
     const daysEl = document.getElementById('countdownDaysValue');
@@ -695,8 +696,9 @@ window.updateAftelkalender = function() {
 
 window.toonWillekeurigeTip = function() { 
     const tipElement = document.getElementById('bentoTipText') || document.getElementById('tipText'); 
-    if (tipElement && typeof ictTips !== 'undefined' && ictTips.length > 0) {
-        const gekozen = ictTips[Math.floor(Math.random() * ictTips.length)];
+    const tips = (window.ictTips && window.ictTips.length > 0) ? window.ictTips : (typeof ictTips !== 'undefined' ? ictTips : []);
+    if (tipElement && tips.length > 0) {
+        const gekozen = tips[Math.floor(Math.random() * tips.length)];
         tipElement.innerText = `"${gekozen.replace(/^Tip:\s*/i, '')}"`;
     } 
 };
@@ -1489,20 +1491,39 @@ window.renderLesideeenGrid = function() {
 window.renderBeheerdersTabellen = function() {
     const periodesBody = document.getElementById('adminPeriodsBody');
     if (periodesBody) {
-        periodesBody.innerHTML = periodes.map(p => `<tr><td><strong>${p.naam}</strong></td><td>${p.start}</td><td>${p.eind}</td><td style="text-align: right;"><button class="btn-green-action" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="window.openPeriodeModal(${p.id})">✏️</button><button style="padding: 5px 10px; font-size: 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.deletePeriode(${p.id})">🗑️</button></td></tr>`).join('');
+        periodesBody.innerHTML = periodes.map(p => `<tr>
+            <td style="padding: 14px 18px;"><strong>${p.naam}</strong></td>
+            <td style="padding: 14px 18px; color: #475569;">${p.start}</td>
+            <td style="padding: 14px 18px; color: #475569;">${p.eind}</td>
+            <td style="text-align: right; padding: 14px 18px; white-space: nowrap;">
+                <button class="btn-table-edit" onclick="window.openPeriodeModal(${p.id})">✏️ Bewerken</button>
+                <button class="btn-table-delete" onclick="window.deletePeriode(${p.id})">🗑️ Verwijderen</button>
+            </td>
+        </tr>`).join('');
     }
 
     const scholenBody = document.getElementById('adminScholenBody');
     if (scholenBody) {
-        scholenBody.innerHTML = scholen.map(s => `<tr><td style="padding: 12px;"><strong>${s.naam}</strong></td><td style="text-align: right; padding: 12px;"><button class="btn-green-action" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="window.openSchoolModal(${s.id})">✏️</button><button style="padding: 5px 10px; font-size: 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.deleteSchool(${s.id})">🗑️</button></td></tr>`).join('');
+        scholenBody.innerHTML = scholen.map(s => `<tr>
+            <td style="padding: 14px 18px;"><strong>${s.naam}</strong></td>
+            <td style="text-align: right; padding: 14px 18px; white-space: nowrap;">
+                <button class="btn-table-edit" onclick="window.openSchoolModal(${s.id})">✏️ Bewerken</button>
+                <button class="btn-table-delete" onclick="window.deleteSchool(${s.id})">🗑️ Verwijderen</button>
+            </td>
+        </tr>`).join('');
     }
 
     const gebruikersBody = document.getElementById('adminGebruikersBody');
     if (gebruikersBody) {
         if (beheerdersLijst.length === 0) {
-            gebruikersBody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 20px; color: #888;">Nog geen extra beheerders toegevoegd.</td></tr>`;
+            gebruikersBody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 25px; color: #64748b;">Nog geen extra beheerders toegevoegd.</td></tr>`;
         } else {
-            gebruikersBody.innerHTML = beheerdersLijst.map(b => `<tr><td style="padding: 12px; font-family: monospace;"><strong>${b.email}</strong></td><td style="text-align: right; padding: 12px;"><button style="padding: 5px 10px; font-size: 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.verwijderBeheerder(${b.id})">🗑️ Verwijder Rechten</button></td></tr>`).join('');
+            gebruikersBody.innerHTML = beheerdersLijst.map(b => `<tr>
+                <td style="padding: 14px 18px; font-family: monospace; font-size: 13.5px;"><strong>${b.email}</strong></td>
+                <td style="text-align: right; padding: 14px 18px; white-space: nowrap;">
+                    <button class="btn-table-delete" onclick="window.verwijderBeheerder(${b.id})">🗑️ Rechten Intrekken</button>
+                </td>
+            </tr>`).join('');
         }
     }
 
@@ -1569,7 +1590,10 @@ window.renderBeheerdersTabellen = function() {
                 let statusHTML = '';
                 
                 if (r.status === "In afwachting") {
-                    statusHTML = `<div class="status-actions"><button style="background: #8CC63F; color: white; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; font-weight: bold;" onclick="window.beoordeelReservering(${r.id}, 'Geaccepteerd')">✔ Accepteren</button><button style="background: #ef4444; color: white; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="window.beoordeelReservering(${r.id}, 'Afgewezen')">✖ Afwijzen</button></div>`;
+                    statusHTML = `<div class="status-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn-table-accept" onclick="window.beoordeelReservering(${r.id}, 'Geaccepteerd')">✔ Accepteren</button>
+                        <button class="btn-table-reject" onclick="window.beoordeelReservering(${r.id}, 'Afgewezen')">✖ Afwijzen</button>
+                    </div>`;
                 } else {
                     let statusColor = r.status === "Geaccepteerd" ? "#8CC63F" : (r.status === "Afgewezen" ? "#ef4444" : "#f59e0b");
                     statusHTML = `<span style="background: ${statusColor}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold;">${r.status}</span>`;
@@ -1590,7 +1614,7 @@ window.renderBeheerdersTabellen = function() {
                     }
                 }
                 
-                let actieMenuHTML = `<button style="background: transparent; border: none; font-size: 18px; cursor: pointer;" onclick="window.actieReserveringVerwijderen(${r.id}, event)">🗑️</button>`;
+                let actieMenuHTML = `<button class="btn-table-delete-icon" title="Reservering verwijderen" onclick="window.actieReserveringVerwijderen(${r.id}, event)">🗑️</button>`;
                 
                 const docentNaam = r.leerkracht || "Onbekende leerkracht";
                 const docentEmail = r.aanvragerEmail 
@@ -1623,21 +1647,38 @@ window.renderBeheerdersTabellen = function() {
     const leskistenBody = document.getElementById('adminLeskistenBody');
     if (leskistenBody) {
         leskistenBody.innerHTML = leskisten.map(kist => {
-            let statusBadge = kist.beschikbaar === false ? `<span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">In reparatie</span>` : `<span style="background: #8CC63F; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px;">Actief</span>`;
+            let statusBadge = kist.beschikbaar === false 
+                ? `<span style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">In reparatie</span>` 
+                : `<span style="background: rgba(140, 198, 63, 0.12); color: var(--ww-green-dark); border: 1px solid rgba(140, 198, 63, 0.3); padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">Actief</span>`;
             let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg);
-            return `<tr><td style="padding: 10px;"><img src="${imgSource}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;"></td><td style="padding: 10px;"><strong>${kist.naam}</strong><br><span style="font-size:11px; color:#888;">${kist.tag}</span></td><td style="padding: 10px;">${kist.doelgroep}<br>${statusBadge}</td><td style="text-align: right; padding: 10px;"><button class="btn-green-action" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="window.openMateriaalModal(${kist.id})">✏️</button><button style="padding: 5px 10px; font-size: 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.deleteMateriaal(${kist.id})">🗑️</button></td></tr>`;
+            return `<tr>
+                <td style="padding: 12px 18px;"><img src="${imgSource}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);"></td>
+                <td style="padding: 12px 18px;"><strong>${kist.naam}</strong><br><span style="font-size:12px; color:#64748b;">${kist.tag || ''}</span></td>
+                <td style="padding: 12px 18px;">${kist.doelgroep || 'Alle groepen'}<br><div style="margin-top: 4px;">${statusBadge}</div></td>
+                <td style="text-align: right; padding: 12px 18px; white-space: nowrap;">
+                    <button class="btn-table-edit" onclick="window.openMateriaalModal(${kist.id})">✏️ Bewerken</button>
+                    <button class="btn-table-delete" onclick="window.deleteMateriaal(${kist.id})">🗑️ Verwijderen</button>
+                </td>
+            </tr>`;
         }).join('');
     }
 
     const lesideeenBody = document.getElementById('adminLesideeenBody');
     if (lesideeenBody) {
         if (lesideeen.length === 0) {
-            lesideeenBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">Nog geen lesideeën toegevoegd.</td></tr>`;
+            lesideeenBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748b; padding:25px;">Nog geen lesideeën toegevoegd.</td></tr>`;
         } else {
             lesideeenBody.innerHTML = lesideeen.map(idee => {
                 const veiligeBeschrijving = idee.beschrijving || "";
                 const korteBeschrijving = veiligeBeschrijving.length > 70 ? veiligeBeschrijving.substring(0,70) + '...' : veiligeBeschrijving;
-                return `<tr><td style="padding: 12px;"><strong>${idee.titel}</strong><br><span style="font-size:11px; color:#888;">${idee.categorie}</span></td><td style="padding: 12px;">${korteBeschrijving}</td><td style="text-align: right; padding: 12px;"><button class="btn-green-action" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="window.openLesideeModal(${idee.id})">✏️</button><button style="padding: 5px 10px; font-size: 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.deleteLesidee(${idee.id})">🗑️</button></td></tr>`;
+                return `<tr>
+                    <td style="padding: 14px 18px;"><strong>${idee.titel}</strong><br><span style="font-size:12px; color:#64748b;">${idee.categorie || ''}</span></td>
+                    <td style="padding: 14px 18px; color: #475569;">${korteBeschrijving}</td>
+                    <td style="text-align: right; padding: 14px 18px; white-space: nowrap;">
+                        <button class="btn-table-edit" onclick="window.openLesideeModal(${idee.id})">✏️ Bewerken</button>
+                        <button class="btn-table-delete" onclick="window.deleteLesidee(${idee.id})">🗑️ Verwijderen</button>
+                    </td>
+                </tr>`;
             }).join('');
         }
     }
@@ -2666,8 +2707,8 @@ window.openPeriodeModal = function(id = null) { const form = document.getElement
 window.openSchoolModal = function(id = null) { const form = document.getElementById('schoolForm'); if(form) form.reset(); if(id) { document.getElementById('modalSchoolTitle').innerText = "School/Locatie Bewerken"; const sch = scholen.find(s => s.id == id); if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = sch.id; if(document.getElementById('schoolNaam')) document.getElementById('schoolNaam').value = sch.naam; } else { document.getElementById('modalSchoolTitle').innerText = "Nieuwe School/Locatie Aanmaken"; if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = ""; } const m = document.getElementById('schoolModal'); if(m) m.style.display = 'flex'; }
 window.openStoringModal = function() { const form = document.getElementById('storingForm'); if(form) form.reset(); if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; const select = document.getElementById('storingKist'); if(select) { select.innerHTML = '<option value="" disabled selected>-- Selecteer een leskist --</option>'; leskisten.forEach(k => select.innerHTML += `<option value="${k.naam}">${k.naam}</option>`); } const m = document.getElementById('storingModal'); if(m) m.style.display = 'flex'; }
 window.openMateriaalModal = function(id = null) { const form = document.getElementById('editLeskistForm'); if(form) form.reset(); const afbFile = document.getElementById('editAfbeeldingFile'); if(afbFile) afbFile.value = ""; const editPdfFiles = document.getElementById('editPdfFiles'); if(editPdfFiles) editPdfFiles.value = ""; if(id) { document.getElementById('modalMateriaalTitle').innerText = "Materiaal Bewerken"; const kist = leskisten.find(k => k.id == id); if(document.getElementById('editKistId')) document.getElementById('editKistId').value = kist.id; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = kist.afbeelding || defaultImg; let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg); if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = `<img src="${imgSource}" style="width: 100%; border-radius: 8px;">`; if(document.getElementById('editNaam')) document.getElementById('editNaam').value = kist.naam || ""; if(document.getElementById('editTag')) document.getElementById('editTag').value = kist.tag || ""; if(document.getElementById('editDoelgroep')) document.getElementById('editDoelgroep').value = kist.doelgroep || ""; if(document.getElementById('editKerndoelen')) document.getElementById('editKerndoelen').value = kist.kerndoelen || ""; if(document.getElementById('editBeschrijving')) document.getElementById('editBeschrijving').value = kist.beschrijving || ""; if(document.getElementById('editInhoud')) document.getElementById('editInhoud').value = kist.inhoud || ""; if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; currentPdfs = kist.pdfs || []; } else { document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = defaultImg; if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; currentPdfs = []; } if(window.updatePdfPreview) window.updatePdfPreview(); const m = document.getElementById('editLeskistModal'); if(m) m.style.display = 'flex'; }
-window.openLesideeModal = function(id = null) { const form = document.getElementById('editLesideeForm'); if(!form) return; form.reset(); if(id) { document.getElementById('modalLesideeTitle').innerText = "Lesidee Bewerken"; const idee = lesideeen.find(i => i.id == id); if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = idee.id; if(document.getElementById('editLesideeTitel')) document.getElementById('editLesideeTitel').value = idee.titel || ""; if(document.getElementById('editLesideeCategorie')) document.getElementById('editLesideeCategorie').value = idee.categorie || ""; if(document.getElementById('editLesideeBeschrijving')) document.getElementById('editLesideeBeschrijving').value = idee.beschrijving || ""; if(document.getElementById('editLesideeLink')) document.getElementById('editLesideeLink').value = idee.link || ""; } else { document.getElementById('modalLesideeTitle').innerText = "Nieuw Lesidee Toevoegen"; if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = ""; } const m = document.getElementById('editLesideeModal'); if(m) m.style.display = 'flex'; }
-window.toonWillekeurigeTip = function() { const tipElement = document.getElementById('tipText'); if (tipElement) tipElement.innerText = ictTips[Math.floor(Math.random() * ictTips.length)]; }
+window.openLesideeModal = function(id = null) { const form = document.getElementById('editLesideeForm'); if(!form) return; form.reset(); if(id) { document.getElementById('modalLesideeTitle').innerText = "Lesidee Bewerken"; const idee = lesideeen.find(i => i.id == id); if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = idee.id; if(document.getElementById('editLesideeTitel')) document.getElementById('editLesideeTitel').value = idee.titel || ""; if(document.getElementById('editLesideeCategorie')) document.getElementById('editLesideeCategorie').value = idee.categorie || ""; if(document.getElementById('editLesideeBeschrijving')) document.getElementById('editLesideeBeschrijving').value = idee.beschrijving || ""; if(document.getElementById('editLesideeLink')) document.getElementById('editLesideeLink').value = idee.link || ""; } else { document.getElementById('modalLesideeTitle').innerText = "Nieuw Lesidee Toevoegen"; if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = ""; } const m = document.getElementById('editLesideeModal'); if(m) m.style.display = 'flex'; };
+
 // ==========================================
 // LEERLIJNEN VOORTGANG & CLOUD SYNCHRONISATIE
 // ==========================================
