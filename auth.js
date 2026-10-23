@@ -1,8 +1,8 @@
 // ============================================================
 // MICROSOFT 365 SSO AUTHENTICATIE MODULE (WonderWijs)
 // ============================================================
-// Volledig zelfstandige en veilige Microsoft 365 SSO module
-// zonder externe CDN-afhankelijkheden die kunnen blokkeren.
+// Volledig zelfstandige Microsoft 365 SSO module met
+// PKCE Authorization Code flow (standaard voor Microsoft Entra SPA).
 // ============================================================
 
 (function() {
@@ -29,7 +29,30 @@
         return email.toLowerCase().trim().endsWith(vereistDomein);
     }
 
-    // Helper: JWT ID-token decoderen van Microsoft
+    // Helper: PKCE code verifier genereren
+    function generateCodeVerifier() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+        let result = '';
+        const randomVals = new Uint8Array(64);
+        window.crypto.getRandomValues(randomVals);
+        for (let i = 0; i < 64; i++) {
+            result += chars[randomVals[i] % chars.length];
+        }
+        return result;
+    }
+
+    // Helper: PKCE code challenge genereren (SHA-256 base64url)
+    async function generateCodeChallenge(verifier) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(verifier);
+        const digest = await window.crypto.subtle.digest('SHA-256', data);
+        return btoa(String.fromCharCode(...new Uint8Array(digest)))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    }
+
+    // Helper: JWT token decoderen
     function decodeerJwtToken(token) {
         try {
             const base64Url = token.split('.')[1];
@@ -42,6 +65,37 @@
             console.error("Fout bij decoderen van token:", e);
             return null;
         }
+    }
+
+    // Helper: Wissel de autorisatiecode om voor tokens via Microsoft token endpoint (PKCE)
+    async function wisselCodeOmVoorToken(code, codeVerifier, redirectUri) {
+        const config = window.AUTH_CONFIG || {};
+        const clientId = config.clientId ? config.clientId.trim() : "";
+        const authority = config.authority || "https://login.microsoftonline.com/organizations";
+        const tokenUrl = `${authority.replace(/\/$/, '')}/oauth2/v2.0/token`;
+
+        const body = new URLSearchParams({
+            client_id: clientId,
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: redirectUri,
+            code_verifier: codeVerifier
+        });
+
+        const res = await fetch(tokenUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body.toString()
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error_description || errorData.error || `HTTP ${res.status}`);
+        }
+
+        return await res.json();
     }
 
     // Verwerk token data van Microsoft
@@ -57,7 +111,7 @@
             localStorage.removeItem('ww_huidige_leerkracht');
             localStorage.removeItem('ww_huidige_email');
             toonLoginScherm({
-                foutmelding: `<strong>Toegang geweigerd</strong><br>Je bent aangemeld met <u>${email || 'onbekend account'}</u>.<br>Alleen Microsoft accounts van Wonderwijs (<strong>${vereistDomein}</strong>) hebben toegang.`
+                foutmelding: `<strong>Toegang geweigerd</strong><br>Je bent aangemeld met <u>${email || 'onbekend account'}</u>.<br>Alleen medewerkers met een <strong>${vereistDomein}</strong> account hebben toegang.`
             });
             return false;
         }
@@ -123,18 +177,6 @@
             </div>
         ` : '';
 
-        // Status melding afhankelijk van configuratie
-        let statusBoxHtml = '';
-        if (!isClientKlaar) {
-            statusBoxHtml = `
-                <div style="background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; padding: 14px 16px; border-radius: 8px; font-size: 13px; line-height: 1.5; margin-bottom: 20px; text-align: left;">
-                    <strong>ℹ️ Azure App-registratie vereist voor Live SSO</strong><br>
-                    In <code>auth-config.js</code> staat nog het voorbeeld-ID (<code>a1b2c3d4...</code>).<br>
-                    De ICT-beheerder kan het echte Client ID instellen via Microsoft Entra ID (zie <em>SSO-HANDLEIDING-WONDERWIJS.md</em>).
-                </div>
-            `;
-        }
-
         loginOverlay.innerHTML = `
             <div style="background: white; width: 100%; max-width: 440px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #e2e8f0; text-align: center;">
                 <div style="height: 6px; background: #8CC63F; width: 100%;"></div>
@@ -146,7 +188,6 @@
                     <p style="color: #64748b; font-size: 14px; margin: 0 0 20px 0;">Portaal voor Leskisten & Digitale Geletterdheid</p>
                     
                     ${foutmeldingHtml}
-                    ${statusBoxHtml}
 
                     <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #334155; font-size: 13px; font-weight: 500;">
@@ -158,76 +199,31 @@
                         </div>
                     </div>
 
-                    ${isClientKlaar ? `
-                        <button id="msLoginBtn" onclick="window.loginMetMicrosoft()" style="
-                            width: 100%;
-                            background: #ffffff;
-                            color: #1e293b;
-                            border: 1.5px solid #cbd5e1;
-                            border-radius: 8px;
-                            padding: 13px 20px;
-                            font-size: 15px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 12px;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-                            transition: all 0.2s ease;
-                        " onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#94a3b8';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
-                            <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-                                <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-                                <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-                                <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-                            </svg>
-                            <span>Aanmelden met Microsoft 365</span>
-                        </button>
-                    ` : `
-                        <button id="msLoginBtn" onclick="window.loginMetMicrosoft()" style="
-                            width: 100%;
-                            background: #ffffff;
-                            color: #1e293b;
-                            border: 1.5px solid #cbd5e1;
-                            border-radius: 8px;
-                            padding: 13px 20px;
-                            font-size: 15px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 12px;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-                            margin-bottom: 20px;
-                            transition: all 0.2s ease;
-                        " onmouseover="this.style.background='#f8fafc';" onmouseout="this.style.background='#ffffff';">
-                            <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-                                <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-                                <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-                                <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-                            </svg>
-                            <span>Aanmelden met Microsoft 365</span>
-                        </button>
-
-                        <div style="background: #f1f5f9; padding: 18px; border-radius: 10px; border: 1px solid #cbd5e1; text-align: left;">
-                            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
-                                🚀 Direct testen als Wonderwijs leerkracht:
-                            </div>
-                            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.4;">
-                                Test het dashboard direct met je <strong>@wonderwijs.nl</strong> werkaccount:
-                            </p>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="email" id="testEmailInput" placeholder="jouw.naam@wonderwijs.nl" value="leerkracht@wonderwijs.nl" style="padding: 10px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px; flex: 1; outline: none; box-sizing: border-box;">
-                                <button onclick="window.loginTestAccount()" style="padding: 10px 16px; font-size: 13px; font-weight: bold; background: #8CC63F; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">Inloggen</button>
-                            </div>
-                            <p style="font-size: 11px; color: #94a3b8; margin-top: 8px; margin-bottom: 0;">
-                                * Beveiliging is actief: alleen accounts op <strong>@wonderwijs.nl</strong> worden toegelaten.
-                            </p>
-                        </div>
-                    `}
+                    <button id="msLoginBtn" onclick="window.loginMetMicrosoft()" style="
+                        width: 100%;
+                        background: #ffffff;
+                        color: #1e293b;
+                        border: 1.5px solid #cbd5e1;
+                        border-radius: 8px;
+                        padding: 13px 20px;
+                        font-size: 15px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 12px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#94a3b8';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#cbd5e1';">
+                        <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                        </svg>
+                        <span>Aanmelden met Microsoft 365</span>
+                    </button>
 
                     <p style="font-size: 12px; color: #94a3b8; margin: 18px 0 0 0;">
                         Inloggen is uitsluitend toegestaan met een <strong>@wonderwijs.nl</strong> account.
@@ -256,136 +252,134 @@
         }
     }
 
-    // Publieke functie: Inloggen met Microsoft 365
-    window.loginMetMicrosoft = function() {
+    // Publieke functie: Inloggen met Microsoft 365 via PKCE
+    window.loginMetMicrosoft = async function() {
         const config = window.AUTH_CONFIG || {};
         const clientId = config.clientId ? config.clientId.trim() : "";
 
-        // Controleer of de ICT-beheerder het Client ID al heeft ingevuld
         if (isVoorbeeldClientId(clientId)) {
             toonLoginScherm({
-                foutmelding: `
-                    <strong>Azure App-registratie nog niet gekoppeld</strong><br>
-                    Het Client ID <code>${clientId || '(leeg)'}</code> is nog een voorbeeld.<br><br>
-                    <strong>Voor de ICT-beheerder:</strong> Maak een App-registratie aan in Microsoft Entra ID volgens <em>SSO-HANDLEIDING-WONDERWIJS.md</em> en vul het echte Client ID in in <code>auth-config.js</code>.<br><br>
-                    <strong>Nu testen?</strong> Gebruik het testvak hieronder om direct in te loggen met een @wonderwijs.nl account.
-                `
+                foutmelding: `<strong>Azure App-registratie vereist</strong><br>Client ID ontbreekt in <code>auth-config.js</code>.`
             });
             return;
         }
 
-        // Als we in file:// protocol zitten kan Microsoft niet redirecten
         if (window.location.protocol === "file:") {
             toonLoginScherm({
-                foutmelding: `
-                    <strong>Webserver vereist voor live Microsoft redirect</strong><br>
-                    Je opent dit HTML-bestand rechtstreeks vanaf de schijf (<code>file://</code>).<br>
-                    Microsoft SSO vereist een webserver (zoals Vercel of <code>http://localhost:3000</code>).<br><br>
-                    Gebruik hieronder de directe testinlog om het portaal lokaal te bekijken.
-                `
+                foutmelding: `<strong>Webserver vereist</strong><br>Je opent dit HTML-bestand rechtstreeks vanaf de schijf (<code>file://</code>). Microsoft SSO vereist een webserver (zoals Vercel of <code>http://localhost:3000</code>).`
             });
             return;
         }
 
-        // Bouw de officiële Microsoft OAuth2 / OpenID Connect URL
-        const redirectUri = config.redirectUri || (window.location.origin + window.location.pathname);
-        const nonce = Math.random().toString(36).substring(2) + Date.now().toString(36);
-        const state = Math.random().toString(36).substring(2);
-        
-        sessionStorage.setItem('ww_ms_auth_state', state);
-        sessionStorage.setItem('ww_ms_auth_nonce', nonce);
-
-        const params = new URLSearchParams({
-            client_id: clientId,
-            response_type: "id_token",
-            redirect_uri: redirectUri,
-            scope: "openid profile email",
-            response_mode: "fragment",
-            state: state,
-            nonce: nonce,
-            domain_hint: "wonderwijs.nl",
-            prompt: "select_account"
-        });
-
-        const authority = config.authority || "https://login.microsoftonline.com/organizations";
-        const authUrl = `${authority.replace(/\/$/, '')}/oauth2/v2.0/authorize?${params.toString()}`;
-
-        // Open login popup of redirect
-        const width = 500;
-        const height = 650;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
+        const btn = document.getElementById('msLoginBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<span>⏳ Verifiëren bij Microsoft 365...</span>`;
+        }
 
         try {
+            const redirectUri = config.redirectUri || (window.location.origin + window.location.pathname);
+            const state = Math.random().toString(36).substring(2);
+            const codeVerifier = generateCodeVerifier();
+            const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+            sessionStorage.setItem('ww_ms_code_verifier', codeVerifier);
+            sessionStorage.setItem('ww_ms_redirect_uri', redirectUri);
+            sessionStorage.setItem('ww_ms_auth_state', state);
+
+            // Gebruik response_type="code" met PKCE (standaard voor Microsoft Entra SPA)
+            const params = new URLSearchParams({
+                client_id: clientId,
+                response_type: "code",
+                redirect_uri: redirectUri,
+                scope: "openid profile email",
+                response_mode: "query",
+                code_challenge: codeChallenge,
+                code_challenge_method: "S256",
+                state: state,
+                domain_hint: "wonderwijs.nl",
+                prompt: "select_account"
+            });
+
+            const authority = config.authority || "https://login.microsoftonline.com/organizations";
+            const authUrl = `${authority.replace(/\/$/, '')}/oauth2/v2.0/authorize?${params.toString()}`;
+
+            const width = 500;
+            const height = 650;
+            const left = (window.screen.width - width) / 2;
+            const top = (window.screen.height - height) / 2;
+
             const popup = window.open(authUrl, "ms_login_popup", `width=${width},height=${height},top=${top},left=${left}`);
             if (!popup || popup.closed || typeof popup.closed === "undefined") {
-                // Popup geblokkeerd, stuur door via redirect
+                // Popup geblokkeerd, val terug op redirect
                 window.location.href = authUrl;
                 return;
             }
 
             // Monitor popup
-            const timer = setInterval(() => {
+            const timer = setInterval(async () => {
                 try {
                     if (popup.closed) {
                         clearInterval(timer);
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = `
+                                <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                                </svg>
+                                <span>Aanmelden met Microsoft 365</span>
+                            `;
+                        }
                         return;
                     }
 
                     if (popup.location.href.includes(redirectUri)) {
+                        const search = popup.location.search;
                         const hash = popup.location.hash;
                         popup.close();
                         clearInterval(timer);
 
-                        if (hash && hash.includes('id_token=')) {
+                        const searchParams = new URLSearchParams(search);
+                        const code = searchParams.get('code');
+
+                        if (code) {
+                            try {
+                                const tokenData = await wisselCodeOmVoorToken(code, codeVerifier, redirectUri);
+                                if (tokenData && tokenData.id_token) {
+                                    const payload = decodeerJwtToken(tokenData.id_token);
+                                    verwerkMicrosoftToken(payload);
+                                }
+                            } catch (tokenErr) {
+                                toonLoginScherm({ foutmelding: `<strong>Token ophalen mislukt:</strong><br>${tokenErr.message}` });
+                            }
+                        } else if (searchParams.get('error')) {
+                            const desc = searchParams.get('error_description') || searchParams.get('error');
+                            toonLoginScherm({ foutmelding: `<strong>Aanmelden mislukt:</strong><br>${desc}` });
+                        } else if (hash && hash.includes('id_token=')) {
+                            // Fallback voor implicit flow indien actief
                             const hashParams = new URLSearchParams(hash.substring(1));
                             const idToken = hashParams.get('id_token');
                             if (idToken) {
                                 const payload = decodeerJwtToken(idToken);
                                 verwerkMicrosoftToken(payload);
                             }
-                        } else if (hash && hash.includes('error=')) {
-                            const hashParams = new URLSearchParams(hash.substring(1));
-                            const errDesc = hashParams.get('error_description') || hashParams.get('error');
-                            toonLoginScherm({ foutmelding: `<strong>Aanmelden geannuleerd of mislukt:</strong><br>${decodeURIComponent(errDesc)}` });
                         }
                     }
                 } catch (e) {
-                    // Cross-origin tijdens inloggen op Microsoft pagina (normaal)
+                    // Cross-origin tijdens inloggen op Microsoft domein
                 }
             }, 500);
 
-        } catch (e) {
-            window.location.href = authUrl;
-        }
-    };
-
-    // Publieke functie: Test-inlog voor leerkrachten (met @wonderwijs.nl validatie)
-    window.loginTestAccount = function() {
-        const input = document.getElementById('testEmailInput');
-        const email = input ? input.value.trim().toLowerCase() : "";
-
-        const config = window.AUTH_CONFIG || {};
-        const vereistDomein = config.allowedDomain || "@wonderwijs.nl";
-
-        // STRIKTE CONTROLE: Zelfs in testmodus MOET het domein @wonderwijs.nl zijn
-        if (!email.endsWith(vereistDomein.toLowerCase())) {
-            toonLoginScherm({
-                foutmelding: `<strong>Toegang geweigerd</strong><br>Het e-mailadres <u>${email || '(leeg)'}</u> is niet toegestaan.<br>Alleen e-mailadressen eindigend op <strong>${vereistDomein}</strong> hebben toegang tot dit portaal.`
-            });
-            return;
-        }
-
-        const naamDeel = email.split('@')[0].replace(/[._]/g, ' ');
-        const opgemaakteNaam = naamDeel.replace(/\b\w/g, l => l.toUpperCase());
-
-        localStorage.setItem('ww_huidige_leerkracht', opgemaakteNaam);
-        localStorage.setItem('ww_huidige_email', email);
-        localStorage.setItem('ww_auth_provider', 'wonderwijs_account');
-
-        verbergLoginScherm();
-        if (typeof window.checkLeerkrachtLogin === "function") {
-            window.checkLeerkrachtLogin();
+        } catch (err) {
+            console.error("Fout tijdens Microsoft 365 login:", err);
+            toonLoginScherm({ foutmelding: `<strong>Fout bij starten login:</strong><br>${err.message}` });
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<span>Aanmelden met Microsoft 365</span>`;
+            }
         }
     };
 
@@ -399,8 +393,32 @@
         window.location.reload();
     };
 
-    // Controleer hash bij pagina-herlaad (redirect flow)
-    function controleerRedirectHash() {
+    // Controleer redirect (code of id_token in huidige URL)
+    async function controleerRedirect() {
+        // Controleer search params (?code=...)
+        if (window.location.search && window.location.search.includes('code=')) {
+            const searchParams = new URLSearchParams(window.location.search);
+            const code = searchParams.get('code');
+            const codeVerifier = sessionStorage.getItem('ww_ms_code_verifier');
+            const redirectUri = sessionStorage.getItem('ww_ms_redirect_uri') || (window.location.origin + window.location.pathname);
+
+            if (code && codeVerifier) {
+                history.replaceState(null, '', window.location.pathname);
+                try {
+                    const tokenData = await wisselCodeOmVoorToken(code, codeVerifier, redirectUri);
+                    if (tokenData && tokenData.id_token) {
+                        const payload = decodeerJwtToken(tokenData.id_token);
+                        return verwerkMicrosoftToken(payload);
+                    }
+                } catch (e) {
+                    console.error("Fout bij omwisselen code na redirect:", e);
+                    toonLoginScherm({ foutmelding: `<strong>Aanmelden mislukt:</strong><br>${e.message}` });
+                    return false;
+                }
+            }
+        }
+
+        // Controleer hash (#id_token=...)
         if (window.location.hash && window.location.hash.includes('id_token=')) {
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const idToken = hashParams.get('id_token');
@@ -414,9 +432,10 @@
     }
 
     // Hoofdfunctie voor authenticatiecontrole
-    window.controleerSSOAuthenticatie = function() {
-        // Controleer of er net een token is binnengekomen via redirect
-        if (controleerRedirectHash()) {
+    window.controleerSSOAuthenticatie = async function() {
+        // Controleer redirect response
+        const viaRedirect = await controleerRedirect();
+        if (viaRedirect) {
             return true;
         }
 
