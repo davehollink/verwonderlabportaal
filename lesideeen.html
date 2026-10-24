@@ -41,7 +41,7 @@
             
             <div class="hero-lesideeen">
                 <h1>Laat je inspireren! ✨</h1>
-                <p>Ontdek innovatieve manieren om digitale geletterdheid tot leven te brengen in jouw klas. Van plug-and-play lesbrieven tot out-of-the-box projecten met het (ver)Wonderlab materiaal. Klap een lesidee open voor het complete stappenplan of reserveer direct de bijbehorende leskist.</p>
+                <p>Ontdek innovatieve manieren om digitale geletterdheid tot leven te brengen in jouw klas. Van plug-and-play lesbrieven tot out-of-the-box projecten met het (ver)Wonderlab materiaal. Klik op 'Open les' voor het complete stappenplan, leerlijndoelen en bijbehorende werkbladen, of reserveer direct de bijbehorende leskist.</p>
             </div>
             
             <div id="lesideeenContainer"></div>
@@ -50,8 +50,22 @@
     </main>
 </div>
 
-<script src="auth-config.js?v=20261023"></script>
-<script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261023l"></script>
+<!-- Lesbrief Popup Modal -->
+<div id="lesModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div class="les-modal-header">
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Lesbrief & Handleiding</span>
+                <h2 id="lesModalTitle" style="color: var(--slate-950); font-size: 24px; font-weight: 800; margin: 0;">Lesidee</h2>
+            </div>
+        </div>
+        <div id="lesModalBody"></div>
+    </div>
+</div>
+
+<script src="auth-config.js?v=20261024c"></script>
+<script src="auth.js?v=20261024c"></script>
+<script src="script.js?v=20261024c"></script>
 </body>
 </html>

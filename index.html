@@ -844,30 +844,189 @@
     </div>
 </div>
 
-<div id="editLesideeModal" class="modal">
-    <div class="modal-content">
+<!-- Uitgebreide Beheerder Modal voor Lesideeën & Lesbrieven -->
+<div id="editLesideeModal" class="modal modal-large">
+    <div class="modal-content" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
         <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
-        <h2 id="modalLesideeTitle">Lesidee</h2>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1.5px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">💡</div>
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Lesidee Beheer</span>
+                <h2 id="modalLesideeTitle" style="color: var(--slate-950); font-size: 22px; font-weight: 800; margin: 0;">Lesidee Bewerken</h2>
+            </div>
+        </div>
+
         <form id="editLesideeForm">
             <input type="hidden" id="editLesideeId">
-            <div class="form-group">
-                <label>Titel:</label>
-                <input type="text" id="editLesideeTitel" required>
+
+            <!-- SECTIE 1: BASISINFORMATIE -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">📌 1. Basisgegevens & Koppeling</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label style="font-weight: 700; font-size: 13px;">Titel van het lesidee:</label>
+                        <input type="text" id="editLesideeTitel" placeholder="Bijv. Dansende Robot Party" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Gekoppelde Leskist:</label>
+                        <select id="editLesideeKistSelect" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <!-- Dynamisch gevuld met actieve leskisten -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Doelgroep / Bouw:</label>
+                        <select id="editLesideeDoelgroep" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="Groep 1-2 (Onderbouw)">Groep 1-2 (Onderbouw)</option>
+                            <option value="Groep 3-4 (Middenbouw)">Groep 3-4 (Middenbouw)</option>
+                            <option value="Groep 5-6 (Midden/Bovenbouw)">Groep 5-6 (Midden/Bovenbouw)</option>
+                            <option value="Groep 7-8 (Bovenbouw)">Groep 7-8 (Bovenbouw)</option>
+                            <option value="Alle groepen (1 t/m 8)">Alle groepen (1 t/m 8)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Moeilijkheidsgraad:</label>
+                        <select id="editLesideeMoeilijkheid" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="Beginner ⭐">Beginner ⭐</option>
+                            <option value="Gemiddeld ⭐⭐">Gemiddeld ⭐⭐</option>
+                            <option value="Uitdagend ⭐⭐⭐">Uitdagend ⭐⭐⭐</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Thema / Categorie:</label>
+                        <input type="text" id="editLesideeCategorie" placeholder="Bijv. Robotica & Muziek" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px; margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Korte samenvatting (zichtbaar op de overzichtskaart):</label>
+                    <textarea id="editLesideeBeschrijving" rows="2" placeholder="Korte wervende introductie over de les..." required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Categorie:</label>
-                <input type="text" id="editLesideeCategorie" required>
+
+            <!-- SECTIE 2: DIGITALE GELETTERDHEID LEERLIJN -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #1e3a8a; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🧠 2. Wonderwijs Leerlijn Digitale Geletterdheid</h3>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">DG Domein / Focus:</label>
+                        <input type="text" id="editLesideeDgDomein" placeholder="Bijv. Wonderwijs Digitale Geletterdheid (Computational Thinking & Programmeren)" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Gekoppelde kerndoelen & leerlijndoelen (één per regel):</label>
+                        <textarea id="editLesideeDgKerndoelen" rows="3" placeholder="Kerndoel 1: Leerlingen ontdekken hoe algoritmes en stappenplannen werken&#10;Kerndoel 2: Probleemoplossend denken en debuggen in blokcode" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-weight: 700; font-size: 13px;">Wat leert de leerling tijdens deze les?</label>
+                        <textarea id="editLesideeDgLeerlingDoelen" rows="2" placeholder="Leerlingen leren zelfstandig een reeks commando's opbouwen..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Beschrijving:</label>
-                <textarea id="editLesideeBeschrijving" rows="4" required></textarea>
+
+            <!-- SECTIE 3: TIJDSINVESTERING, MATERIALEN & VOORBEREIDING -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #14532d; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🧰 3. Tijdsinvestering, Materialen & Voorbereiding</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Totale lesduur:</label>
+                        <input type="text" id="editLesideeTijd" placeholder="Bijv. 60 min" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Klassikale organisatie:</label>
+                        <input type="text" id="editLesideeOrganisatie" placeholder="Bijv. Tweetallen of groepjes van 4" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Materialen uit de Verwonderlab leskist:</label>
+                        <input type="text" id="editLesideeKistMateriaal" placeholder="Bijv. Dash robots, opladers, opdrachtenkaarten" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Zelf aanwezig in de klas:</label>
+                        <input type="text" id="editLesideeKlasMateriaal" placeholder="Bijv. 1 tablet per tweetal, digibord" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Praktische voorbereiding leerkracht:</label>
+                    <textarea id="editLesideeVoorbereiding" rows="2" placeholder="Wat moet de leerkracht 10 minuten van tevoren klaargezet hebben?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Externe Link (optioneel):</label>
-                <input type="url" id="editLesideeLink">
+
+            <!-- SECTIE 4: STAPSGEWIJS LESVERLOOP -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #b45309; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🚀 4. Stapsgewijs Lesverloop (3 Fasen)</h3>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; font-size: 13px;">Stap 1: Inleiding & Prikkeling (ca. 10-15 min):</label>
+                    <textarea id="editLesideeInleiding" rows="3" placeholder="Hoe open je de les? Wat toon je op het digibord?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; font-size: 13px;">Stap 2: Kernactiviteit & Challenge (ca. 30-35 min):</label>
+                    <textarea id="editLesideeKern" rows="4" placeholder="Wat is de concrete opdracht voor de leerlingen?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Stap 3: Demonstratie, Afronding & Reflectie (ca. 10-15 min):</label>
+                    <textarea id="editLesideeAfsluiting" rows="3" placeholder="Hoe evalueren en delen de leerlingen hun eindresultaat?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
             </div>
-            <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 20px; font-size: 14px; padding: 12px 24px;">💾 Lesidee Opslaan</button>
+
+            <!-- SECTIE 5: DIFFERENTIATIE & VERDIEPING -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #6d28d9; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🌟 5. Differentiatie & Externe Links</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">⭐ Uitdaging / Verdieping:</label>
+                        <textarea id="editLesideeDiffUitdaging" rows="2" placeholder="Voor snelle of gevorderde leerlingen..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">💡 Extra ondersteuning:</label>
+                        <textarea id="editLesideeDiffOndersteuning" rows="2" placeholder="Tips voor leerlingen die extra hulp nodig hebben..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Externe website of handleiding link (optioneel):</label>
+                    <input type="url" id="editLesideeLink" placeholder="https://..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <!-- SECTIE 6: BESTANDEN & WERKBLADEN UPLOADEN -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">📎 6. Lesbestanden & Werkbladen Uploaden</h3>
+                    <span style="font-size: 12px; color: var(--slate-500);">PDF, Word, PowerPoint of werkkaarten</span>
+                </div>
+
+                <div class="les-file-dropzone" onclick="document.getElementById('editLesideeFilesInput').click()">
+                    <span style="font-size: 28px; display: block; margin-bottom: 4px;">📂</span>
+                    <strong style="color: var(--slate-900); font-size: 13.5px;">Klik hier om lesbestanden toe te voegen</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--slate-500);">Kies één of meerdere bestanden (PDF, DOCX, PPTX, afbeeldingen)</p>
+                    <input type="file" id="editLesideeFilesInput" multiple accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.png,.jpg,.jpeg,.zip" style="display: none;" onchange="window.handleLesideeFilesUpload(event)">
+                </div>
+
+                <div id="lesideeFilesPreviewContainer" class="les-files-preview-list"></div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="sluitAlleModals()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                    Annuleren
+                </button>
+                <button type="submit" class="btn-green-action" style="font-size: 14px; padding: 12px 28px; justify-content: center;">
+                    💾 Lesidee Compleet Opslaan
+                </button>
+            </div>
         </form>
+    </div>
+</div>
+
+<!-- Lesbrief Popup Modal voor weergave -->
+<div id="lesModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div class="les-modal-header">
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Lesbrief & Handleiding</span>
+                <h2 id="lesModalTitle" style="color: var(--slate-950); font-size: 24px; font-weight: 800; margin: 0;">Lesidee</h2>
+            </div>
+        </div>
+        <div id="lesModalBody"></div>
     </div>
 </div>
 
@@ -1035,8 +1194,8 @@
     }
 </script>
 
-<script src="auth-config.js?v=20261023"></script>
-<script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261024b"></script>
+<script src="auth-config.js?v=20261024c"></script>
+<script src="auth.js?v=20261024c"></script>
+<script src="script.js?v=20261024c"></script>
 </body>
 </html>

@@ -932,8 +932,33 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         };
 
         window.saveMeldingToCloud = async function(newData) { try { if(newData.foto && newData.foto.startsWith('data:image')) { const imgRef = ref(storage, `schades/${newData.id}`); await uploadString(imgRef, newData.foto, 'data_url'); newData.foto = await getDownloadURL(imgRef); } await setDoc(doc(db, "meldingen", newData.id.toString()), newData); } catch(e) { console.error("Opslaan Melding Mislukt:", e); } };
-        window.deleteMateriaalFromCloud = async function(id) { await deleteDoc(doc(db, "leskisten", id.toString())); };
-        window.saveLesideeToCloud = async function(newData) { await setDoc(doc(db, "lesideeen", newData.id.toString()), newData); };
+        window.saveLesideeToCloud = async function(newData) {
+            try {
+                if (newData.bestanden && Array.isArray(newData.bestanden) && typeof ref === 'function' && typeof uploadString === 'function') {
+                    let finalFiles = [];
+                    for (let i = 0; i < newData.bestanden.length; i++) {
+                        let f = newData.bestanden[i];
+                        if (f.data && f.data.startsWith('data:')) {
+                            try {
+                                const safeExt = (f.naam && f.naam.includes('.')) ? f.naam.split('.').pop() : 'bin';
+                                const fileRef = ref(storage, `lesideeen_bestanden/${newData.id}_${Date.now()}_${i}.${safeExt}`);
+                                await uploadString(fileRef, f.data, 'data_url');
+                                finalFiles.push({ naam: f.naam, grootte: f.grootte, type: f.type, data: await getDownloadURL(fileRef) });
+                            } catch(upErr) {
+                                console.warn("Storage upload fallback naar DataURL:", upErr);
+                                finalFiles.push(f);
+                            }
+                        } else {
+                            finalFiles.push(f);
+                        }
+                    }
+                    newData.bestanden = finalFiles;
+                }
+                await setDoc(doc(db, "lesideeen", newData.id.toString()), newData);
+            } catch(e) {
+                console.error("Opslaan Lesidee Cloud Mislukt:", e);
+            }
+        };
         window.deleteLesideeFromCloud = async function(id) { await deleteDoc(doc(db, "lesideeen", id.toString())); };
         window.savePeriodeToCloud = async function(newData) { await setDoc(doc(db, "periodes", newData.id.toString()), newData); };
         window.deletePeriodeFromCloud = async function(id) { await deleteDoc(doc(db, "periodes", id.toString())); };
@@ -1124,9 +1149,86 @@ window.logoutAdmin = function() {
 };
 
 window.initMobileNavigation = function() {
-    // Menu knop verwijderd op verzoek van gebruiker
-    const existing = document.getElementById('mobileNavToggle');
-    if (existing) existing.remove();
+    // 1. Zorg voor mobiele toggle knop in de sidebar header op mobiele schermen
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        let headerRow = sidebar.querySelector('.sidebar-header-row');
+        const logo = sidebar.querySelector('.logo');
+        if (!headerRow && logo) {
+            headerRow = document.createElement('div');
+            headerRow.className = 'sidebar-header-row';
+            logo.parentNode.insertBefore(headerRow, logo);
+            headerRow.appendChild(logo);
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.id = 'mobileMenuToggleBtn';
+            toggleBtn.className = 'mobile-menu-toggle-btn';
+            toggleBtn.setAttribute('aria-label', 'Toggle navigatie menu');
+            toggleBtn.innerHTML = '<span class="toggle-icon">☰</span> <span>Menu</span>';
+            toggleBtn.onclick = function() {
+                const isOpen = sidebar.classList.toggle('mobile-menu-open');
+                toggleBtn.classList.toggle('active', isOpen);
+                toggleBtn.innerHTML = isOpen 
+                    ? '<span class="toggle-icon">✕</span> <span>Sluit</span>' 
+                    : '<span class="toggle-icon">☰</span> <span>Menu</span>';
+            };
+            headerRow.appendChild(toggleBtn);
+        }
+    }
+
+    // 2. Sluit mobiel menu automatisch zodra op een menulink geklikt wordt
+    document.querySelectorAll('.sidebar .menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (sidebar && sidebar.classList.contains('mobile-menu-open')) {
+                sidebar.classList.remove('mobile-menu-open');
+                const btn = document.getElementById('mobileMenuToggleBtn');
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '<span class="toggle-icon">☰</span> <span>Menu</span>';
+                }
+            }
+        });
+    });
+
+    // 3. Zorg voor de vaste Mobile Bottom Navigation bar onderin het scherm
+    let bottomNav = document.getElementById('mobileBottomNav');
+    if (!bottomNav) {
+        bottomNav = document.createElement('nav');
+        bottomNav.id = 'mobileBottomNav';
+        bottomNav.className = 'mobile-bottom-nav';
+        
+        const path = window.location.pathname.toLowerCase();
+        const isDashboard = path.endsWith('index.html') || path.endsWith('/') || path === '';
+        const isReserveren = path.endsWith('reserveren.html');
+        const isLesideeen = path.endsWith('lesideeen.html');
+        const isLeerlijnen = path.endsWith('leerlijnen.html');
+        const isProfiel = path.endsWith('profiel.html');
+
+        bottomNav.innerHTML = `
+            <a href="index.html" class="bottom-nav-item ${isDashboard ? 'active' : ''}">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </a>
+            <a href="reserveren.html" class="bottom-nav-item ${isReserveren ? 'active' : ''}">
+                <span class="nav-icon">📅</span>
+                <span>Reserveren</span>
+            </a>
+            <a href="lesideeen.html" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
+                <span class="nav-icon">💡</span>
+                <span>Lesideeën</span>
+            </a>
+            <a href="leerlijnen.html" class="bottom-nav-item ${isLeerlijnen ? 'active' : ''}">
+                <span class="nav-icon">🎯</span>
+                <span>Leerlijnen</span>
+            </a>
+            <a href="profiel.html" class="bottom-nav-item ${isProfiel ? 'active' : ''}">
+                <span class="nav-icon">👤</span>
+                <span>Profiel</span>
+            </a>
+        `;
+        document.body.appendChild(bottomNav);
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1292,61 +1394,110 @@ window.zoekLesideeen = function(val) {
     window.renderLesideeenGrid();
 };
 
-window.toggleLesbrief = function(detailId, btn) {
-    const drawer = document.getElementById(detailId);
-    if (!drawer) return;
-    const isHidden = drawer.style.display === 'none' || drawer.style.display === '';
-    drawer.style.display = isHidden ? 'block' : 'none';
-    if (btn) {
-        btn.innerHTML = isHidden 
-            ? '<span>▲ Lesbrief inklappen</span>' 
-            : '<span>📖 Bekijk complete lesbrief</span> <span class="arrow-indicator">▼</span>';
-        btn.style.background = isHidden ? '#e2e8f0' : '#f8fafc';
-        btn.style.borderColor = isHidden ? '#8CC63F' : '#cbd5e1';
-    }
-};
+window.openLesModal = function(id) {
+    const idee = lesideeen.find(i => i.id == id);
+    if (!idee) return;
 
-window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
-    const lb = idee.lesbrief;
+    let kist = null;
+    if (idee.kistId) {
+        kist = leskisten.find(k => k.id == idee.kistId);
+    }
+    if (!kist && idee.titel) {
+        kist = leskisten.find(k => k.naam && (
+            k.naam.toLowerCase().includes(idee.titel.toLowerCase()) || 
+            idee.titel.toLowerCase().includes(k.naam.toLowerCase())
+        ));
+    }
+    if (!kist && leskisten.length > 0) {
+        kist = leskisten[0];
+    }
+
+    const kistNaam = kist ? kist.naam : (idee.kistNaam || "Verwonderlab Leskist");
+    const kistIdParam = kist ? (kist.id || encodeURIComponent(kist.naam)) : '';
+    const reserveerUrl = `reserveren.html?kist=${encodeURIComponent(kistIdParam)}`;
+
+    const titleEl = document.getElementById('lesModalTitle');
+    if (titleEl) titleEl.innerText = idee.titel;
+
+    const bodyEl = document.getElementById('lesModalBody');
+    if (!bodyEl) return;
+
+    const lb = idee.lesbrief || {};
     const doelgroep = idee.doelgroep || idee.bouw || 'Alle groepen';
     const moeilijkheid = idee.moeilijkheid || (doelgroep.includes('1-2') ? 'Beginner ⭐' : (doelgroep.includes('7-8') ? 'Uitdagend ⭐⭐⭐' : 'Gemiddeld ⭐⭐'));
+    const tijdOpbouw = lb.tijdsopbouw || {};
+    const dg = lb.dgDoelen || {};
+    const bestanden = idee.bestanden || [];
 
-    if (!lb) {
-        return `
-        <div style="padding: 10px 0;">
-            <p><strong>Over deze les:</strong> ${idee.beschrijving || 'Geen uitgebreide lesbrief beschikbaar.'}</p>
-            ${idee.link ? `<p><a href="${idee.link}" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: none;">🌐 Bekijk online lesmateriaal →</a></p>` : ''}
-            <div class="lesbrief-cta">
-                <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">Direct aan de slag met deze les?</p>
-                <a href="${reserveerUrl}" class="btn-direct-reserve" style="display: inline-flex; width: auto; padding: 10px 22px;">📅 Reserveer direct '${kistNaam}'</a>
+    let filesHtml = '';
+    if (bestanden && bestanden.length > 0) {
+        filesHtml = `
+        <div class="les-downloads-box">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <strong style="color: var(--slate-900); font-size: 14px; display: flex; align-items: center; gap: 7px;">
+                    <span>📎</span> <span>Lesbijlagen & Werkbladen (${bestanden.length})</span>
+                </strong>
+                <span style="font-size: 11px; color: var(--slate-500);">Direct te downloaden voor in de klas</span>
             </div>
+            <div class="downloads-grid">
+                ${bestanden.map((f) => {
+                    const icon = (f.naam && f.naam.toLowerCase().endsWith('.pdf')) ? '📄' : ((f.naam && f.naam.toLowerCase().match(/\.(doc|docx)$/)) ? '📝' : ((f.naam && f.naam.toLowerCase().match(/\.(ppt|pptx)$/)) ? '📊' : '📁'));
+                    return `
+                    <div class="download-file-card">
+                        <div class="download-file-info">
+                            <span class="download-file-icon">${icon}</span>
+                            <div style="overflow: hidden;">
+                                <div class="download-file-name" title="${f.naam}">${f.naam}</div>
+                                <div class="download-file-size">${f.grootte || 'Bijlage'}</div>
+                            </div>
+                        </div>
+                        <a href="${f.data}" download="${f.naam}" target="_blank" class="btn-download-action">
+                            <span>📥 Download</span>
+                        </a>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>`;
+    } else {
+        filesHtml = `
+        <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: var(--radius-md); padding: 12px 16px; margin-top: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; color: var(--slate-500); display: flex; align-items: center; gap: 6px;">
+                <span>📎</span> <span>Nog geen bestanden of werkbladen geüpload voor deze les.</span>
+            </span>
+            <span style="font-size: 11.5px; color: var(--slate-400);">Kan worden toegevoegd in het beheer</span>
         </div>`;
     }
 
-    const tijdOpbouw = lb.tijdsopbouw || {};
-    const dg = lb.dgDoelen || {};
-
-    return `
-    <div style="padding: 8px 0;">
-        <!-- Belangrijkste leskenmerken: Doelgroep, Moeilijkheidsgraad & Tijd -->
-        <div style="background: rgba(248, 250, 252, 0.95); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px;">
-            <div>
-                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Doelgroep</span>
-                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">🎯 ${doelgroep}</strong>
-            </div>
-            <div>
-                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Moeilijkheidsgraad</span>
-                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">⚡ ${moeilijkheid}</strong>
-            </div>
-            <div>
-                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Tijdsinvestering</span>
-                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">⏱️ ${lb.tijd || '60 min'} (${tijdOpbouw.voorbereiding || '10 min'} voorb.)</strong>
-            </div>
-            <div>
-                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--slate-400); display: block; margin-bottom: 3px;">Organisatie</span>
-                <strong style="color: var(--slate-900); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">👥 ${lb.organisatie || 'In tweetallen'}</strong>
-            </div>
+    bodyEl.innerHTML = `
+        <!-- Meta badges rij -->
+        <div class="les-meta-badges" style="margin-bottom: 18px;">
+            <span class="les-meta-badge primary">🎯 Bouw: ${doelgroep}</span>
+            <span class="les-meta-badge accent">⚡ Niveau: ${moeilijkheid}</span>
+            <span class="les-meta-badge">⏱️ Duur: ${lb.tijd || '60 min'}</span>
+            <span class="les-meta-badge">👥 ${lb.organisatie || 'In tweetallen'}</span>
+            <span class="les-meta-badge" style="background: #e0e7ff; color: #3730a3;">🏷️ ${idee.categorie || 'Lesidee'}</span>
         </div>
+
+        <!-- Reserveer Kist Callout -->
+        <div style="background: linear-gradient(135deg, rgba(140, 198, 63, 0.12), rgba(22, 163, 74, 0.08)); border: 1.5px solid rgba(140, 198, 63, 0.4); border-radius: var(--radius-lg); padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 26px;">📦</span>
+                <div>
+                    <strong style="color: #14532d; font-size: 14px; display: block;">Benodigde leskist: ${kistNaam}</strong>
+                    <span style="color: #166534; font-size: 12.5px;">Beschikbaar via het Verwonderlab uitleensysteem</span>
+                </div>
+            </div>
+            <a href="${reserveerUrl}" class="btn-direct-reserve" style="width: auto; padding: 9px 20px; font-size: 13px; text-decoration: none;">
+                <span>📅 Reserveer deze kist direct</span>
+            </a>
+        </div>
+
+        <!-- Korte introductie -->
+        ${idee.beschrijving ? `
+        <div style="margin-bottom: 22px;">
+            <h4 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; color: var(--slate-400); margin: 0 0 6px 0;">Lesomschrijving</h4>
+            <p style="color: var(--slate-700); font-size: 14px; line-height: 1.65; margin: 0;">${idee.beschrijving}</p>
+        </div>` : ''}
 
         <!-- Doelen Digitale Geletterdheid (Wonderwijs) -->
         <div class="lesbrief-section">
@@ -1355,7 +1506,7 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
                 <div class="dg-domain-badge">
                     <span>${dg.domein || 'Wonderwijs Digitale Geletterdheid'}</span>
                 </div>
-                ${dg.kerndoelenWonderwijs && Array.isArray(dg.kerndoelenWonderwijs) ? `
+                ${dg.kerndoelenWonderwijs && Array.isArray(dg.kerndoelenWonderwijs) && dg.kerndoelenWonderwijs.length > 0 ? `
                 <div style="margin-top: 10px;">
                     <strong style="color: #0f172a; font-size: 13px;">Gekoppelde kerndoelen & domeinen uit de leerlijn:</strong>
                     <ul class="dg-goals-list">
@@ -1383,7 +1534,7 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
                 </div>
                 <div class="material-col">
                     <span class="mat-label">🏫 In het eigen klaslokaal aanwezig:</span>
-                    <p>${lb.klasMateriaal || 'Tablets of computers, digibord, schrijfspullen'}</p>
+                    <p>${lb.klasMateriaal || 'Tablets of laptops, digibord, schrijfspullen'}</p>
                 </div>
                 <div class="prep-note">
                     <strong>💡 Praktische voorbereiding leerkracht (${tijdOpbouw.voorbereiding || lb.voorbereidingTijd || '10 min'}):</strong>
@@ -1400,21 +1551,21 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
                     <span class="step-num">1</span>
                     <strong style="color: #1e3a8a;">Inleiding & Prikkeling (${tijdOpbouw.inleiding || lb.inleidingTijd || '15 min'})</strong>
                 </div>
-                <div class="step-content">${lb.inleiding}</div>
+                <div class="step-content">${lb.inleiding || 'Introduceer het onderwerp en activeer voorkennis bij de leerlingen.'}</div>
             </div>
             <div class="lesbrief-step-card step-kern">
                 <div class="step-header">
                     <span class="step-num">2</span>
                     <strong style="color: #14532d;">Kernactiviteit & Challenge (${tijdOpbouw.kern || lb.kernTijd || '30 min'})</strong>
                 </div>
-                <div class="step-content">${lb.kern}</div>
+                <div class="step-content">${lb.kern || 'Leerlingen gaan actief en zelfstandig of in tweetallen aan de slag met de opdracht.'}</div>
             </div>
             <div class="lesbrief-step-card step-afsluiting">
                 <div class="step-header">
                     <span class="step-num">3</span>
                     <strong style="color: #78350f;">Demonstratie, Evaluatie & Reflectie (${tijdOpbouw.afsluiting || lb.afsluitingTijd || '15 min'})</strong>
                 </div>
-                <div class="step-content">${lb.afsluiting}</div>
+                <div class="step-content">${lb.afsluiting || 'Presenteer resultaten klassikaal en bespreek wat er goed ging en wat beter kon.'}</div>
             </div>
         </div>
 
@@ -1429,21 +1580,32 @@ window.renderLesbriefContent = function(idee, kistNaam, reserveerUrl) {
             </div>
         </div>` : ''}
 
+        <!-- Bestanden & Bijlagen Downloads -->
+        <div class="lesbrief-section">
+            <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 4px 0;">📥 Lesmateriaal & Documenten</h4>
+            ${filesHtml}
+        </div>
+
         ${idee.link ? `
-        <div style="margin-top: 10px; margin-bottom: 15px;">
-            <a href="${idee.link}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; color: #2563eb; font-weight: 600; text-decoration: none; font-size: 13px;">
-                <span>🌐 Extra online lesmateriaal & werkbladen openen →</span>
+        <div style="margin-top: 18px;">
+            <a href="${idee.link}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; color: #2563eb; font-weight: 700; text-decoration: none; font-size: 13.5px;">
+                <span>🌐 Open externe online handleiding & tools →</span>
             </a>
         </div>` : ''}
 
-        <!-- Directe Koppeling naar Reserveren -->
-        <div class="lesbrief-cta">
-            <p style="margin: 0 0 10px 0; font-weight: 700; color: #166534; font-size: 15px;">Meteen enthousiast om deze les te geven?</p>
-            <a href="${reserveerUrl}" class="btn-direct-reserve" style="display: inline-flex; width: auto; padding: 12px 28px; font-size: 14px; text-decoration: none;">
-                <span>📅 Reserveer direct '${kistNaam}' voor jouw klas</span>
+        <!-- Footer CTA -->
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <button type="button" onclick="window.sluitAlleModals()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer;">
+                Sluiten
+            </button>
+            <a href="${reserveerUrl}" class="btn-direct-reserve" style="width: auto; padding: 11px 26px; font-size: 14px; text-decoration: none;">
+                <span>📅 Reserveer direct '${kistNaam}'</span>
             </a>
         </div>
-    </div>`;
+    `;
+
+    const modal = document.getElementById('lesModal');
+    if (modal) modal.style.display = 'flex';
 };
 
 window.checkUrlReservationParam = function() {
@@ -1552,19 +1714,14 @@ window.renderLesideeenGrid = function() {
 
                     <p style="color: var(--slate-600); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; flex-grow: 1;">${idee.beschrijving || ""}</p>
 
-                    <!-- Actieknoppen rij -->
+                    <!-- Actieknoppen rij: Pop-up Lesbrief & Direct Reserveren -->
                     <div class="idea-actions-row">
-                        <button onclick="window.toggleLesbrief('${detailId}', this)" class="btn-toggle-lesbrief">
-                            <span>📖 Bekijk uitgebreide lesinstructie</span> <span class="arrow-indicator">▼</span>
+                        <button type="button" onclick="window.openLesModal(${idee.id})" class="btn-open-les">
+                            <span>📖 Open les</span>
                         </button>
                         <a href="${reserveerUrl}" class="btn-direct-reserve">
                             <span>📅 Reserveer kist</span>
                         </a>
-                    </div>
-
-                    <!-- Uitklapbare complete lesbrief -->
-                    <div id="${detailId}" class="lesbrief-drawer">
-                        ${window.renderLesbriefContent(idee, kistNaam, reserveerUrl)}
                     </div>
                 </div>
             </div>`;
@@ -1913,7 +2070,51 @@ async function verwerkFormulier(formId, btnElement) {
         } else if (formId === 'editLesideeForm') { 
             const rawId = getVal('editLesideeId'); 
             const ideeId = rawId ? parseInt(rawId) : Date.now(); 
-            const newData = { id: ideeId, titel: getVal('editLesideeTitel', 'Naamloos Idee'), categorie: getVal('editLesideeCategorie', 'Standaard'), beschrijving: getVal('editLesideeBeschrijving'), link: getVal('editLesideeLink') }; 
+            const kistIdVal = getVal('editLesideeKistSelect');
+            const kerndoelenRaw = getVal('editLesideeDgKerndoelen');
+            const kerndoelenArr = kerndoelenRaw ? kerndoelenRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+            const doelgroepVal = getVal('editLesideeDoelgroep', 'Groep 5-6 (Midden/Bovenbouw)');
+
+            const existingIdee = lesideeen.find(i => i.id == ideeId) || {};
+            const existingLb = existingIdee.lesbrief || {};
+
+            let kistObj = null;
+            if (kistIdVal) {
+                kistObj = leskisten.find(k => k.id == kistIdVal);
+            }
+
+            const newData = { 
+                id: ideeId, 
+                titel: getVal('editLesideeTitel', 'Naamloos Idee'), 
+                categorie: getVal('editLesideeCategorie', 'Wonderwijs'), 
+                kistId: kistIdVal ? parseInt(kistIdVal) : (existingIdee.kistId || null),
+                kistNaam: kistObj ? kistObj.naam : (existingIdee.kistNaam || ''),
+                doelgroep: doelgroepVal,
+                bouw: doelgroepVal,
+                moeilijkheid: getVal('editLesideeMoeilijkheid', 'Gemiddeld ⭐⭐'),
+                beschrijving: getVal('editLesideeBeschrijving'), 
+                link: getVal('editLesideeLink'),
+                bestanden: (currentLesideeFiles && currentLesideeFiles.length > 0) ? currentLesideeFiles : (existingIdee.bestanden || []),
+                lesbrief: {
+                    tijd: getVal('editLesideeTijd', existingLb.tijd || '60 min'),
+                    organisatie: getVal('editLesideeOrganisatie', existingLb.organisatie || 'In tweetallen'),
+                    dgDoelen: {
+                        domein: getVal('editLesideeDgDomein', (existingLb.dgDoelen && existingLb.dgDoelen.domein) || 'Wonderwijs Digitale Geletterdheid'),
+                        kerndoelenWonderwijs: kerndoelenArr.length > 0 ? kerndoelenArr : ((existingLb.dgDoelen && existingLb.dgDoelen.kerndoelenWonderwijs) || []),
+                        leerlingDoelen: getVal('editLesideeDgLeerlingDoelen', (existingLb.dgDoelen && existingLb.dgDoelen.leerlingDoelen) || '')
+                    },
+                    kistMateriaal: getVal('editLesideeKistMateriaal', existingLb.kistMateriaal || (kistObj ? kistObj.naam : '')),
+                    klasMateriaal: getVal('editLesideeKlasMateriaal', existingLb.klasMateriaal || 'Tablets of laptops, digibord'),
+                    voorbereiding: getVal('editLesideeVoorbereiding', existingLb.voorbereiding || 'Zet de materialen klaar en controleer de acculading.'),
+                    inleiding: getVal('editLesideeInleiding', existingLb.inleiding || 'Introduceer het onderwerp en activeer voorkennis bij de leerlingen.'),
+                    kern: getVal('editLesideeKern', existingLb.kern || 'Leerlingen gaan actief en zelfstandig of in tweetallen aan de slag met de opdracht.'),
+                    afsluiting: getVal('editLesideeAfsluiting', existingLb.afsluiting || 'Presenteer resultaten klassikaal en bespreek wat er goed ging en wat beter kon.'),
+                    differentiatie: {
+                        uitdaging: getVal('editLesideeDiffUitdaging', (existingLb.differentiatie && existingLb.differentiatie.uitdaging) || ''),
+                        ondersteuning: getVal('editLesideeDiffOndersteuning', (existingLb.differentiatie && existingLb.differentiatie.ondersteuning) || '')
+                    }
+                }
+            }; 
             const idx = lesideeen.findIndex(i => i.id == ideeId); 
             if(idx > -1) lesideeen[idx] = { ...lesideeen[idx], ...newData }; else lesideeen.push(newData); 
             slaDataOp(); 
@@ -1921,7 +2122,7 @@ async function verwerkFormulier(formId, btnElement) {
             if(window.renderLesideeenGrid) window.renderLesideeenGrid(); 
             if(window.saveLesideeToCloud) await window.saveLesideeToCloud(newData); 
             window.sluitAlleModals(); 
-            alert("✅ Lesidee succesvol opgeslagen!"); 
+            alert("✅ Lesidee inclusief bijlagen en leerlijndoelen succesvol opgeslagen!"); 
         } else if (formId === 'periodeForm') { 
             const rawId = getVal('editPeriodeId'); 
             const perId = rawId ? parseInt(rawId) : Date.now(); 
@@ -2985,7 +3186,123 @@ window.openPeriodeModal = function(id = null) { const form = document.getElement
 window.openSchoolModal = function(id = null) { const form = document.getElementById('schoolForm'); if(form) form.reset(); if(id) { document.getElementById('modalSchoolTitle').innerText = "School/Locatie Bewerken"; const sch = scholen.find(s => s.id == id); if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = sch.id; if(document.getElementById('schoolNaam')) document.getElementById('schoolNaam').value = sch.naam; } else { document.getElementById('modalSchoolTitle').innerText = "Nieuwe School/Locatie Aanmaken"; if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = ""; } const m = document.getElementById('schoolModal'); if(m) m.style.display = 'flex'; }
 window.openStoringModal = function() { const form = document.getElementById('storingForm'); if(form) form.reset(); if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; const select = document.getElementById('storingKist'); if(select) { select.innerHTML = '<option value="" disabled selected>-- Selecteer een leskist --</option>'; leskisten.forEach(k => select.innerHTML += `<option value="${k.naam}">${k.naam}</option>`); } const m = document.getElementById('storingModal'); if(m) m.style.display = 'flex'; }
 window.openMateriaalModal = function(id = null) { const form = document.getElementById('editLeskistForm'); if(form) form.reset(); const afbFile = document.getElementById('editAfbeeldingFile'); if(afbFile) afbFile.value = ""; const editPdfFiles = document.getElementById('editPdfFiles'); if(editPdfFiles) editPdfFiles.value = ""; if(id) { document.getElementById('modalMateriaalTitle').innerText = "Materiaal Bewerken"; const kist = leskisten.find(k => k.id == id); if(document.getElementById('editKistId')) document.getElementById('editKistId').value = kist.id; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = kist.afbeelding || defaultImg; let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg); if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = `<img src="${imgSource}" style="width: 100%; border-radius: 8px;">`; if(document.getElementById('editNaam')) document.getElementById('editNaam').value = kist.naam || ""; if(document.getElementById('editTag')) document.getElementById('editTag').value = kist.tag || ""; if(document.getElementById('editDoelgroep')) document.getElementById('editDoelgroep').value = kist.doelgroep || ""; if(document.getElementById('editKerndoelen')) document.getElementById('editKerndoelen').value = kist.kerndoelen || ""; if(document.getElementById('editBeschrijving')) document.getElementById('editBeschrijving').value = kist.beschrijving || ""; if(document.getElementById('editInhoud')) document.getElementById('editInhoud').value = kist.inhoud || ""; if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; currentPdfs = kist.pdfs || []; } else { document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = defaultImg; if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; currentPdfs = []; } if(window.updatePdfPreview) window.updatePdfPreview(); const m = document.getElementById('editLeskistModal'); if(m) m.style.display = 'flex'; }
-window.openLesideeModal = function(id = null) { const form = document.getElementById('editLesideeForm'); if(!form) return; form.reset(); if(id) { document.getElementById('modalLesideeTitle').innerText = "Lesidee Bewerken"; const idee = lesideeen.find(i => i.id == id); if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = idee.id; if(document.getElementById('editLesideeTitel')) document.getElementById('editLesideeTitel').value = idee.titel || ""; if(document.getElementById('editLesideeCategorie')) document.getElementById('editLesideeCategorie').value = idee.categorie || ""; if(document.getElementById('editLesideeBeschrijving')) document.getElementById('editLesideeBeschrijving').value = idee.beschrijving || ""; if(document.getElementById('editLesideeLink')) document.getElementById('editLesideeLink').value = idee.link || ""; } else { document.getElementById('modalLesideeTitle').innerText = "Nieuw Lesidee Toevoegen"; if(document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = ""; } const m = document.getElementById('editLesideeModal'); if(m) m.style.display = 'flex'; };
+let currentLesideeFiles = [];
+
+window.handleLesideeFilesUpload = function(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        const fileSizeStr = file.size > 1024 * 1024 
+            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+            : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+        
+        reader.onload = (e) => {
+            currentLesideeFiles.push({
+                naam: file.name,
+                type: file.type || 'application/octet-stream',
+                grootte: fileSizeStr,
+                data: e.target.result
+            });
+            window.updateLesideeFilesPreview();
+        };
+        reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+};
+
+window.updateLesideeFilesPreview = function() {
+    const container = document.getElementById('lesideeFilesPreviewContainer');
+    if (!container) return;
+    if (!currentLesideeFiles || currentLesideeFiles.length === 0) {
+        container.innerHTML = `<div style="font-size: 12.5px; color: var(--slate-400); font-style: italic; padding: 6px 0;">Geen bestanden of werkbladen gekoppeld aan deze les.</div>`;
+        return;
+    }
+    container.innerHTML = currentLesideeFiles.map((f, idx) => `
+        <div class="les-file-preview-item">
+            <div class="les-file-preview-name">
+                <span style="font-size: 16px;">📄</span>
+                <strong style="color: var(--slate-900);">${f.naam}</strong>
+                <span style="font-size: 11px; color: var(--slate-400);">(${f.grootte || 'Bijlage'})</span>
+            </div>
+            <button type="button" class="btn-remove-file" onclick="window.removeLesideeFile(${idx})" title="Verwijder bestand">🗑️</button>
+        </div>
+    `).join('');
+};
+
+window.removeLesideeFile = function(idx) {
+    if (idx >= 0 && idx < currentLesideeFiles.length) {
+        currentLesideeFiles.splice(idx, 1);
+        window.updateLesideeFilesPreview();
+    }
+};
+
+window.openLesideeModal = function(id = null) {
+    const form = document.getElementById('editLesideeForm');
+    if (!form) return;
+    form.reset();
+
+    // Vul dropdown met actieve leskisten
+    const kistSelect = document.getElementById('editLesideeKistSelect');
+    if (kistSelect) {
+        kistSelect.innerHTML = '<option value="">-- Geen specifieke kist --</option>' + 
+            leskisten.map(k => `<option value="${k.id}">${k.naam}</option>`).join('');
+    }
+
+    if (id) {
+        document.getElementById('modalLesideeTitle').innerText = "Lesidee & Lesbrief Bewerken";
+        const idee = lesideeen.find(i => i.id == id);
+        if (!idee) return;
+
+        const lb = idee.lesbrief || {};
+        const dg = lb.dgDoelen || {};
+        const diff = lb.differentiatie || {};
+
+        if (document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = idee.id;
+        if (document.getElementById('editLesideeTitel')) document.getElementById('editLesideeTitel').value = idee.titel || "";
+        if (document.getElementById('editLesideeCategorie')) document.getElementById('editLesideeCategorie').value = idee.categorie || "";
+        if (kistSelect && idee.kistId) kistSelect.value = idee.kistId;
+        if (document.getElementById('editLesideeDoelgroep')) document.getElementById('editLesideeDoelgroep').value = idee.doelgroep || idee.bouw || "Groep 5-6 (Midden/Bovenbouw)";
+        if (document.getElementById('editLesideeMoeilijkheid')) document.getElementById('editLesideeMoeilijkheid').value = idee.moeilijkheid || "Gemiddeld ⭐⭐";
+        if (document.getElementById('editLesideeBeschrijving')) document.getElementById('editLesideeBeschrijving').value = idee.beschrijving || "";
+        if (document.getElementById('editLesideeLink')) document.getElementById('editLesideeLink').value = idee.link || "";
+
+        // DG doelen
+        if (document.getElementById('editLesideeDgDomein')) document.getElementById('editLesideeDgDomein').value = dg.domein || "";
+        if (document.getElementById('editLesideeDgKerndoelen')) {
+            document.getElementById('editLesideeDgKerndoelen').value = Array.isArray(dg.kerndoelenWonderwijs) ? dg.kerndoelenWonderwijs.join('\n') : (dg.kerndoelenWonderwijs || "");
+        }
+        if (document.getElementById('editLesideeDgLeerlingDoelen')) document.getElementById('editLesideeDgLeerlingDoelen').value = dg.leerlingDoelen || lb.doelen || "";
+
+        // Tijd & materialen
+        if (document.getElementById('editLesideeTijd')) document.getElementById('editLesideeTijd').value = lb.tijd || "60 min";
+        if (document.getElementById('editLesideeOrganisatie')) document.getElementById('editLesideeOrganisatie').value = lb.organisatie || "In tweetallen";
+        if (document.getElementById('editLesideeKistMateriaal')) document.getElementById('editLesideeKistMateriaal').value = lb.kistMateriaal || "";
+        if (document.getElementById('editLesideeKlasMateriaal')) document.getElementById('editLesideeKlasMateriaal').value = lb.klasMateriaal || "";
+        if (document.getElementById('editLesideeVoorbereiding')) document.getElementById('editLesideeVoorbereiding').value = lb.voorbereiding || "";
+
+        // Fasen
+        if (document.getElementById('editLesideeInleiding')) document.getElementById('editLesideeInleiding').value = lb.inleiding || "";
+        if (document.getElementById('editLesideeKern')) document.getElementById('editLesideeKern').value = lb.kern || "";
+        if (document.getElementById('editLesideeAfsluiting')) document.getElementById('editLesideeAfsluiting').value = lb.afsluiting || "";
+
+        // Differentiatie
+        if (document.getElementById('editLesideeDiffUitdaging')) document.getElementById('editLesideeDiffUitdaging').value = diff.uitdaging || "";
+        if (document.getElementById('editLesideeDiffOndersteuning')) document.getElementById('editLesideeDiffOndersteuning').value = diff.ondersteuning || lb.tips || "";
+
+        // Bestanden
+        currentLesideeFiles = (idee.bestanden && Array.isArray(idee.bestanden)) ? JSON.parse(JSON.stringify(idee.bestanden)) : [];
+    } else {
+        document.getElementById('modalLesideeTitle').innerText = "Nieuw Lesidee Toevoegen";
+        if (document.getElementById('editLesideeId')) document.getElementById('editLesideeId').value = "";
+        currentLesideeFiles = [];
+    }
+
+    window.updateLesideeFilesPreview();
+    const m = document.getElementById('editLesideeModal');
+    if (m) m.style.display = 'flex';
+};
 
 // ==========================================
 // LEERLIJNEN VOORTGANG & CLOUD SYNCHRONISATIE
