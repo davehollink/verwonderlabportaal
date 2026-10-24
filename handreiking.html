@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Handreiking digitale geletterdheid</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261024d">
+    <link rel="stylesheet" href="style.css?v=20261024e">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -241,26 +241,150 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px 20px;
+            padding: 24px 20px;
             position: relative;
             min-height: 100%;
         }
 
-        .pages-spread-wrapper {
+        /* 3D Boek Stage */
+        .book-3d-stage {
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 16px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
-            border-radius: 12px;
+            perspective: 2600px;
+            perspective-origin: 50% 50%;
+            transform-style: preserve-3d;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
             background: #ffffff;
-            transition: transform 0.2s ease, opacity 0.2s ease;
+            transition: box-shadow 0.3s ease;
+            user-select: none;
+        }
+
+        .book-page-panel {
             position: relative;
+            overflow: hidden;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .book-page-panel.panel-left {
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .book-page-panel.panel-right {
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        /* Binnenwaartse schaduwen bij de rug van het boek */
+        .book-spine-gradient {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 38px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .book-spine-gradient.left {
+            right: 0;
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.05) 60%, transparent 100%);
+        }
+
+        .book-spine-gradient.right {
+            left: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.05) 60%, transparent 100%);
+        }
+
+        .book-center-spine {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.18);
+            z-index: 12;
+            pointer-events: none;
+        }
+
+        /* 3D Geanimeerde Omslag Bladzijde */
+        .book-flipping-leaf {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+            transform-style: preserve-3d;
+            z-index: 25;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .book-flipping-leaf.flip-forward {
+            right: 0;
+            transform-origin: left center;
+        }
+
+        .book-flipping-leaf.flip-backward {
+            left: 0;
+            transform-origin: right center;
+        }
+
+        .leaf-side {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background: #ffffff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .leaf-front {
+            z-index: 2;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .leaf-back {
+            z-index: 1;
+            transform: rotateY(180deg);
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .leaf-shadow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            transition: opacity 0.1s linear;
+            opacity: 0;
+        }
+
+        .leaf-front .leaf-shadow {
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
+        }
+
+        .leaf-back .leaf-shadow {
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
         }
 
         .pdf-page-canvas {
             display: block;
-            border-radius: 6px;
+            border-radius: 4px;
             max-width: 100%;
             height: auto;
             background: white;
@@ -271,21 +395,21 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(8px);
-            border: 1.5px solid rgba(203, 213, 225, 0.8);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(203, 213, 225, 0.9);
             color: var(--slate-800);
-            font-size: 20px;
+            font-size: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 10;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 35;
             user-select: none;
         }
 
@@ -293,8 +417,8 @@
             background: #ffffff;
             color: var(--ww-green-dark);
             border-color: var(--ww-green);
-            transform: translateY(-50%) scale(1.1);
-            box-shadow: 0 8px 22px rgba(140, 198, 63, 0.25);
+            transform: translateY(-50%) scale(1.14);
+            box-shadow: 0 10px 28px rgba(140, 198, 63, 0.3);
         }
 
         .flip-arrow-btn:disabled {
@@ -303,11 +427,11 @@
         }
 
         .flip-arrow-btn.prev {
-            left: 20px;
+            left: 18px;
         }
 
         .flip-arrow-btn.next {
-            right: 20px;
+            right: 18px;
         }
 
         /* Laad- en foutscherm */
@@ -318,14 +442,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 30;
+            background: rgba(255, 255, 255, 0.92);
+            z-index: 40;
             transition: opacity 0.2s ease;
         }
 
         .loader-spinner {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border: 4px solid #e2e8f0;
             border-top-color: var(--ww-green);
             border-radius: 50%;
@@ -335,14 +459,6 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        /* Klassieke / Native Weergave */
-        .native-viewer-container {
-            display: none;
-            width: 100%;
-            height: 100%;
-            border: none;
         }
 
         @media (max-width: 768px) {
@@ -457,14 +573,17 @@
                     <button type="button" class="reader-btn" onclick="window.zoomIn()" title="Inzoomen">
                         <span>🔍+</span>
                     </button>
-                    <button type="button" class="reader-btn" onclick="window.fitToWidth()" title="Passend op schermbreedte">
+                    <button type="button" class="reader-btn" onclick="window.fitToWidth()" title="Passend op schermgrootte">
                         <span>⤢</span>
                     </button>
+                    <button type="button" class="reader-btn" id="btnSoundToggle" onclick="window.toggleSound()" title="Bladergeluid aan/uit">
+                        <span id="soundIcon">🔊</span>
+                    </button>
+                    <a href="handreiking-wonderwijs.pdf" download="Handreiking-Digitale-Geletterdheid-Wonderwijs.pdf" class="reader-btn" title="Download PDF bestand" target="_blank">
+                        <span>⬇️</span>
+                    </a>
                     <button type="button" class="reader-btn" onclick="window.toggleFullscreen()" title="Volledig scherm">
                         <span>⛶</span>
-                    </button>
-                    <button type="button" class="reader-btn" id="btnToggleNative" onclick="window.toggleNativeViewer()" title="Wissel naar klassieke browser viewer">
-                        <span>🖥️</span>
                     </button>
                 </div>
             </div>
@@ -485,18 +604,54 @@
 
                 <!-- CANVAS VIEWPORT -->
                 <div class="viewport-container" id="viewportContainer">
-                    <button type="button" class="flip-arrow-btn prev" id="arrowPrev" onclick="window.prevPage()" title="Vorige pagina">‹</button>
+                    <button type="button" class="flip-arrow-btn prev" id="arrowPrev" onclick="window.prevPage()" title="Vorige pagina (Pijl links)">‹</button>
                     
-                    <div class="pages-spread-wrapper" id="spreadWrapper">
-                        <canvas id="pdfCanvasLeft" class="pdf-page-canvas"></canvas>
-                        <canvas id="pdfCanvasRight" class="pdf-page-canvas" style="display: none;"></canvas>
+                    <!-- 3D BOEK STAGE -->
+                    <div class="book-3d-stage" id="bookStage">
+                        <!-- Linker pagina paneel -->
+                        <div class="book-page-panel panel-left" id="panelLeft">
+                            <canvas id="pdfCanvasLeft" class="pdf-page-canvas"></canvas>
+                            <div class="book-spine-gradient left"></div>
+                        </div>
+
+                        <!-- Rechter pagina paneel -->
+                        <div class="book-page-panel panel-right" id="panelRight">
+                            <canvas id="pdfCanvasRight" class="pdf-page-canvas"></canvas>
+                            <div class="book-spine-gradient right"></div>
+                        </div>
+
+                        <!-- 3D Omslaande bladzijde (wordt actief bij animatie) -->
+                        <div class="book-flipping-leaf" id="flippingLeaf" style="display: none;">
+                            <div class="leaf-side leaf-front">
+                                <canvas id="flipCanvasFront" class="pdf-page-canvas"></canvas>
+                                <div class="leaf-shadow" id="leafShadowFront"></div>
+                            </div>
+                            <div class="leaf-side leaf-back">
+                                <canvas id="flipCanvasBack" class="pdf-page-canvas"></canvas>
+                                <div class="leaf-shadow" id="leafShadowBack"></div>
+                            </div>
+                        </div>
+
+                        <!-- Rug van het boek -->
+                        <div class="book-center-spine" id="centerSpine"></div>
                     </div>
 
-                    <button type="button" class="flip-arrow-btn next" id="arrowNext" onclick="window.nextPage()" title="Volgende pagina">›</button>
+                    <button type="button" class="flip-arrow-btn next" id="arrowNext" onclick="window.nextPage()" title="Volgende pagina (Pijl rechts of spatie)">›</button>
                 </div>
 
-                <!-- KLASSIEKE INGEBOUWDE BROWSER VIEWER (FALLBACK OF VOORKEUR) -->
-                <iframe id="nativePdfViewer" class="native-viewer-container" src="handreiking-wonderwijs.pdf#toolbar=1&navpanes=1"></iframe>
+                <!-- FOUTMELDING INDIEN BESTAND ONTBREEKT OP SERVER -->
+                <div class="reader-error-container" id="readerErrorContainer" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 40px; text-align: center; background: #ffffff;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;">📄</div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">PDF-bestand ontbreekt nog op de server</h3>
+                    <p style="font-size: 14px; color: #64748b; max-width: 550px; line-height: 1.6; margin-bottom: 20px;">
+                        Het bestand <strong>handreiking-wonderwijs.pdf</strong> is nog niet geüpload naar GitHub of Vercel. Hierdoor kan de browser het bestand niet vinden (404).
+                    </p>
+                    <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 24px; text-align: left; max-width: 550px; font-size: 13px; color: #334155; line-height: 1.6;">
+                        <p style="font-weight: 700; color: #0f172a; margin-bottom: 8px;">💡 Hoe los je dit op?</p>
+                        <p style="margin: 4px 0;">1. Commit en push het bestand <code>handreiking-wonderwijs.pdf</code> naar GitHub via <strong>VS Code</strong> of de terminal.</p>
+                        <p style="margin: 4px 0;">2. <em>Let op:</em> Omdat het bestand <strong>29,7 MB</strong> is, blokkeert de GitHub website uploads via drag-and-drop (limiet van 25 MB). Via VS Code of Git push geldt een limiet van 100 MB, waardoor het direct lukt.</p>
+                    </div>
+                </div>
 
                 <!-- LAADINDICATOR -->
                 <div class="reader-loader" id="readerLoader">
@@ -588,26 +743,110 @@
     let currentPage = 1;
     let totalPages = 62;
     let currentScale = 1.0;
-    let viewMode = 'single'; // 'single' of 'spread'
+    let viewMode = 'spread'; // 'single' of 'spread'
     let isRendering = false;
-    let renderQueuePage = null;
-    let isNativeView = false;
+    let isFlipping = false;
+    let soundEnabled = true;
+    let audioCtx = null;
 
-    // Stel worker in voor snelle multithreaded rendering
-    if (window.pdfjsLib) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    // Stel worker in met Blob wrapper ter voorkoming van cross-origin CORS restricties
+    try {
+        if (window.pdfjsLib) {
+            const workerCode = `importScripts("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js");`;
+            const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+            pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
+        }
+    } catch (e) {
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
     }
 
-    // Render TOC lijst
+    // Realistisch zacht papiergeluid via Web Audio API (zonder externe mp3 bestanden)
+    function playPageFlipSound() {
+        if (!soundEnabled) return;
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const duration = 0.26;
+            const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Zacht ruis-profiel (roze gefilterde ruis)
+            let b0 = 0, b1 = 0, b2 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                data[i] = (b0 + b1 + b2) * 0.12;
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+
+            // Bandpass filter gecentreerd op 820Hz (geluid van papiervezels)
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(820, audioCtx.currentTime);
+            filter.Q.setValueAtTime(1.8, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + duration);
+
+            // Volume enveloppe
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.16, audioCtx.currentTime + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            noise.start();
+        } catch (e) {
+            // Audio is optioneel
+        }
+    }
+
+    window.toggleSound = function() {
+        soundEnabled = !soundEnabled;
+        const icon = document.getElementById('soundIcon');
+        const btn = document.getElementById('btnSoundToggle');
+        if (icon) icon.innerText = soundEnabled ? '🔊' : '🔇';
+        if (btn) btn.title = soundEnabled ? 'Bladergeluid aan (klik om te dempen)' : 'Bladergeluid gedempt (klik om aan te zetten)';
+    };
+
+    // Render Inhoudsopgave lijst
     function renderTocList() {
         const listEl = document.getElementById('tocList');
         if (!listEl) return;
-        listEl.innerHTML = handreikingTOC.map(item => `
-            <li class="toc-item ${item.categorie ? 'category' : ''} ${item.pagina === currentPage ? 'active' : ''}" onclick="window.jumpToPage(${item.pagina})">
-                <span>${item.titel}</span>
-                <span class="toc-badge">${item.pagina}</span>
-            </li>
-        `).join('');
+
+        let activePages = [currentPage];
+        if (viewMode === 'spread' && currentPage > 1) {
+            const left = (currentPage % 2 === 0) ? currentPage : currentPage - 1;
+            activePages = [left, left + 1];
+        }
+
+        listEl.innerHTML = handreikingTOC.map(item => {
+            const isActive = activePages.includes(item.pagina);
+            return `
+                <li class="toc-item ${item.categorie ? 'category' : ''} ${isActive ? 'active' : ''}" onclick="window.jumpToPage(${item.pagina})">
+                    <span>${item.titel}</span>
+                    <span class="toc-badge">${item.pagina}</span>
+                </li>
+            `;
+        }).join('');
+
+        const activeEl = listEl.querySelector('.toc-item.active');
+        if (activeEl) {
+            activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
     }
 
     // Laad het PDF document
@@ -619,52 +858,63 @@
             if (!window.pdfjsLib) {
                 throw new Error("PDF.js library niet geladen");
             }
-            // Laad het PDF bestand via relatieve URL
-            const loadingTask = pdfjsLib.getDocument('handreiking-wonderwijs.pdf');
+            const loadingTask = pdfjsLib.getDocument({
+                url: 'handreiking-wonderwijs.pdf',
+                cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                cMapPacked: true
+            });
+
             pdfDoc = await loadingTask.promise;
             totalPages = pdfDoc.numPages || 62;
-            
+
             const countLabel = document.getElementById('pageCountLabel');
             if (countLabel) countLabel.innerText = `/ ${totalPages}`;
             const pageInput = document.getElementById('pageNumberInput');
             if (pageInput) pageInput.max = totalPages;
 
-            // Bepaal startmodus op basis van schermbreedte
-            if (window.innerWidth >= 1200) {
+            // Standaard Boekweergave op laptops en desktops
+            if (window.innerWidth >= 960) {
                 viewMode = 'spread';
             } else {
                 viewMode = 'single';
             }
             updateModeButtons();
 
-            // Automatische schaalberekening passend op viewport
             calculateInitialScale();
             renderTocList();
             await renderCurrentPages();
 
             if (loader) loader.style.display = 'none';
         } catch (error) {
-            console.warn("Fout bij inladen via PDF.js, schakelt over naar ingebouwde weergave:", error);
-            // Fallback naar native browser weergave
-            window.toggleNativeViewer(true);
+            console.error("Fout bij laden van handreiking PDF:", error);
             if (loader) loader.style.display = 'none';
+            const errorContainer = document.getElementById('readerErrorContainer');
+            const viewport = document.getElementById('viewportContainer');
+            if (viewport) viewport.style.display = 'none';
+            if (errorContainer) errorContainer.style.display = 'flex';
         }
     }
 
     function calculateInitialScale() {
         const container = document.getElementById('viewportContainer');
         if (!container) return;
-        const availableWidth = container.clientWidth - (viewMode === 'spread' ? 120 : 60);
-        // Standaard A4 ratio breedte is circa 595 pt
-        const targetPageWidth = (viewMode === 'spread') ? (availableWidth / 2) : availableWidth;
-        currentScale = Math.min(1.4, Math.max(0.55, targetPageWidth / 620));
+        const availableWidth = container.clientWidth - (viewMode === 'spread' ? 100 : 40);
+        const availableHeight = container.clientHeight - 40;
+
+        // A4 ratio 595.5 x 842.25
+        const targetWidth = (viewMode === 'spread') ? (595.5 * 2) : 595.5;
+        const scaleW = availableWidth / targetWidth;
+        const scaleH = availableHeight / 842.25;
+
+        currentScale = Math.min(scaleW, scaleH);
+        currentScale = Math.min(1.4, Math.max(0.35, currentScale));
         updateZoomLabel();
     }
 
     async function renderPageToCanvas(pageNum, canvasId) {
         const canvas = document.getElementById(canvasId);
-        if (!canvas || !pdfDoc) return;
-        
+        if (!canvas || !pdfDoc || pageNum < 1 || pageNum > totalPages) return;
+
         try {
             const page = await pdfDoc.getPage(pageNum);
             const pixelRatio = window.devicePixelRatio || 1.5;
@@ -673,8 +923,8 @@
             const ctx = canvas.getContext('2d');
             canvas.height = viewport.height;
             canvas.width = viewport.width;
-            canvas.style.width = `${viewport.width / pixelRatio}px`;
-            canvas.style.height = `${viewport.height / pixelRatio}px`;
+            canvas.style.width = `${Math.round(viewport.width / pixelRatio)}px`;
+            canvas.style.height = `${Math.round(viewport.height / pixelRatio)}px`;
 
             const renderContext = {
                 canvasContext: ctx,
@@ -688,14 +938,12 @@
     }
 
     async function renderCurrentPages() {
-        if (isRendering) {
-            renderQueuePage = currentPage;
-            return;
-        }
+        if (isRendering || isFlipping) return;
         isRendering = true;
 
-        const leftCanvas = document.getElementById('pdfCanvasLeft');
-        const rightCanvas = document.getElementById('pdfCanvasRight');
+        const panelLeft = document.getElementById('panelLeft');
+        const panelRight = document.getElementById('panelRight');
+        const centerSpine = document.getElementById('centerSpine');
         const inputEl = document.getElementById('pageNumberInput');
         if (inputEl) inputEl.value = currentPage;
 
@@ -703,38 +951,223 @@
         renderTocList();
 
         if (viewMode === 'single') {
-            if (rightCanvas) rightCanvas.style.display = 'none';
-            await renderPageToCanvas(currentPage, 'pdfCanvasLeft');
+            if (panelLeft) panelLeft.style.display = 'none';
+            if (centerSpine) centerSpine.style.display = 'none';
+            if (panelRight) panelRight.style.display = 'flex';
+            await renderPageToCanvas(currentPage, 'pdfCanvasRight');
         } else {
-            // Spread mode (boekomslag = pag 1 solo, daarna 2-3, 4-5...)
-            let leftPageNum = currentPage;
-            let rightPageNum = currentPage + 1;
-
+            // Boek Spread weergave
             if (currentPage === 1) {
-                // Pagina 1 is de cover: toon centraal
-                if (rightCanvas) rightCanvas.style.display = 'none';
-                await renderPageToCanvas(1, 'pdfCanvasLeft');
+                // Coverpagina: alleen rechter paneel zichtbaar (gesloten boek)
+                if (panelLeft) panelLeft.style.display = 'none';
+                if (centerSpine) centerSpine.style.display = 'none';
+                if (panelRight) panelRight.style.display = 'flex';
+                await renderPageToCanvas(1, 'pdfCanvasRight');
             } else {
-                // Zorg voor even links, oneven rechts
-                if (leftPageNum % 2 !== 0) {
-                    leftPageNum -= 1;
-                    rightPageNum = leftPageNum + 1;
+                // Twee pagina's open (even links, oneven rechts)
+                let leftP = currentPage;
+                let rightP = currentPage + 1;
+                if (leftP % 2 !== 0) {
+                    leftP = currentPage - 1;
+                    rightP = currentPage;
                 }
-                await renderPageToCanvas(leftPageNum, 'pdfCanvasLeft');
-                if (rightPageNum <= totalPages) {
-                    await renderPageToCanvas(rightPageNum, 'pdfCanvasRight');
-                } else if (rightCanvas) {
-                    rightCanvas.style.display = 'none';
+
+                if (panelLeft) panelLeft.style.display = 'flex';
+                if (panelRight) panelRight.style.display = 'flex';
+                if (centerSpine) centerSpine.style.display = 'block';
+
+                await renderPageToCanvas(leftP, 'pdfCanvasLeft');
+                if (rightP <= totalPages) {
+                    await renderPageToCanvas(rightP, 'pdfCanvasRight');
+                } else if (panelRight) {
+                    panelRight.style.display = 'none';
                 }
             }
         }
 
         isRendering = false;
-        if (renderQueuePage !== null) {
-            const nextP = renderQueuePage;
-            renderQueuePage = null;
-            window.jumpToPage(nextP);
+    }
+
+    // 3D GEANIMEERD BLADEREN (VOLGENDE BLADZIJDE)
+    async function flipNextAnimated() {
+        if (isFlipping || isRendering || currentPage >= totalPages) return;
+
+        // Bepaal doelpagina
+        let nextP;
+        if (viewMode === 'single') {
+            nextP = currentPage + 1;
+        } else {
+            if (currentPage === 1) nextP = 2;
+            else nextP = Math.min(totalPages, (currentPage % 2 === 0 ? currentPage + 2 : currentPage + 1));
         }
+
+        if (viewMode === 'single') {
+            currentPage = nextP;
+            playPageFlipSound();
+            await renderCurrentPages();
+            return;
+        }
+
+        isFlipping = true;
+        playPageFlipSound();
+
+        const flippingLeaf = document.getElementById('flippingLeaf');
+        const flipShadowFront = document.getElementById('leafShadowFront');
+        const flipShadowBack = document.getElementById('leafShadowBack');
+        const panelRight = document.getElementById('panelRight');
+        const panelLeft = document.getElementById('panelLeft');
+        const centerSpine = document.getElementById('centerSpine');
+
+        if (!flippingLeaf) {
+            currentPage = nextP;
+            await renderCurrentPages();
+            isFlipping = false;
+            return;
+        }
+
+        // Bereken pagina nummers voor de omslaande pagina
+        let currentRightP = (currentPage === 1) ? 1 : (currentPage % 2 === 0 ? currentPage + 1 : currentPage);
+        let nextLeftP = (currentPage === 1) ? 2 : currentRightP + 1;
+        let nextRightP = nextLeftP + 1;
+
+        // Bereid flipping leaf voor
+        await renderPageToCanvas(currentRightP, 'flipCanvasFront');
+        if (nextLeftP <= totalPages) {
+            await renderPageToCanvas(nextLeftP, 'flipCanvasBack');
+        }
+
+        // De onderliggende rechterpagina rendert alvast de nieuwe pagina
+        if (nextRightP <= totalPages) {
+            await renderPageToCanvas(nextRightP, 'pdfCanvasRight');
+        } else if (panelRight) {
+            panelRight.style.display = 'none';
+        }
+
+        // Configureer blad positie
+        flippingLeaf.className = 'book-flipping-leaf flip-forward';
+        flippingLeaf.style.transition = 'none';
+        flippingLeaf.style.transform = 'rotateY(0deg)';
+        if (flipShadowFront) flipShadowFront.style.opacity = '0';
+        if (flipShadowBack) flipShadowBack.style.opacity = '0.35';
+        flippingLeaf.style.display = 'block';
+
+        if (currentPage === 1 && panelLeft) {
+            panelLeft.style.display = 'flex';
+            if (centerSpine) centerSpine.style.display = 'block';
+            await renderPageToCanvas(2, 'pdfCanvasLeft');
+        }
+
+        // Start 3D rotatie
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                flippingLeaf.style.transition = 'transform 0.62s cubic-bezier(0.25, 1, 0.5, 1)';
+                flippingLeaf.style.transform = 'rotateY(-180deg)';
+                if (flipShadowFront) flipShadowFront.style.opacity = '0.4';
+                if (flipShadowBack) flipShadowBack.style.opacity = '0';
+            });
+        });
+
+        // Afronden na animatie
+        setTimeout(async () => {
+            currentPage = nextP;
+            await renderCurrentPages();
+            flippingLeaf.style.display = 'none';
+            flippingLeaf.style.transition = 'none';
+            flippingLeaf.style.transform = 'rotateY(0deg)';
+            isFlipping = false;
+        }, 620);
+    }
+
+    // 3D GEANIMEERD BLADEREN (VORIGE BLADZIJDE)
+    async function flipPrevAnimated() {
+        if (isFlipping || isRendering || currentPage <= 1) return;
+
+        let prevP;
+        if (viewMode === 'single') {
+            prevP = currentPage - 1;
+        } else {
+            if (currentPage <= 3) prevP = 1;
+            else prevP = (currentPage % 2 === 0 ? currentPage - 2 : currentPage - 3);
+        }
+
+        if (viewMode === 'single') {
+            currentPage = prevP;
+            playPageFlipSound();
+            await renderCurrentPages();
+            return;
+        }
+
+        isFlipping = true;
+        playPageFlipSound();
+
+        const flippingLeaf = document.getElementById('flippingLeaf');
+        const flipShadowFront = document.getElementById('leafShadowFront');
+        const flipShadowBack = document.getElementById('leafShadowBack');
+        const panelLeft = document.getElementById('panelLeft');
+        const panelRight = document.getElementById('panelRight');
+
+        if (!flippingLeaf) {
+            currentPage = prevP;
+            await renderCurrentPages();
+            isFlipping = false;
+            return;
+        }
+
+        if (prevP === 1) {
+            // Terug naar Cover: linker pagina slaat dicht naar rechts
+            await renderPageToCanvas(1, 'flipCanvasFront');
+            await renderPageToCanvas(2, 'flipCanvasBack');
+
+            flippingLeaf.className = 'book-flipping-leaf flip-backward';
+            flippingLeaf.style.transition = 'none';
+            flippingLeaf.style.transform = 'rotateY(-180deg)';
+            flippingLeaf.style.display = 'block';
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    flippingLeaf.style.transition = 'transform 0.62s cubic-bezier(0.25, 1, 0.5, 1)';
+                    flippingLeaf.style.transform = 'rotateY(0deg)';
+                });
+            });
+
+            setTimeout(async () => {
+                currentPage = 1;
+                await renderCurrentPages();
+                flippingLeaf.style.display = 'none';
+                flippingLeaf.style.transition = 'none';
+                isFlipping = false;
+            }, 620);
+            return;
+        }
+
+        // Tussen normale spreads: linker pagina slaat om naar rechts
+        let targetLeftP = prevP % 2 === 0 ? prevP : prevP - 1;
+        let turningLeftP = targetLeftP + 1;
+        let turningRightP = targetLeftP + 2;
+
+        await renderPageToCanvas(turningRightP, 'flipCanvasFront');
+        await renderPageToCanvas(turningLeftP, 'flipCanvasBack');
+        await renderPageToCanvas(targetLeftP, 'pdfCanvasLeft');
+
+        flippingLeaf.className = 'book-flipping-leaf flip-backward';
+        flippingLeaf.style.transition = 'none';
+        flippingLeaf.style.transform = 'rotateY(-180deg)';
+        flippingLeaf.style.display = 'block';
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                flippingLeaf.style.transition = 'transform 0.62s cubic-bezier(0.25, 1, 0.5, 1)';
+                flippingLeaf.style.transform = 'rotateY(0deg)';
+            });
+        });
+
+        setTimeout(async () => {
+            currentPage = prevP;
+            await renderCurrentPages();
+            flippingLeaf.style.display = 'none';
+            flippingLeaf.style.transition = 'none';
+            isFlipping = false;
+        }, 620);
     }
 
     function updateNavButtons() {
@@ -764,35 +1197,40 @@
         if (label) label.innerText = `${Math.round(currentScale * 100)}%`;
     }
 
-    // Navigatie acties
+    // Publieke Navigatie Acties
     window.prevPage = function() {
-        if (currentPage <= 1) return;
-        if (viewMode === 'spread' && currentPage > 2) {
-            currentPage -= 2;
-            if (currentPage < 1) currentPage = 1;
-        } else {
-            currentPage -= 1;
-        }
-        renderCurrentPages();
+        flipPrevAnimated();
     };
 
     window.nextPage = function() {
-        if (currentPage >= totalPages) return;
-        if (viewMode === 'spread') {
-            if (currentPage === 1) currentPage = 2;
-            else currentPage = Math.min(totalPages, currentPage + 2);
-        } else {
-            currentPage += 1;
-        }
-        renderCurrentPages();
+        flipNextAnimated();
     };
 
     window.jumpToPage = function(page) {
+        if (isFlipping) return;
         let p = parseInt(page, 10);
         if (isNaN(p)) return;
         p = Math.max(1, Math.min(totalPages, p));
-        currentPage = p;
-        renderCurrentPages();
+
+        playPageFlipSound();
+
+        // Subtiele animatie bij sprong
+        const stage = document.getElementById('bookStage');
+        if (stage) {
+            stage.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
+            stage.style.opacity = '0.7';
+            stage.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                currentPage = p;
+                renderCurrentPages().then(() => {
+                    stage.style.opacity = '1';
+                    stage.style.transform = 'scale(1)';
+                });
+            }, 150);
+        } else {
+            currentPage = p;
+            renderCurrentPages();
+        }
     };
 
     window.setViewMode = function(mode) {
@@ -803,13 +1241,13 @@
     };
 
     window.zoomIn = function() {
-        currentScale = Math.min(2.5, currentScale + 0.15);
+        currentScale = Math.min(2.5, currentScale + 0.12);
         updateZoomLabel();
         renderCurrentPages();
     };
 
     window.zoomOut = function() {
-        currentScale = Math.max(0.45, currentScale - 0.15);
+        currentScale = Math.max(0.4, currentScale - 0.12);
         updateZoomLabel();
         renderCurrentPages();
     };
@@ -833,34 +1271,7 @@
         }
     };
 
-    window.toggleNativeViewer = function(forceNative) {
-        const nativeViewer = document.getElementById('nativePdfViewer');
-        const viewportContainer = document.getElementById('viewportContainer');
-        const btnToggle = document.getElementById('btnToggleNative');
-
-        isNativeView = (typeof forceNative === 'boolean') ? forceNative : !isNativeView;
-
-        if (nativeViewer && viewportContainer) {
-            if (isNativeView) {
-                nativeViewer.style.display = 'block';
-                viewportContainer.style.display = 'none';
-                if (btnToggle) {
-                    btnToggle.classList.add('active');
-                    btnToggle.innerHTML = '<span>📖</span> Terug naar Bladeren';
-                }
-            } else {
-                nativeViewer.style.display = 'none';
-                viewportContainer.style.display = 'flex';
-                if (btnToggle) {
-                    btnToggle.classList.remove('active');
-                    btnToggle.innerHTML = '<span>🖥️</span>';
-                }
-                renderCurrentPages();
-            }
-        }
-    };
-
-    // Toetsenbordnavigatie (Links/Rechts pijltjes en spatie)
+    // Toetsenbordnavigatie (Pijl links/rechts & Spatie)
     document.addEventListener('keydown', (e) => {
         if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
         if (e.key === 'ArrowLeft') {
@@ -882,19 +1293,20 @@
 
         viewportEl.addEventListener('touchend', (e) => {
             touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) {
+                window.nextPage();
+            } else if (touchEndX > touchStartX + threshold) {
+                window.prevPage();
+            }
         }, { passive: true });
     }
 
-    function handleSwipe() {
-        const threshold = 50;
-        if (touchEndX < touchStartX - threshold) {
-            window.nextPage();
-        }
-        if (touchEndX > touchStartX + threshold) {
-            window.prevPage();
-        }
-    }
+    // Automatische herberekening bij window resize
+    window.addEventListener('resize', () => {
+        calculateInitialScale();
+        renderCurrentPages();
+    });
 
     // Start loading bij DOMContentLoaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -902,8 +1314,8 @@
     });
 </script>
 
-<script src="auth-config.js?v=20261024d"></script>
-<script src="auth.js?v=20261024d"></script>
-<script src="script.js?v=20261024d"></script>
+<script src="auth-config.js?v=20261024e"></script>
+<script src="auth.js?v=20261024e"></script>
+<script src="script.js?v=20261024e"></script>
 </body>
 </html>
