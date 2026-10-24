@@ -1668,6 +1668,7 @@ window.initMobileNavigation = function() {
         const isReserveren = path.endsWith('reserveren.html');
         const isLesideeen = path.endsWith('lesideeen.html');
         const isLeerlijnen = path.endsWith('leerlijnen.html');
+        const isHandreiking = path.endsWith('handreiking.html');
         const isProfiel = path.endsWith('profiel.html');
 
         bottomNav.innerHTML = `
@@ -1679,13 +1680,17 @@ window.initMobileNavigation = function() {
                 <span class="nav-icon">📅</span>
                 <span>Reserveren</span>
             </a>
-            <a href="lesideeen.html" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
-                <span class="nav-icon">💡</span>
-                <span>Lesideeën</span>
-            </a>
             <a href="leerlijnen.html" class="bottom-nav-item ${isLeerlijnen ? 'active' : ''}">
                 <span class="nav-icon">🎯</span>
                 <span>Leerlijnen</span>
+            </a>
+            <a href="handreiking.html" class="bottom-nav-item ${isHandreiking ? 'active' : ''}">
+                <span class="nav-icon">📖</span>
+                <span>Handreiking</span>
+            </a>
+            <a href="lesideeen.html" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
+                <span class="nav-icon">💡</span>
+                <span>Lesideeën</span>
             </a>
             <a href="profiel.html" class="bottom-nav-item ${isProfiel ? 'active' : ''}">
                 <span class="nav-icon">👤</span>

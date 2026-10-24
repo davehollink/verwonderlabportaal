@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verwonderlab - Handreiking digitale geletterdheid</title>
+    <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
+    <link rel="stylesheet" href="style.css?v=20261024d">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        .reader-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 130px);
+            min-height: 600px;
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            border: 1.5px solid var(--glass-border-subtle);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Zwevende bedieningsbalk */
+        .reader-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1.5px solid #e2e8f0;
+            z-index: 20;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reader-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid #cbd5e1;
+            background: #ffffff;
+            color: var(--slate-700);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .reader-btn:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: var(--slate-900);
+            transform: translateY(-1px);
+        }
+
+        .reader-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .reader-btn.primary {
+            background: var(--ww-green);
+            color: white;
+            border-color: var(--ww-green);
+            box-shadow: 0 3px 10px rgba(140, 198, 63, 0.3);
+        }
+
+        .reader-btn.primary:hover:not(:disabled) {
+            background: var(--ww-green-dark);
+            border-color: var(--ww-green-dark);
+            color: white;
+        }
+
+        .reader-btn.active {
+            background: #f0fdf4;
+            border-color: var(--ww-green);
+            color: #166534;
+        }
+
+        .reader-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-indicator-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--slate-700);
+            background: #f8fafc;
+            padding: 4px 10px;
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+        }
+
+        .page-input {
+            width: 44px;
+            text-align: center;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 6px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--slate-900);
+            background: white;
+            outline: none;
+        }
+
+        .page-input:focus {
+            border-color: var(--ww-green);
+        }
+
+        /* Hoofd weergavegebied */
+        .reader-main-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        /* Inhoudsopgave zijbalk */
+        .toc-sidebar {
+            width: 320px;
+            max-width: 85%;
+            background: #ffffff;
+            border-right: 1.5px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 15;
+            flex-shrink: 0;
+        }
+
+        .toc-sidebar.collapsed {
+            margin-left: -320px;
+        }
+
+        .toc-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fafaf9;
+        }
+
+        .toc-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toc-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            list-style: none;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            color: var(--slate-700);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+
+        .toc-item:hover {
+            background: #f8fafc;
+            color: var(--slate-950);
+            border-color: #e2e8f0;
+        }
+
+        .toc-item.active {
+            background: #f0fdf4;
+            color: #166534;
+            font-weight: 700;
+            border-color: #bbf7d0;
+        }
+
+        .toc-item.category {
+            font-weight: 800;
+            color: var(--slate-900);
+            background: #f8fafc;
+            margin-top: 6px;
+        }
+
+        .toc-badge {
+            font-size: 11px;
+            background: #e2e8f0;
+            color: #475569;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .toc-item.active .toc-badge {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        /* Document weergave viewport */
+        .viewport-container {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            position: relative;
+            min-height: 100%;
+        }
+
+        .pages-spread-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+            border-radius: 12px;
+            background: #ffffff;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            position: relative;
+        }
+
+        .pdf-page-canvas {
+            display: block;
+            border-radius: 6px;
+            max-width: 100%;
+            height: auto;
+            background: white;
+        }
+
+        /* Zwevende snelle bladerknoppen links/rechts */
+        .flip-arrow-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(203, 213, 225, 0.8);
+            color: var(--slate-800);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10;
+            user-select: none;
+        }
+
+        .flip-arrow-btn:hover:not(:disabled) {
+            background: #ffffff;
+            color: var(--ww-green-dark);
+            border-color: var(--ww-green);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 8px 22px rgba(140, 198, 63, 0.25);
+        }
+
+        .flip-arrow-btn:disabled {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .flip-arrow-btn.prev {
+            left: 20px;
+        }
+
+        .flip-arrow-btn.next {
+            right: 20px;
+        }
+
+        /* Laad- en foutscherm */
+        .reader-loader {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 30;
+            transition: opacity 0.2s ease;
+        }
+
+        .loader-spinner {
+            width: 46px;
+            height: 46px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--ww-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 14px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Klassieke / Native Weergave */
+        .native-viewer-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .reader-wrapper {
+                height: calc(100vh - 120px);
+                border-radius: 16px;
+            }
+            .reader-toolbar {
+                padding: 10px 14px;
+            }
+            .toc-sidebar {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+            }
+            .flip-arrow-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+            .flip-arrow-btn.prev { left: 8px; }
+            .flip-arrow-btn.next { right: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="mededelingenBalk" style="display:none; background:#ef4444; color:white; text-align:center; padding:10px; font-weight:bold; font-size:14px; position: relative; z-index: 1000;"></div>
+
+<div class="dashboard-container" id="mainApp">
+    
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item">Dashboard</a>
+            <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
+            <a href="handreiking.html" class="menu-item active">Handreiking digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        <div class="bottom-menu">
+            <p class="menu-label">Account</p>
+            <a href="profiel.html" class="menu-item">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div>
+                <div class="pill-badge-live">
+                    <span class="live-dot pulse"></span>
+                    <span>Stichting Wonderwijs • Handreiking 2026</span>
+                </div>
+                <h1 id="pageTitle" style="margin-bottom: 4px;">Handreiking digitale geletterdheid</h1>
+                <p id="userEmailSubtitle" class="top-bar-subtitle">
+                    Interactief doorbladeren van de officiële Wonderwijs handreiking & SLO kerndoelen
+                </p>
+            </div>
+            <div class="top-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="handreiking-wonderwijs.pdf" download="Handreiking-Wonderwijs-Digitale-Geletterdheid.pdf" class="pill-btn primary" style="text-decoration: none;">
+                    <span>📥</span> Download PDF
+                </a>
+                <a href="leerlijnen.html" class="pill-btn secondary" style="text-decoration: none;">
+                    <span>🎯</span> Bekijk Leerlijn Vinkjes
+                </a>
+            </div>
+        </header>
+
+        <!-- INTERACTIEVE BLADER READER -->
+        <div class="reader-wrapper" id="readerWrapper">
+            
+            <!-- TOOLBAR -->
+            <div class="reader-toolbar">
+                <div class="toolbar-group">
+                    <button type="button" class="reader-btn" id="btnToggleToc" onclick="window.toggleToc()">
+                        <span>📚</span> <span id="tocBtnText">Inhoud</span>
+                    </button>
+                    <div class="page-indicator-box">
+                        <span>Blz.</span>
+                        <input type="number" id="pageNumberInput" class="page-input" min="1" max="62" value="1" onchange="window.jumpToPage(this.value)">
+                        <span id="pageCountLabel">/ 62</span>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="reader-btn" id="btnPrevPage" onclick="window.prevPage()" title="Vorige pagina (Pijl links)">
+                        <span>◀</span> Vorige
+                    </button>
+                    <button type="button" class="reader-btn primary" id="btnNextPage" onclick="window.nextPage()" title="Volgende pagina (Pijl rechts of spatie)">
+                        Volgende <span>▶</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-group">
+                    <button type="button" class="reader-btn" id="btnModeSingle" onclick="window.setViewMode('single')" title="Enkele pagina">
+                        <span>📄</span> Enkel
+                    </button>
+                    <button type="button" class="reader-btn" id="btnModeSpread" onclick="window.setViewMode('spread')" title="Twee pagina's naast elkaar (Boek)">
+                        <span>📖</span> Boek
+                    </button>
+                    
+                    <button type="button" class="reader-btn" onclick="window.zoomOut()" title="Uitzoomen">
+                        <span>🔍−</span>
+                    </button>
+                    <span id="zoomLevelLabel" style="font-size: 12px; font-weight: 700; color: var(--slate-600); min-width: 42px; text-align: center;">100%</span>
+                    <button type="button" class="reader-btn" onclick="window.zoomIn()" title="Inzoomen">
+                        <span>🔍+</span>
+                    </button>
+                    <button type="button" class="reader-btn" onclick="window.fitToWidth()" title="Passend op schermbreedte">
+                        <span>⤢</span>
+                    </button>
+                    <button type="button" class="reader-btn" onclick="window.toggleFullscreen()" title="Volledig scherm">
+                        <span>⛶</span>
+                    </button>
+                    <button type="button" class="reader-btn" id="btnToggleNative" onclick="window.toggleNativeViewer()" title="Wissel naar klassieke browser viewer">
+                        <span>🖥️</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- HOOFDWEERGAVE MET INHOUDSOPGAVE EN PAGES -->
+            <div class="reader-main-area">
+                
+                <!-- ZIJBALK INHOUDSOPGAVE -->
+                <aside class="toc-sidebar" id="tocSidebar">
+                    <div class="toc-header">
+                        <h3><span>📑</span> Inhoudsopgave</h3>
+                        <button type="button" class="reader-btn" style="padding: 4px 8px; font-size: 12px;" onclick="window.toggleToc()">✕</button>
+                    </div>
+                    <ul class="toc-list" id="tocList">
+                        <!-- Dynamisch gevuld via JavaScript -->
+                    </ul>
+                </aside>
+
+                <!-- CANVAS VIEWPORT -->
+                <div class="viewport-container" id="viewportContainer">
+                    <button type="button" class="flip-arrow-btn prev" id="arrowPrev" onclick="window.prevPage()" title="Vorige pagina">‹</button>
+                    
+                    <div class="pages-spread-wrapper" id="spreadWrapper">
+                        <canvas id="pdfCanvasLeft" class="pdf-page-canvas"></canvas>
+                        <canvas id="pdfCanvasRight" class="pdf-page-canvas" style="display: none;"></canvas>
+                    </div>
+
+                    <button type="button" class="flip-arrow-btn next" id="arrowNext" onclick="window.nextPage()" title="Volgende pagina">›</button>
+                </div>
+
+                <!-- KLASSIEKE INGEBOUWDE BROWSER VIEWER (FALLBACK OF VOORKEUR) -->
+                <iframe id="nativePdfViewer" class="native-viewer-container" src="handreiking-wonderwijs.pdf#toolbar=1&navpanes=1"></iframe>
+
+                <!-- LAADINDICATOR -->
+                <div class="reader-loader" id="readerLoader">
+                    <div class="loader-spinner"></div>
+                    <p style="font-size: 14px; font-weight: 700; color: var(--slate-700); margin: 0;">Handreiking laden...</p>
+                    <p style="font-size: 12px; color: var(--slate-400); margin: 4px 0 0 0;">Versie 2.0 • Stichting Wonderwijs</p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+    // HOOFDSTUKKEN INHOUDSOPGAVE (Overeenkomstig pagina 2 van de handreiking)
+    const handreikingTOC = [
+        { titel: "Voorpagina Handreiking", pagina: 1, categorie: true },
+        { titel: "De inhoud", pagina: 2, categorie: true },
+        { titel: "De werkgroep Innovatie stelt zich voor", pagina: 4, categorie: true },
+        { titel: "Achtergrond & Visie werkgroep", pagina: 4 },
+        { titel: "Dave, Stef & Paul aan het woord", pagina: 5 },
+        { titel: "Ron, Jana & Robert aan het woord", pagina: 6 },
+        { titel: "De nieuwe landelijke kerndoelen", pagina: 7 },
+        { titel: "Margot, Robin & Oproep werkgroep", pagina: 8 },
+        { titel: "Digitale Geletterdheid borgen op school", pagina: 9, categorie: true },
+        { titel: "Kerndoelen borgen (4 niveaus)", pagina: 10 },
+        { titel: "Domein 1: Praktische kennis en vaardigheden", pagina: 11, categorie: true },
+        { titel: "Kerndoel 22: Algemene inleiding", pagina: 11 },
+        { titel: "Kerndoel 22a: Digitale systemen (Overzicht)", pagina: 12 },
+        { titel: "22a: De leerkracht (Houding, Kunnen, Weten)", pagina: 13 },
+        { titel: "22a: Leerjarenoverzicht Groep 1 t/m 4", pagina: 14 },
+        { titel: "22a: Leerjarenoverzicht Groep 5 t/m 8", pagina: 15 },
+        { titel: "Kerndoel 22b: Digitale media & info (Overzicht)", pagina: 16 },
+        { titel: "22b: De leerkracht competenties", pagina: 17 },
+        { titel: "22b: Leerjarenoverzicht Groep 1 t/m 4", pagina: 18 },
+        { titel: "22b: Leerjarenoverzicht Groep 5 t/m 8 (Fake news)", pagina: 19 },
+        { titel: "Kerndoel 22c: Data (Overzicht)", pagina: 20 },
+        { titel: "22c: De leerkracht competenties", pagina: 21 },
+        { titel: "22c: Leerjarenoverzicht Groep 1 t/m 4", pagina: 22 },
+        { titel: "22c: Leerjarenoverzicht Groep 5 t/m 8", pagina: 23 },
+        { titel: "Kerndoel 22d: Artificiële Intelligentie (AI)", pagina: 24 },
+        { titel: "22d: De leerkracht competenties", pagina: 25 },
+        { titel: "22d: Leerjarenoverzicht Groep 1 t/m 4", pagina: 26 },
+        { titel: "22d: Leerjarenoverzicht Groep 5 t/m 8 (Prompten)", pagina: 27 },
+        { titel: "Het (ver)Wonderlab als hulpmiddel", pagina: 28, categorie: true },
+        { titel: "Drempel over & (ver)Wonderboxen", pagina: 29 },
+        { titel: "Visie bepalen, experimenteren & reserveren", pagina: 30 },
+        { titel: "Domein 2: Ontwerpen en maken", pagina: 31, categorie: true },
+        { titel: "Kerndoel 23: Algemene inleiding", pagina: 31 },
+        { titel: "Kerndoel 23a: Creëren met technologie", pagina: 32 },
+        { titel: "23a: De leerkracht competenties", pagina: 33 },
+        { titel: "23a: Leerjarenoverzicht Groep 1 t/m 4", pagina: 34 },
+        { titel: "23a: Leerjarenoverzicht Groep 5 t/m 8", pagina: 35 },
+        { titel: "Kerndoel 23b: Programmeren", pagina: 36 },
+        { titel: "23b: De leerkracht competenties", pagina: 37 },
+        { titel: "23b: Leerjarenoverzicht Groep 1 t/m 4 (Bee-Bot/Indi)", pagina: 38 },
+        { titel: "23b: Leerjarenoverzicht Groep 5 t/m 8 (Scratch/Spike)", pagina: 39 },
+        { titel: "Schoolteams bezoeken het (ver)Wonderlab", pagina: 40, categorie: true },
+        { titel: "Ervaringen SamSam & De Okkernoot", pagina: 41 },
+        { titel: "Ervaringen 't Startblok & Het Sterrenbos", pagina: 42 },
+        { titel: "Domein 3: De gedigitaliseerde wereld", pagina: 43, categorie: true },
+        { titel: "Kerndoel 24: Algemene inleiding", pagina: 43 },
+        { titel: "Kerndoel 24a: Veiligheid & privacy", pagina: 44 },
+        { titel: "24a: De leerkracht competenties", pagina: 45 },
+        { titel: "24a: Leerjarenoverzicht Groep 1 t/m 4", pagina: 46 },
+        { titel: "24a: Leerjarenoverzicht Groep 5 t/m 8", pagina: 47 },
+        { titel: "Kerndoel 24b: Technologie, jezelf en de ander", pagina: 48 },
+        { titel: "24b: De leerkracht competenties", pagina: 49 },
+        { titel: "24b: Leerjarenoverzicht Groep 1 t/m 4 (Schermtijd)", pagina: 50 },
+        { titel: "24b: Leerjarenoverzicht Groep 5 t/m 8 (Balans)", pagina: 51 },
+        { titel: "Kerndoel 24c: Technologie, samenleving & wereld", pagina: 52 },
+        { titel: "24c: De leerkracht competenties", pagina: 53 },
+        { titel: "24c: Leerjarenoverzicht Groep 1 t/m 4", pagina: 54 },
+        { titel: "24c: Leerjarenoverzicht Groep 5 t/m 8", pagina: 55 },
+        { titel: "Toepassingen van de scholen", pagina: 56, categorie: true },
+        { titel: "3D printen op school & Klassenpodcast", pagina: 57 },
+        { titel: "Jeugdjournaal & Greenscreen in de klas", pagina: 58 },
+        { titel: "Vliegen en programmeren met drones", pagina: 59 },
+        { titel: "LEGO leerlijn & Met VR naar Anne Frank", pagina: 60 },
+        { titel: "Tips van het lab (AppNootMuis, Meester Sander)", pagina: 61 },
+        { titel: "Google AI Studio, Tintara & Methodebooster", pagina: 62 }
+    ];
+
+    // PDF.js State Management
+    let pdfDoc = null;
+    let currentPage = 1;
+    let totalPages = 62;
+    let currentScale = 1.0;
+    let viewMode = 'single'; // 'single' of 'spread'
+    let isRendering = false;
+    let renderQueuePage = null;
+    let isNativeView = false;
+
+    // Stel worker in voor snelle multithreaded rendering
+    if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // Render TOC lijst
+    function renderTocList() {
+        const listEl = document.getElementById('tocList');
+        if (!listEl) return;
+        listEl.innerHTML = handreikingTOC.map(item => `
+            <li class="toc-item ${item.categorie ? 'category' : ''} ${item.pagina === currentPage ? 'active' : ''}" onclick="window.jumpToPage(${item.pagina})">
+                <span>${item.titel}</span>
+                <span class="toc-badge">${item.pagina}</span>
+            </li>
+        `).join('');
+    }
+
+    // Laad het PDF document
+    async function loadPdfDocument() {
+        const loader = document.getElementById('readerLoader');
+        if (loader) loader.style.display = 'flex';
+
+        try {
+            if (!window.pdfjsLib) {
+                throw new Error("PDF.js library niet geladen");
+            }
+            // Laad het PDF bestand via relatieve URL
+            const loadingTask = pdfjsLib.getDocument('handreiking-wonderwijs.pdf');
+            pdfDoc = await loadingTask.promise;
+            totalPages = pdfDoc.numPages || 62;
+            
+            const countLabel = document.getElementById('pageCountLabel');
+            if (countLabel) countLabel.innerText = `/ ${totalPages}`;
+            const pageInput = document.getElementById('pageNumberInput');
+            if (pageInput) pageInput.max = totalPages;
+
+            // Bepaal startmodus op basis van schermbreedte
+            if (window.innerWidth >= 1200) {
+                viewMode = 'spread';
+            } else {
+                viewMode = 'single';
+            }
+            updateModeButtons();
+
+            // Automatische schaalberekening passend op viewport
+            calculateInitialScale();
+            renderTocList();
+            await renderCurrentPages();
+
+            if (loader) loader.style.display = 'none';
+        } catch (error) {
+            console.warn("Fout bij inladen via PDF.js, schakelt over naar ingebouwde weergave:", error);
+            // Fallback naar native browser weergave
+            window.toggleNativeViewer(true);
+            if (loader) loader.style.display = 'none';
+        }
+    }
+
+    function calculateInitialScale() {
+        const container = document.getElementById('viewportContainer');
+        if (!container) return;
+        const availableWidth = container.clientWidth - (viewMode === 'spread' ? 120 : 60);
+        // Standaard A4 ratio breedte is circa 595 pt
+        const targetPageWidth = (viewMode === 'spread') ? (availableWidth / 2) : availableWidth;
+        currentScale = Math.min(1.4, Math.max(0.55, targetPageWidth / 620));
+        updateZoomLabel();
+    }
+
+    async function renderPageToCanvas(pageNum, canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas || !pdfDoc) return;
+        
+        try {
+            const page = await pdfDoc.getPage(pageNum);
+            const pixelRatio = window.devicePixelRatio || 1.5;
+            const viewport = page.getViewport({ scale: currentScale * pixelRatio });
+
+            const ctx = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            canvas.style.width = `${viewport.width / pixelRatio}px`;
+            canvas.style.height = `${viewport.height / pixelRatio}px`;
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+            canvas.style.display = 'block';
+        } catch (err) {
+            console.error("Fout bij renderen pagina:", pageNum, err);
+        }
+    }
+
+    async function renderCurrentPages() {
+        if (isRendering) {
+            renderQueuePage = currentPage;
+            return;
+        }
+        isRendering = true;
+
+        const leftCanvas = document.getElementById('pdfCanvasLeft');
+        const rightCanvas = document.getElementById('pdfCanvasRight');
+        const inputEl = document.getElementById('pageNumberInput');
+        if (inputEl) inputEl.value = currentPage;
+
+        updateNavButtons();
+        renderTocList();
+
+        if (viewMode === 'single') {
+            if (rightCanvas) rightCanvas.style.display = 'none';
+            await renderPageToCanvas(currentPage, 'pdfCanvasLeft');
+        } else {
+            // Spread mode (boekomslag = pag 1 solo, daarna 2-3, 4-5...)
+            let leftPageNum = currentPage;
+            let rightPageNum = currentPage + 1;
+
+            if (currentPage === 1) {
+                // Pagina 1 is de cover: toon centraal
+                if (rightCanvas) rightCanvas.style.display = 'none';
+                await renderPageToCanvas(1, 'pdfCanvasLeft');
+            } else {
+                // Zorg voor even links, oneven rechts
+                if (leftPageNum % 2 !== 0) {
+                    leftPageNum -= 1;
+                    rightPageNum = leftPageNum + 1;
+                }
+                await renderPageToCanvas(leftPageNum, 'pdfCanvasLeft');
+                if (rightPageNum <= totalPages) {
+                    await renderPageToCanvas(rightPageNum, 'pdfCanvasRight');
+                } else if (rightCanvas) {
+                    rightCanvas.style.display = 'none';
+                }
+            }
+        }
+
+        isRendering = false;
+        if (renderQueuePage !== null) {
+            const nextP = renderQueuePage;
+            renderQueuePage = null;
+            window.jumpToPage(nextP);
+        }
+    }
+
+    function updateNavButtons() {
+        const btnPrev = document.getElementById('btnPrevPage');
+        const btnNext = document.getElementById('btnNextPage');
+        const arrowPrev = document.getElementById('arrowPrev');
+        const arrowNext = document.getElementById('arrowNext');
+
+        const isAtStart = (currentPage <= 1);
+        const isAtEnd = (currentPage >= totalPages);
+
+        if (btnPrev) btnPrev.disabled = isAtStart;
+        if (arrowPrev) arrowPrev.disabled = isAtStart;
+        if (btnNext) btnNext.disabled = isAtEnd;
+        if (arrowNext) arrowNext.disabled = isAtEnd;
+    }
+
+    function updateModeButtons() {
+        const btnSingle = document.getElementById('btnModeSingle');
+        const btnSpread = document.getElementById('btnModeSpread');
+        if (btnSingle) btnSingle.classList.toggle('active', viewMode === 'single');
+        if (btnSpread) btnSpread.classList.toggle('active', viewMode === 'spread');
+    }
+
+    function updateZoomLabel() {
+        const label = document.getElementById('zoomLevelLabel');
+        if (label) label.innerText = `${Math.round(currentScale * 100)}%`;
+    }
+
+    // Navigatie acties
+    window.prevPage = function() {
+        if (currentPage <= 1) return;
+        if (viewMode === 'spread' && currentPage > 2) {
+            currentPage -= 2;
+            if (currentPage < 1) currentPage = 1;
+        } else {
+            currentPage -= 1;
+        }
+        renderCurrentPages();
+    };
+
+    window.nextPage = function() {
+        if (currentPage >= totalPages) return;
+        if (viewMode === 'spread') {
+            if (currentPage === 1) currentPage = 2;
+            else currentPage = Math.min(totalPages, currentPage + 2);
+        } else {
+            currentPage += 1;
+        }
+        renderCurrentPages();
+    };
+
+    window.jumpToPage = function(page) {
+        let p = parseInt(page, 10);
+        if (isNaN(p)) return;
+        p = Math.max(1, Math.min(totalPages, p));
+        currentPage = p;
+        renderCurrentPages();
+    };
+
+    window.setViewMode = function(mode) {
+        viewMode = mode;
+        updateModeButtons();
+        calculateInitialScale();
+        renderCurrentPages();
+    };
+
+    window.zoomIn = function() {
+        currentScale = Math.min(2.5, currentScale + 0.15);
+        updateZoomLabel();
+        renderCurrentPages();
+    };
+
+    window.zoomOut = function() {
+        currentScale = Math.max(0.45, currentScale - 0.15);
+        updateZoomLabel();
+        renderCurrentPages();
+    };
+
+    window.fitToWidth = function() {
+        calculateInitialScale();
+        renderCurrentPages();
+    };
+
+    window.toggleToc = function() {
+        const sidebar = document.getElementById('tocSidebar');
+        if (sidebar) sidebar.classList.toggle('collapsed');
+    };
+
+    window.toggleFullscreen = function() {
+        const wrapper = document.getElementById('readerWrapper');
+        if (!document.fullscreenElement) {
+            if (wrapper && wrapper.requestFullscreen) wrapper.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    };
+
+    window.toggleNativeViewer = function(forceNative) {
+        const nativeViewer = document.getElementById('nativePdfViewer');
+        const viewportContainer = document.getElementById('viewportContainer');
+        const btnToggle = document.getElementById('btnToggleNative');
+
+        isNativeView = (typeof forceNative === 'boolean') ? forceNative : !isNativeView;
+
+        if (nativeViewer && viewportContainer) {
+            if (isNativeView) {
+                nativeViewer.style.display = 'block';
+                viewportContainer.style.display = 'none';
+                if (btnToggle) {
+                    btnToggle.classList.add('active');
+                    btnToggle.innerHTML = '<span>📖</span> Terug naar Bladeren';
+                }
+            } else {
+                nativeViewer.style.display = 'none';
+                viewportContainer.style.display = 'flex';
+                if (btnToggle) {
+                    btnToggle.classList.remove('active');
+                    btnToggle.innerHTML = '<span>🖥️</span>';
+                }
+                renderCurrentPages();
+            }
+        }
+    };
+
+    // Toetsenbordnavigatie (Links/Rechts pijltjes en spatie)
+    document.addEventListener('keydown', (e) => {
+        if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+        if (e.key === 'ArrowLeft') {
+            window.prevPage();
+        } else if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            window.nextPage();
+        }
+    });
+
+    // Touch swipe ondersteuning voor mobiel & tablet
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const viewportEl = document.getElementById('viewportContainer');
+    if (viewportEl) {
+        viewportEl.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        viewportEl.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+    }
+
+    function handleSwipe() {
+        const threshold = 50;
+        if (touchEndX < touchStartX - threshold) {
+            window.nextPage();
+        }
+        if (touchEndX > touchStartX + threshold) {
+            window.prevPage();
+        }
+    }
+
+    // Start loading bij DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPdfDocument();
+    });
+</script>
+
+<script src="auth-config.js?v=20261024d"></script>
+<script src="auth.js?v=20261024d"></script>
+<script src="script.js?v=20261024d"></script>
+</body>
+</html>
