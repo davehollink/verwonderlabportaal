@@ -812,15 +812,15 @@
             </div>
             <div class="form-group">
                 <label>Afbeelding URL (of data):</label>
-                <input type="file" id="editAfbeeldingFile" accept="image/*">
+                <input type="file" id="editAfbeeldingFile" accept="image/*" onchange="window.handleMateriaalAfbeeldingUpload(event)">
                 <input type="hidden" id="editAfbeelding">
                 <div id="imagePreview" style="margin-top: 10px;"></div>
             </div>
             
             <div class="form-group">
                 <label>Leskaarten / Bijlagen (PDF):</label>
-                <input type="file" id="editPdfFiles" accept="application/pdf" multiple>
-                <div id="pdfPreviewContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
+                <input type="file" id="editPdfFiles" accept="application/pdf,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple onchange="window.handlePdfUpload(event)">
+                <div id="pdfPreviewContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
                 <input type="hidden" id="editPdfData">
                 <p style="font-size: 11px; color: #888; margin-top: 5px;">Tip: Je kunt meerdere bestanden tegelijk selecteren door Ctrl (of Cmd op Mac) in te drukken tijdens het klikken.</p>
             </div>

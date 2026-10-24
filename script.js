@@ -1379,20 +1379,40 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     newData.afbeelding = await getDownloadURL(imgRef);
                 }
                 let finalPdfs = [];
-                for(let i = 0; i < pdfsData.length; i++) {
-                    let pdf = pdfsData[i];
-                    if(pdf.data && pdf.data.startsWith('data:application')) {
-                        const pdfRef = ref(storage, `pdfs/${newData.id}_${Date.now()}_${i}.pdf`);
-                        await uploadString(pdfRef, pdf.data, 'data_url');
-                        finalPdfs.push({ naam: pdf.naam, data: await getDownloadURL(pdfRef) });
-                    } else {
-                        finalPdfs.push(pdf);
+                if (pdfsData && Array.isArray(pdfsData)) {
+                    for(let i = 0; i < pdfsData.length; i++) {
+                        let pdf = pdfsData[i];
+                        if(pdf.data && typeof pdf.data === 'string' && pdf.data.startsWith('data:')) {
+                            try {
+                                const ext = (pdf.naam && pdf.naam.includes('.')) ? pdf.naam.split('.').pop() : 'pdf';
+                                const pdfRef = ref(storage, `pdfs/${newData.id}_${Date.now()}_${i}.${ext}`);
+                                await uploadString(pdfRef, pdf.data, 'data_url');
+                                finalPdfs.push({
+                                    naam: pdf.naam,
+                                    grootte: pdf.grootte || '',
+                                    type: pdf.type || 'application/pdf',
+                                    data: await getDownloadURL(pdfRef)
+                                });
+                            } catch(storageErr) {
+                                console.warn("Firebase Storage upload mislukt, behoud base64 fallback:", storageErr);
+                                finalPdfs.push(pdf);
+                            }
+                        } else {
+                            finalPdfs.push(pdf);
+                        }
                     }
                 }
                 newData.pdfs = finalPdfs;
                 await setDoc(doc(db, "leskisten", newData.id.toString()), newData);
-                currentPdfs = [];
-                if(window.updatePdfPreview) window.updatePdfPreview();
+                
+                // Synchroniseer ook direct lokaal geheugen
+                const idx = leskisten.findIndex(k => k.id == newData.id);
+                if (idx > -1) {
+                    leskisten[idx] = { ...leskisten[idx], ...newData };
+                }
+                slaDataOp();
+                if (window.renderReserveringsGrid) window.renderReserveringsGrid();
+                if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
             } catch(e) { console.error("Cloud Opslag Mislukt:", e); }
         };
 
@@ -1793,11 +1813,22 @@ window.renderReserveringsGrid = function() {
         let isFav = mijnFavorieten.includes(kist.id);
         
         let hartjeHtml = `<div onclick="window.toggleFavoriet(${kist.id}, event)" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;">${isFav ? '❤️' : '🤍'}</div>`;
-        let actieHtml = isKapot ? `<div style="color: #E74C3C; font-weight: bold; font-size: 13px; margin-top: auto; padding-top: 15px;">⚠️ Tijdelijk in reparatie</div>` : `<button class="btn-submit" style="margin-top: auto; background: #3e2723; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Informatie & Reserveren</button>`;
+        let actieHtml = isKapot ? `<div style="color: #E74C3C; font-weight: bold; font-size: 13px; margin-top: auto; padding-top: 15px;">⚠️ Tijdelijk in reparatie</div>` : `<button class="btn-submit" style="margin-top: auto; background: #3e2723; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Informatie &amp; Reserveren</button>`;
         let clickEvent = isKapot ? `` : `onclick="window.openLeskistInfo(${kist.id})"`;
         let styling = isKapot ? `opacity: 0.6; cursor: not-allowed;` : `cursor: pointer;`;
         let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg);
         
+        let pdfBadgeHtml = '';
+        if (kist.pdfs && Array.isArray(kist.pdfs) && kist.pdfs.length > 0) {
+            const aantal = kist.pdfs.length;
+            const label = aantal === 1 ? '1 leskaart / bijlage' : `${aantal} leskaarten / bijlagen`;
+            pdfBadgeHtml = `
+                <div style="margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; width: fit-content;">
+                    <span>📄</span> ${label}
+                </div>
+            `;
+        }
+
         return `
         <div class="leskist-card" ${clickEvent} style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; transition: transform 0.2s ease; ${styling}">
             ${hartjeHtml}
@@ -1806,7 +1837,8 @@ window.renderReserveringsGrid = function() {
             </div>
             <div style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
                 <h3 style="margin-top: 0; font-size: 18px; color: #1e293b; margin-bottom: 5px;">${kist.naam}</h3>
-                <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">${kist.tag}</p>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 10px;">${kist.tag}</p>
+                ${pdfBadgeHtml}
                 ${actieHtml}
             </div>
         </div>`;
@@ -2521,15 +2553,28 @@ async function verwerkFormulier(formId, btnElement) {
             const rawId = getVal('editKistId'); 
             const imgData = getVal('editAfbeelding', defaultImg); 
             let kistId = rawId ? parseInt(rawId) : Date.now(); 
-            const newData = { id: kistId, naam: getVal('editNaam', 'Naamloos Materiaal'), tag: getVal('editTag'), doelgroep: getVal('editDoelgroep'), kerndoelen: getVal('editKerndoelen'), beschrijving: getVal('editBeschrijving'), inhoud: getVal('editInhoud'), videoUrl: getVal('editVideo'), beschikbaar: getCheck('editBeschikbaar', true), afbeelding: imgData, pdfs: currentPdfs || [] }; 
+            const kistPdfs = (currentPdfs && Array.isArray(currentPdfs)) ? JSON.parse(JSON.stringify(currentPdfs)) : [];
+            const newData = { 
+                id: kistId, 
+                naam: getVal('editNaam', 'Naamloos Materiaal'), 
+                tag: getVal('editTag'), 
+                doelgroep: getVal('editDoelgroep'), 
+                kerndoelen: getVal('editKerndoelen'), 
+                beschrijving: getVal('editBeschrijving'), 
+                inhoud: getVal('editInhoud'), 
+                videoUrl: getVal('editVideo'), 
+                beschikbaar: getCheck('editBeschikbaar', true), 
+                afbeelding: imgData, 
+                pdfs: kistPdfs 
+            }; 
             const idx = leskisten.findIndex(k => k.id == kistId); 
             if(idx > -1) leskisten[idx] = { ...leskisten[idx], ...newData }; else leskisten.push(newData); 
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
             if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
-            if(window.saveMateriaalToCloud) await window.saveMateriaalToCloud(rawId, newData, imgData, currentPdfs); 
+            if(window.saveMateriaalToCloud) await window.saveMateriaalToCloud(rawId, newData, imgData, kistPdfs); 
             window.sluitAlleModals(); 
-            alert("✅ Materiaal succesvol opgeslagen!"); 
+            alert("✅ Materiaal en bijlagen succesvol opgeslagen!"); 
         } else if (formId === 'editLesideeForm') { 
             const rawId = getVal('editLesideeId'); 
             const ideeId = rawId ? parseInt(rawId) : Date.now(); 
@@ -3285,10 +3330,33 @@ window.openLeskistInfo = function(id) {
     
     const pdfContainer = document.getElementById('modalPdfContainer');
     if (pdfContainer) {
-        if (kist.pdfs && kist.pdfs.length > 0) {
-            let pdfHtml = '<strong style="color: #333; display:block; margin-bottom: 8px;">📄 Leskaarten / Bijlagen:</strong><div style="display: flex; flex-direction: column; gap: 8px;">';
+        if (kist.pdfs && Array.isArray(kist.pdfs) && kist.pdfs.length > 0) {
+            let pdfHtml = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <strong style="color: #166534; font-size: 14.5px; display: flex; align-items: center; gap: 6px;">
+                        <span>📄</span> Leskaarten &amp; Bijlagen (${kist.pdfs.length})
+                    </strong>
+                    <span style="font-size: 12px; color: #15803d; font-weight: 600;">Direct te openen of downloaden</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+            `;
             kist.pdfs.forEach(pdf => {
-                pdfHtml += `<a href="${pdf.data}" download="${pdf.naam}" class="btn-green-action" style="text-decoration: none; display: inline-block; text-align: center; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; background: #8CC63F; color: white;">💾 Download ${pdf.naam}</a>`;
+                pdfHtml += `
+                    <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 2px 4px rgba(140, 198, 63, 0.08);">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden;">
+                            <span style="font-size: 22px; flex-shrink: 0;">📄</span>
+                            <div style="min-width: 0; overflow: hidden;">
+                                <div style="font-weight: 700; font-size: 13.5px; color: #1e293b; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${pdf.naam}</div>
+                                <div style="font-size: 11px; color: #64748b;">${pdf.grootte || 'PDF Document'}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                            <a href="${pdf.data}" target="_blank" download="${pdf.naam}" class="btn-green-action" style="padding: 7px 14px; font-size: 12px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: #8CC63F; color: white; font-weight: 700;">
+                                <span>📥</span> Download
+                            </a>
+                        </div>
+                    </div>
+                `;
             });
             pdfHtml += '</div>';
             pdfContainer.innerHTML = pdfHtml;
@@ -3648,7 +3716,136 @@ window.verwijderBeheerder = async function(id) { if(confirm("Weet je zeker dat j
 window.openPeriodeModal = function(id = null) { const form = document.getElementById('periodeForm'); if(form) form.reset(); if(id) { document.getElementById('modalPeriodeTitle').innerText = "Periode Bewerken"; const per = periodes.find(p => p.id == id); if(document.getElementById('editPeriodeId')) document.getElementById('editPeriodeId').value = per.id; if(document.getElementById('periodeNaam')) document.getElementById('periodeNaam').value = per.naam; if(document.getElementById('periodeStart')) document.getElementById('periodeStart').value = per.start; if(document.getElementById('periodeEind')) document.getElementById('periodeEind').value = per.eind; } else { document.getElementById('modalPeriodeTitle').innerText = "Nieuwe Periode Aanmaken"; if(document.getElementById('editPeriodeId')) document.getElementById('editPeriodeId').value = ""; } const m = document.getElementById('periodeModal'); if(m) m.style.display = 'flex'; }
 window.openSchoolModal = function(id = null) { const form = document.getElementById('schoolForm'); if(form) form.reset(); if(id) { document.getElementById('modalSchoolTitle').innerText = "School/Locatie Bewerken"; const sch = scholen.find(s => s.id == id); if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = sch.id; if(document.getElementById('schoolNaam')) document.getElementById('schoolNaam').value = sch.naam; } else { document.getElementById('modalSchoolTitle').innerText = "Nieuwe School/Locatie Aanmaken"; if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = ""; } const m = document.getElementById('schoolModal'); if(m) m.style.display = 'flex'; }
 window.openStoringModal = function() { const form = document.getElementById('storingForm'); if(form) form.reset(); if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; const select = document.getElementById('storingKist'); if(select) { select.innerHTML = '<option value="" disabled selected>-- Selecteer een leskist --</option>'; leskisten.forEach(k => select.innerHTML += `<option value="${k.naam}">${k.naam}</option>`); } const m = document.getElementById('storingModal'); if(m) m.style.display = 'flex'; }
-window.openMateriaalModal = function(id = null) { const form = document.getElementById('editLeskistForm'); if(form) form.reset(); const afbFile = document.getElementById('editAfbeeldingFile'); if(afbFile) afbFile.value = ""; const editPdfFiles = document.getElementById('editPdfFiles'); if(editPdfFiles) editPdfFiles.value = ""; if(id) { document.getElementById('modalMateriaalTitle').innerText = "Materiaal Bewerken"; const kist = leskisten.find(k => k.id == id); if(document.getElementById('editKistId')) document.getElementById('editKistId').value = kist.id; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = kist.afbeelding || defaultImg; let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg); if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = `<img src="${imgSource}" style="width: 100%; border-radius: 8px;">`; if(document.getElementById('editNaam')) document.getElementById('editNaam').value = kist.naam || ""; if(document.getElementById('editTag')) document.getElementById('editTag').value = kist.tag || ""; if(document.getElementById('editDoelgroep')) document.getElementById('editDoelgroep').value = kist.doelgroep || ""; if(document.getElementById('editKerndoelen')) document.getElementById('editKerndoelen').value = kist.kerndoelen || ""; if(document.getElementById('editBeschrijving')) document.getElementById('editBeschrijving').value = kist.beschrijving || ""; if(document.getElementById('editInhoud')) document.getElementById('editInhoud').value = kist.inhoud || ""; if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; currentPdfs = kist.pdfs || []; } else { document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = defaultImg; if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; currentPdfs = []; } if(window.updatePdfPreview) window.updatePdfPreview(); const m = document.getElementById('editLeskistModal'); if(m) m.style.display = 'flex'; }
+window.handleMateriaalAfbeeldingUpload = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const hiddenInput = document.getElementById('editAfbeelding');
+        if (hiddenInput) hiddenInput.value = e.target.result;
+        const preview = document.getElementById('imagePreview');
+        if (preview) {
+            preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">`;
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.handlePdfUpload = function(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        const fileSizeStr = file.size > 1024 * 1024 
+            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+            : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+        
+        reader.onload = (e) => {
+            currentPdfs.push({
+                naam: file.name,
+                type: file.type || 'application/pdf',
+                grootte: fileSizeStr,
+                data: e.target.result
+            });
+            window.updatePdfPreview();
+        };
+        reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+};
+
+window.updatePdfPreview = function() {
+    const container = document.getElementById('pdfPreviewContainer');
+    if (!container) return;
+
+    if (!currentPdfs || currentPdfs.length === 0) {
+        container.innerHTML = `<div style="font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0;">Nog geen leskaarten of bijlagen toegevoegd.</div>`;
+        return;
+    }
+
+    container.innerHTML = currentPdfs.map((pdf, idx) => `
+        <div class="pdf-preview-item" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; min-width: 0;">
+                <span style="font-size: 20px; flex-shrink: 0;">📄</span>
+                <div style="min-width: 0; overflow: hidden;">
+                    <a href="${pdf.data}" target="_blank" download="${pdf.naam}" style="font-size: 13px; font-weight: 700; color: #1e293b; text-decoration: none; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="Klik om te bekijken/downloaden">
+                        ${pdf.naam}
+                    </a>
+                    <span style="font-size: 11px; color: #64748b;">${pdf.grootte || 'Bijlage'}</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                <a href="${pdf.data}" target="_blank" download="${pdf.naam}" class="btn-pdf-view" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px; background: #e0f2fe; color: #0369a1; text-decoration: none; font-weight: 600;">
+                    👁️ Bekijk
+                </a>
+                <button type="button" onclick="window.removePdfFile(${idx})" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;" title="Verwijder bijlage">
+                    🗑️
+                </button>
+            </div>
+        </div>
+    `).join('');
+};
+
+window.removePdfFile = function(idx) {
+    if (idx >= 0 && idx < currentPdfs.length) {
+        currentPdfs.splice(idx, 1);
+        window.updatePdfPreview();
+    }
+};
+
+window.handleStoringFotoUpload = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const hidden = document.getElementById('storingFotoData');
+        if (hidden) hidden.value = e.target.result;
+        const preview = document.getElementById('storingFotoPreview');
+        if (preview) preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 6px;">`;
+    };
+    reader.readAsDataURL(file);
+};
+
+window.openMateriaalModal = function(id = null) { 
+    const form = document.getElementById('editLeskistForm'); 
+    if(form) form.reset(); 
+    const afbFile = document.getElementById('editAfbeeldingFile'); 
+    if(afbFile) afbFile.value = ""; 
+    const editPdfFiles = document.getElementById('editPdfFiles'); 
+    if(editPdfFiles) editPdfFiles.value = ""; 
+
+    if(id) { 
+        document.getElementById('modalMateriaalTitle').innerText = "Materiaal Bewerken"; 
+        const kist = leskisten.find(k => k.id == id); 
+        if (kist) {
+            if(document.getElementById('editKistId')) document.getElementById('editKistId').value = kist.id; 
+            if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = kist.afbeelding || defaultImg; 
+            let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg); 
+            if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = `<img src="${imgSource}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px;">`; 
+            if(document.getElementById('editNaam')) document.getElementById('editNaam').value = kist.naam || ""; 
+            if(document.getElementById('editTag')) document.getElementById('editTag').value = kist.tag || ""; 
+            if(document.getElementById('editDoelgroep')) document.getElementById('editDoelgroep').value = kist.doelgroep || ""; 
+            if(document.getElementById('editKerndoelen')) document.getElementById('editKerndoelen').value = kist.kerndoelen || ""; 
+            if(document.getElementById('editBeschrijving')) document.getElementById('editBeschrijving').value = kist.beschrijving || ""; 
+            if(document.getElementById('editInhoud')) document.getElementById('editInhoud').value = kist.inhoud || ""; 
+            if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; 
+            if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; 
+            currentPdfs = (kist.pdfs && Array.isArray(kist.pdfs)) ? JSON.parse(JSON.stringify(kist.pdfs)) : []; 
+        }
+    } else { 
+        document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; 
+        if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; 
+        if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = defaultImg; 
+        if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; 
+        if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; 
+        currentPdfs = []; 
+    } 
+
+    if(window.updatePdfPreview) window.updatePdfPreview(); 
+    const m = document.getElementById('editLeskistModal'); 
+    if(m) m.style.display = 'flex'; 
+};
 let currentLesideeFiles = [];
 
 window.handleLesideeFilesUpload = function(event) {
