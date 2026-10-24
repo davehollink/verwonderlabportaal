@@ -3840,10 +3840,12 @@ Afzender: verwonderlab@wonderwijs.nl`;
     if (isVerzondenViaServer) {
         alert(`✅ Reservering goedgekeurd!\n\nEr is automatisch een bevestigingsmail verstuurd naar ${docentNaam} (${docentEmail}).`);
     } else {
-        // 2. Open direct Microsoft 365 Outlook
+        // 2. Open direct de geïnstalleerde Microsoft Outlook Desktop app
         window.openInOutlook(docentEmail, mailOnderwerp, mailTekst);
 
-        alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!\n\nOutlook wordt nu geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).\n\nKlik in Outlook op 'Verzenden' om de mail te versturen.`);
+        setTimeout(() => {
+            alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!\n\nMicrosoft Outlook (geïnstalleerde app) is geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).\n\nKlik in Outlook op 'Verzenden' om de mail te versturen.`);
+        }, 150);
     }
 };
 window.actieReserveringVerwijderen = function(id, event) { event.preventDefault(); if(confirm("Weet je zeker dat je deze reservering definitief wilt verwijderen?")) { reserveringen = reserveringen.filter(r => r.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteReserveringFromCloud) window.deleteReserveringFromCloud(id); } }
