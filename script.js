@@ -1433,8 +1433,26 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
         // Tabellen Ophalen
         onSnapshot(collection(db, "periodes"), (snapshot) => { if(!snapshot.empty) { periodes = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.updateAftelkalender === "function") window.updateAftelkalender(); } }, checkError);
-        onSnapshot(collection(db, "scholen"), (snapshot) => { if(!snapshot.empty) { scholen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
-        onSnapshot(collection(db, "beheerders"), (snapshot) => { if(!snapshot.empty) { beheerdersLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } else { beheerdersLijst = []; slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+        onSnapshot(collection(db, "scholen"), (snapshot) => { 
+            if(!snapshot.empty) { 
+                scholen = snapshot.docs.map(d => d.data()); 
+                slaDataOp(); 
+                if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+                if(typeof window.laadProfielPagina === "function") window.laadProfielPagina();
+            } 
+        }, checkError);
+        onSnapshot(collection(db, "beheerders"), (snapshot) => { 
+            if(!snapshot.empty) { 
+                beheerdersLijst = snapshot.docs.map(d => d.data()); 
+                slaDataOp(); 
+                if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+            } else { 
+                beheerdersLijst = []; 
+                slaDataOp(); 
+                if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+            }
+            if(typeof window.updateAdminButtonVisibility === "function") window.updateAdminButtonVisibility();
+        }, checkError);
         onSnapshot(collection(db, "leskisten"), (snapshot) => { 
             if(!snapshot.empty) { 
                 const cloudKisten = snapshot.docs.map(d => d.data());
@@ -1663,6 +1681,32 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.updateMeldingStatusInCloud = async function(id, status) { await setDoc(doc(db, "meldingen", id.toString()), {status: status}, {merge: true}); };
         window.saveFeedbackToCloud = async function(newData) { await setDoc(doc(db, "feedback", newData.id.toString()), newData); };
         window.saveFeedbackConfigToCloud = async function(cfg) { await setDoc(doc(db, "instellingen", "feedback_config"), cfg, { merge: true }); };
+        window.saveUserPreferenceToCloud = async function(email, schoolNaam) {
+            if (!db || !email) return;
+            try {
+                const veiligEmail = email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+                await setDoc(doc(db, "gebruikers", veiligEmail), {
+                    email: email,
+                    standaardSchool: schoolNaam,
+                    gewijzigdOp: new Date().toISOString()
+                }, { merge: true });
+            } catch(e) {
+                console.warn("Fout bij opslaan schoolvoorkeur in cloud:", e);
+            }
+        };
+        window.getUserPreferenceFromCloud = async function(email) {
+            if (!db || !email) return null;
+            try {
+                const veiligEmail = email.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+                const snap = await getDoc(doc(db, "gebruikers", veiligEmail));
+                if (snap.exists() && snap.data().standaardSchool) {
+                    return snap.data().standaardSchool;
+                }
+            } catch(e) {
+                console.warn("Fout bij ophalen schoolvoorkeur uit cloud:", e);
+            }
+            return null;
+        };
 
     } catch (error) { 
         console.error("Firebase module overgeslagen. Lokaal actief."); 
@@ -1719,10 +1763,24 @@ window.checkLeerkrachtLogin = function() {
             window.updateSidebarUserProfile();
         }
 
-        // Check Beheerdersrechten
+        // Check Beheerdersrechten & werk admin-knoppen bij
         const isBeheerder = beheerdersLijst.some(b => b.email && b.email.toLowerCase() === huidigeEmail.toLowerCase());
-        const adminBtn = document.getElementById('adminLoginBtn');
-        if (adminBtn) adminBtn.style.display = isBeheerder ? 'inline-block' : 'none';
+        if (typeof window.updateAdminButtonVisibility === "function") {
+            window.updateAdminButtonVisibility();
+        } else {
+            const adminBtn = document.getElementById('adminLoginBtn');
+            if (adminBtn) adminBtn.style.display = isBeheerder ? 'inline-block' : 'none';
+        }
+
+        // Standaard school synchroniseren vanuit de cloud als nog niet lokaal bekend
+        if (!localStorage.getItem('ww_standaard_school') && huidigeEmail && typeof window.getUserPreferenceFromCloud === "function") {
+            window.getUserPreferenceFromCloud(huidigeEmail).then(school => {
+                if (school) {
+                    localStorage.setItem('ww_standaard_school', school);
+                    if (typeof window.laadProfielPagina === "function") window.laadProfielPagina();
+                }
+            });
+        }
 
         const leerlijnBadge = document.getElementById('leerlijnAccountBadge');
         if (leerlijnBadge && huidigeEmail) {
@@ -1786,6 +1844,33 @@ window.updateSidebarUserProfile = function() {
         <div style="font-weight: 700; font-size: 13px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${huidigeNaam}">${huidigeNaam || 'Leerkracht'}</div>
         <div style="font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${huidigeEmail}">✉️ ${huidigeEmail || ''}</div>
     `;
+};
+
+// Universele zichtbaarheidscontrole voor de Admin knop (alleen voor geverifieerde beheerders)
+window.updateAdminButtonVisibility = function() {
+    const huidigeEmail = (localStorage.getItem('ww_huidige_email') || '').toLowerCase().trim();
+    const isBeheerder = beheerdersLijst.some(b => b.email && b.email.toLowerCase().trim() === huidigeEmail);
+
+    // Alle admin login knoppen op de huidige pagina
+    const adminButtons = document.querySelectorAll('#adminLoginBtn, .pill-btn.admin');
+    if (adminButtons.length > 0) {
+        adminButtons.forEach(btn => {
+            btn.style.display = isBeheerder ? 'inline-flex' : 'none';
+            btn.onclick = () => window.checkAdminPassword();
+        });
+    } else if (isBeheerder) {
+        // Indien op deze pagina nog geen knop staat, voeg hem direct toe in de top-actions of top-bar
+        const container = document.querySelector('.top-actions') || document.querySelector('.top-bar');
+        if (container) {
+            const btn = document.createElement('button');
+            btn.id = 'adminLoginBtn';
+            btn.className = 'pill-btn admin';
+            btn.innerHTML = '<span>⚙️</span> Admin';
+            btn.style.display = 'inline-flex';
+            btn.onclick = () => window.checkAdminPassword();
+            container.appendChild(btn);
+        }
+    }
 };
 
 // Global functies voor beheerdersmodus (zonder wachtwoord, Microsoft SSO geautoriseerd)
@@ -1924,10 +2009,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if(typeof window.updateAftelkalender === "function") window.updateAftelkalender();
 
     // Specifieke check voor profiel pagina
-    if(window.location.pathname.includes('profiel.html')) {
-        if(typeof laadProfielPagina === "function") laadProfielPagina();
+    if(window.location.pathname.includes('profiel.html') || document.getElementById('profielStandaardSchool')) {
+        if(typeof window.laadProfielPagina === "function") window.laadProfielPagina();
     }
 
+    // Logo linksboven universeel klikbaar maken naar dashboard op alle pagina's
+    document.querySelectorAll('.logo, .logo-img').forEach(el => {
+        el.style.cursor = 'pointer';
+        el.title = 'Terug naar Dashboard';
+        el.onclick = (e) => {
+            e.stopPropagation();
+            window.location.href = 'index.html';
+        };
+    });
+
+    if(typeof window.updateAdminButtonVisibility === "function") window.updateAdminButtonVisibility();
     if(typeof window.updateSidebarUserProfile === "function") window.updateSidebarUserProfile();
     if(typeof checkLeerkrachtLogin === "function") checkLeerkrachtLogin(); 
     if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();

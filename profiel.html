@@ -28,7 +28,7 @@
 
 <div class="dashboard-container" id="mainApp">
     <aside class="sidebar">
-        <div class="logo">
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;" title="Terug naar Dashboard">
             <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
         </div>
         <nav class="menu">
@@ -50,8 +50,8 @@
         <header class="top-bar">
             <h1>Mijn Profiel</h1>
             <div class="top-actions" style="display: flex; gap: 10px; align-items: center;">
-                <button id="adminLoginBtn" class="btn-role" onclick="checkAdminPassword()" style="display: none;">Admin ⚙️</button>
-                <button id="adminLogoutBtn" class="btn-role" onclick="logoutAdmin()" style="display: none;">Verlaat Admin</button>
+                <button id="adminLoginBtn" class="pill-btn admin" onclick="checkAdminPassword()" style="display: none;"><span>⚙️</span> Admin</button>
+                <button id="adminLogoutBtn" class="pill-btn admin" onclick="logoutAdmin()" style="display: none; background: #ef4444; color: white;">Verlaat Admin</button>
             </div>
         </header>
 
@@ -73,13 +73,13 @@
 
             <div class="form-group" style="margin-bottom: 20px;">
                 <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #334155;">Standaard Locatie / School:</label>
-                <select id="profielStandaardSchool" style="width: 100%; max-width: 400px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; font-family: inherit;">
+                <select id="profielStandaardSchool" style="width: 100%; max-width: 400px; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: white; font-family: inherit; font-size: 14px; font-weight: 600; color: #1e293b;">
                     <option value="">-- Kies je standaard school --</option>
                 </select>
-                <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Deze school wordt voortaan automatisch geselecteerd wanneer je een leskist reserveert.</p>
+                <p style="font-size: 12px; color: #64748b; margin-top: 6px;">Deze school wordt voortaan automatisch geselecteerd wanneer je een leskist reserveert.</p>
             </div>
 
-            <button onclick="window.slaProfielInstellingenOp()" class="btn-green-action" style="padding: 10px 20px; background: #8CC63F; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Instellingen opslaan</button>
+            <button onclick="window.slaProfielInstellingenOp()" class="btn-green-action" style="padding: 11px 22px; background: var(--ww-green, #8CC63F); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(140, 198, 63, 0.3);">💾 Instellingen opslaan</button>
         </div>
 
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -93,49 +93,108 @@
 
 <script>
     // Specifieke laadfunctie voor de profielpagina
-    function laadProfielPagina() {
+    window.laadProfielPagina = async function() {
         const naam = localStorage.getItem('ww_huidige_leerkracht') || "";
         const email = localStorage.getItem('ww_huidige_email') || "";
-        const opgeslagenSchool = localStorage.getItem('ww_standaard_school') || "";
+        let opgeslagenSchool = localStorage.getItem('ww_standaard_school') || "";
 
         if(document.getElementById('profielNaamInput')) document.getElementById('profielNaamInput').value = naam;
         if(document.getElementById('profielEmailInput')) document.getElementById('profielEmailInput').value = email;
 
-        // Vul locaties dropdown vanuit de globale scholen array (uit script.js)
+        // Als er nog geen lokale standaard school is, kijk of de cloud er een heeft
+        if (!opgeslagenSchool && email && typeof window.getUserPreferenceFromCloud === "function") {
+            try {
+                const cloudPref = await window.getUserPreferenceFromCloud(email);
+                if (cloudPref) {
+                    opgeslagenSchool = cloudPref;
+                    localStorage.setItem('ww_standaard_school', opgeslagenSchool);
+                }
+            } catch(e) {
+                console.warn("Fout bij ophalen cloud voorkeur:", e);
+            }
+        }
+
+        // Haal beschikbare scholen op (globaal of uit localStorage)
         const schoolSelect = document.getElementById('profielStandaardSchool');
-        if (schoolSelect && typeof scholen !== 'undefined') {
-            schoolSelect.innerHTML = '<option value="">-- Kies je standaard school --</option>';
-            scholen.forEach(s => {
-                let selected = (s.naam === opgeslagenSchool) ? 'selected' : '';
-                schoolSelect.innerHTML += `<option value="${s.naam}" ${selected}>${s.naam}</option>`;
+        if (schoolSelect) {
+            let bronScholen = [];
+            if (typeof scholen !== 'undefined' && Array.isArray(scholen) && scholen.length > 0) {
+                bronScholen = scholen;
+            } else {
+                try {
+                    bronScholen = JSON.parse(localStorage.getItem('ww_scholen_v1')) || [];
+                } catch(e) { bronScholen = []; }
+            }
+
+            // Bouw opties op
+            let optiesHtml = '<option value="">-- Kies je standaard school --</option>';
+            let matchGevonden = false;
+            bronScholen.forEach(s => {
+                const sNaam = typeof s === 'string' ? s : (s && s.naam ? s.naam : '');
+                if (sNaam) {
+                    const isSelected = (sNaam === opgeslagenSchool);
+                    if (isSelected) matchGevonden = true;
+                    optiesHtml += `<option value="${sNaam}" ${isSelected ? 'selected' : ''}>${sNaam}</option>`;
+                }
             });
+
+            // Als opgeslagenSchool nog niet in de lijst stond maar wel bestaat
+            if (opgeslagenSchool && !matchGevonden) {
+                optiesHtml += `<option value="${opgeslagenSchool}" selected>${opgeslagenSchool}</option>`;
+            }
+
+            schoolSelect.innerHTML = optiesHtml;
+            if (opgeslagenSchool) {
+                schoolSelect.value = opgeslagenSchool;
+            }
         }
 
         // Laad historie
-        laadProfielHistorie(email);
-    }
+        if (typeof window.laadProfielHistorie === 'function') {
+            window.laadProfielHistorie(email);
+        }
+    };
 
-    window.slaProfielInstellingenOp = function() {
-        const gekozenSchool = document.getElementById('profielStandaardSchool').value;
+    window.slaProfielInstellingenOp = async function() {
+        const schoolSelect = document.getElementById('profielStandaardSchool');
+        if(!schoolSelect) return;
+        const gekozenSchool = schoolSelect.value.trim();
         if(!gekozenSchool) {
             alert("⚠️ Kies een geldige standaard school.");
             return;
         }
-        localStorage.setItem('ww_standaard_school', gekozenSchool);
-        alert("✅ Je standaard locatie is succesvol opgeslagen! Deze wordt nu automatisch ingevuld bij reserveringen.");
-    }
 
-    function laadProfielHistorie(email) {
+        // Direct lokaal bewaren
+        localStorage.setItem('ww_standaard_school', gekozenSchool);
+
+        // Synchroon naar de cloud als beschikbaar
+        const email = localStorage.getItem('ww_huidige_email') || "";
+        if (email && typeof window.saveUserPreferenceToCloud === "function") {
+            try {
+                await window.saveUserPreferenceToCloud(email, gekozenSchool);
+            } catch(e) {
+                console.warn("Cloud save warning:", e);
+            }
+        }
+
+        alert("✅ Je standaard locatie (" + gekozenSchool + ") is succesvol opgeslagen! Deze wordt nu automatisch geselecteerd bij het reserveren van leskisten.");
+    };
+
+    window.laadProfielHistorie = function(email) {
         const historieContainer = document.getElementById('profielHistorieLijst');
         if(!historieContainer) return;
 
-        // Controleer of reserveringen variabele bestaat
-        if(typeof reserveringen === 'undefined') {
-            historieContainer.innerHTML = `<p style="color: #888; font-size: 13px;">Geen reserveringen gevonden.</p>`;
-            return;
+        let bronReserveringen = [];
+        if(typeof reserveringen !== 'undefined' && Array.isArray(reserveringen)) {
+            bronReserveringen = reserveringen;
+        } else {
+            try {
+                bronReserveringen = JSON.parse(localStorage.getItem('ww_reserveringen_v1')) || [];
+            } catch(e) { bronReserveringen = []; }
         }
 
-        const mijnReserveringen = reserveringen.filter(r => r.aanvragerEmail === email);
+        const emailLower = (email || '').toLowerCase().trim();
+        const mijnReserveringen = bronReserveringen.filter(r => (r.aanvragerEmail || '').toLowerCase().trim() === emailLower);
 
         if(mijnReserveringen.length === 0) {
             historieContainer.innerHTML = `<p style="color: #888; font-size: 13px;">Je hebt nog geen reserveringen gedaan.</p>`;
@@ -144,20 +203,24 @@
                 const periode = (typeof periodes !== 'undefined') ? periodes.find(p => p.id == r.periodeId) : null;
                 let statusColor = r.status === "Geaccepteerd" ? "#8CC63F" : (r.status === "Afgewezen" ? "#ef4444" : "#f59e0b");
                 return `
-                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${statusColor};">
+                <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${statusColor};">
                     <div>
                         <strong style="display: block; font-size: 14px; color: #1e293b;">${r.kist}</strong>
-                        <span style="font-size: 12px; color: #64748b;">Locatie: ${r.school || 'Nu'} | Periode: ${periode ? periode.naam : 'Onbekend'}</span>
+                        <span style="font-size: 12px; color: #64748b;">Locatie: ${r.school || 'Standaard'} | Periode: ${periode ? (periode.naam || periode.label || '') : (r.periode || 'N.v.t.')}</span>
                     </div>
                     <span style="background: ${statusColor}; color: white; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: bold;">${r.status}</span>
                 </div>`;
             }).join('');
         }
-    }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.laadProfielPagina();
+    });
 </script>
 
-<script src="auth-config.js?v=20261024f"></script>
-<script src="auth.js?v=20261024f"></script>
-<script src="script.js?v=20261024f"></script>
+<script src="auth-config.js?v=20261024i"></script>
+<script src="auth.js?v=20261024i"></script>
+<script src="script.js?v=20261024i"></script>
 </body>
 </html>

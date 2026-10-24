@@ -350,17 +350,46 @@
             justify-content: center;
         }
 
-        .leaf-front {
+        .book-flipping-leaf.flip-forward .leaf-front {
             z-index: 2;
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
         }
 
-        .leaf-back {
+        .book-flipping-leaf.flip-forward .leaf-back {
             z-index: 1;
             transform: rotateY(180deg);
             border-top-left-radius: 6px;
             border-bottom-left-radius: 6px;
+        }
+
+        .book-flipping-leaf.flip-forward .leaf-front .leaf-shadow {
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
+        }
+
+        .book-flipping-leaf.flip-forward .leaf-back .leaf-shadow {
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
+        }
+
+        .book-flipping-leaf.flip-backward .leaf-front {
+            z-index: 2;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .book-flipping-leaf.flip-backward .leaf-back {
+            z-index: 1;
+            transform: rotateY(180deg);
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .book-flipping-leaf.flip-backward .leaf-front .leaf-shadow {
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
+        }
+
+        .book-flipping-leaf.flip-backward .leaf-back .leaf-shadow {
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
         }
 
         .leaf-shadow {
@@ -372,14 +401,6 @@
             pointer-events: none;
             transition: opacity 0.1s linear;
             opacity: 0;
-        }
-
-        .leaf-front .leaf-shadow {
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
-        }
-
-        .leaf-back .leaf-shadow {
-            background: linear-gradient(to left, rgba(0, 0, 0, 0.38) 0%, rgba(0, 0, 0, 0.08) 50%, transparent 100%);
         }
 
         .pdf-page-canvas {
@@ -517,7 +538,7 @@
 <div class="dashboard-container" id="mainApp">
     
     <aside class="sidebar">
-        <div class="logo">
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;" title="Terug naar Dashboard">
             <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
         </div>
         <nav class="menu">
@@ -548,6 +569,7 @@
                 </p>
             </div>
             <div class="top-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button id="adminLoginBtn" class="pill-btn admin" onclick="checkAdminPassword()" style="display: none;"><span>⚙️</span> Admin</button>
                 <a href="handreiking-wonderwijs.pdf" download="Handreiking-Wonderwijs-Digitale-Geletterdheid.pdf" class="pill-btn primary" style="text-decoration: none;">
                     <span>📥</span> Download PDF
                 </a>
@@ -1161,18 +1183,22 @@
 
         if (prevP === 1) {
             // Terug naar Cover: pagina 2 slaat dicht naar rechts op pagina 1
-            await renderPageToCanvas(1, 'flipCanvasFront');
-            await renderPageToCanvas(2, 'flipCanvasBack');
+            await renderPageToCanvas(2, 'flipCanvasFront');
+            await renderPageToCanvas(1, 'flipCanvasBack');
 
             flippingLeaf.className = 'book-flipping-leaf flip-backward';
             flippingLeaf.style.transition = 'none';
-            flippingLeaf.style.transform = 'rotateY(-180deg)';
+            flippingLeaf.style.transform = 'rotateY(0deg)';
+            if (flipShadowFront) flipShadowFront.style.opacity = '0';
+            if (flipShadowBack) flipShadowBack.style.opacity = '0.35';
             flippingLeaf.style.display = 'block';
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     flippingLeaf.style.transition = 'transform 0.62s cubic-bezier(0.25, 1, 0.5, 1)';
-                    flippingLeaf.style.transform = 'rotateY(0deg)';
+                    flippingLeaf.style.transform = 'rotateY(180deg)';
+                    if (flipShadowFront) flipShadowFront.style.opacity = '0.4';
+                    if (flipShadowBack) flipShadowBack.style.opacity = '0';
                 });
             });
 
@@ -1192,21 +1218,26 @@
         let targetRightP = targetLeftP + 1;
         let currentTurningLeftP = currentLeftP;
 
-        // Omslaand blad:
-        await renderPageToCanvas(targetRightP, 'flipCanvasFront');
-        await renderPageToCanvas(currentTurningLeftP, 'flipCanvasBack');
-        // Onderliggend links rendert alvast targetLeftP
+        // Omslaand blad: voorkant is de pagina die van links oplicht (currentTurningLeftP)
+        // Achterkant is de pagina die op rechts landt (targetRightP)
+        await renderPageToCanvas(currentTurningLeftP, 'flipCanvasFront');
+        await renderPageToCanvas(targetRightP, 'flipCanvasBack');
+        // Onderliggend links rendert alvast targetLeftP (zichtbaar zodra het blad oplicht)
         await renderPageToCanvas(targetLeftP, 'pdfCanvasLeft');
 
         flippingLeaf.className = 'book-flipping-leaf flip-backward';
         flippingLeaf.style.transition = 'none';
-        flippingLeaf.style.transform = 'rotateY(-180deg)';
+        flippingLeaf.style.transform = 'rotateY(0deg)';
+        if (flipShadowFront) flipShadowFront.style.opacity = '0';
+        if (flipShadowBack) flipShadowBack.style.opacity = '0.35';
         flippingLeaf.style.display = 'block';
 
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 flippingLeaf.style.transition = 'transform 0.62s cubic-bezier(0.25, 1, 0.5, 1)';
-                flippingLeaf.style.transform = 'rotateY(0deg)';
+                flippingLeaf.style.transform = 'rotateY(180deg)';
+                if (flipShadowFront) flipShadowFront.style.opacity = '0.4';
+                if (flipShadowBack) flipShadowBack.style.opacity = '0';
             });
         });
 
@@ -1371,8 +1402,8 @@
     });
 </script>
 
-<script src="auth-config.js?v=20261024f"></script>
-<script src="auth.js?v=20261024f"></script>
-<script src="script.js?v=20261024f"></script>
+<script src="auth-config.js?v=20261024i"></script>
+<script src="auth.js?v=20261024i"></script>
+<script src="script.js?v=20261024i"></script>
 </body>
 </html>

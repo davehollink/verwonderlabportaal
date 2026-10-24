@@ -161,10 +161,13 @@ body::after {
     border: 1px solid rgba(255, 255, 255, 1);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     transition: transform 0.3s var(--spring-easing);
+    cursor: pointer;
+    user-select: none;
 }
 
 .logo:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(140, 198, 63, 0.15);
 }
 
 .logo-img {
