@@ -2302,17 +2302,17 @@ window.renderBeheerdersTabellen = function() {
                         }
 
                         statusHTML += `
-                        <div style="margin-top: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                            <div style="font-size: 12px; font-weight: bold; color: #334155; margin-bottom: 8px;">📋 Logboek / Status Kist</div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center;">
-                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.klaar ? '#8CC63F' : '#fff'}; color: ${r.klaar ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'klaar', this.checked)" ${r.klaar ? 'checked' : ''}>📦 Klaarzetten</label>
-                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.opgehaald ? '#8CC63F' : '#fff'}; color: ${r.opgehaald ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'opgehaald', this.checked)" ${r.opgehaald ? 'checked' : ''}>🤝 Opgehaald</label>
-                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.ingeleverd ? '#8CC63F' : '#fff'}; color: ${r.ingeleverd ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'ingeleverd', this.checked)" ${r.ingeleverd ? 'checked' : ''}>🔙 Ingeleverd</label>
-                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.compleet ? '#8CC63F' : '#fff'}; color: ${r.compleet ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'compleet', this.checked)" ${r.compleet ? 'checked' : ''}>✅ Compleet</label>
-                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.schade ? '#ef4444' : '#fff'}; color: ${r.schade ? '#fff' : '#333'}; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'schade', this.checked)" ${r.schade ? 'checked' : ''}>⚠️ Schade</label>
+                        <div class="res-logboek-box" style="margin-top: 12px; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">📋 Logboek / Status Kist</div>
+                            <div class="res-checklist-pills" style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; align-items: center;">
+                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.klaar ? '#8CC63F' : '#fff'}; color: ${r.klaar ? '#fff' : '#333'}; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'klaar', this.checked)" ${r.klaar ? 'checked' : ''}>📦 Klaarzetten</label>
+                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.opgehaald ? '#8CC63F' : '#fff'}; color: ${r.opgehaald ? '#fff' : '#333'}; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'opgehaald', this.checked)" ${r.opgehaald ? 'checked' : ''}>🤝 Opgehaald</label>
+                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.ingeleverd ? '#8CC63F' : '#fff'}; color: ${r.ingeleverd ? '#fff' : '#333'}; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'ingeleverd', this.checked)" ${r.ingeleverd ? 'checked' : ''}>🔙 Ingeleverd</label>
+                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.compleet ? '#8CC63F' : '#fff'}; color: ${r.compleet ? '#fff' : '#333'}; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'compleet', this.checked)" ${r.compleet ? 'checked' : ''}>✅ Compleet</label>
+                                <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: ${r.schade ? '#ef4444' : '#fff'}; color: ${r.schade ? '#fff' : '#333'}; padding: 4px 9px; border: 1px solid #cbd5e1; border-radius: 20px;"><input type="checkbox" style="display: none;" onchange="window.updateChecklist(${r.id}, 'schade', this.checked)" ${r.schade ? 'checked' : ''}>⚠️ Schade</label>
                                 ${feedbackBtnHTML}
                             </div>
-                            <input type="text" placeholder="✏️ Ruimte voor toelichting..." value="${r.toelichting || ''}" onchange="window.updateChecklist(${r.id}, 'toelichting', this.value)" style="width: 100%; padding: 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <input type="text" placeholder="✏️ Ruimte voor toelichting..." value="${r.toelichting || ''}" onchange="window.updateChecklist(${r.id}, 'toelichting', this.value)" style="width: 100%; box-sizing: border-box; padding: 8px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff;">
                         </div>`;
                     }
                 }
@@ -2321,10 +2321,10 @@ window.renderBeheerdersTabellen = function() {
                 
                 const docentNaam = r.leerkracht || "Onbekende leerkracht";
                 const docentEmail = r.aanvragerEmail 
-                    ? `<div style="font-size: 12px; color: #64748b; margin-top: 3px;"><a href="mailto:${r.aanvragerEmail}" style="color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">✉️ ${r.aanvragerEmail}</a></div>` 
+                    ? `<div style="font-size: 12px; color: #64748b; margin-top: 3px;"><a href="mailto:${r.aanvragerEmail}" style="color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; word-break: break-all;">✉️ ${r.aanvragerEmail}</a></div>` 
                     : `<div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">(Geen e-mailadres)</div>`;
                 const schoolBadge = r.school 
-                    ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 500;">🏫 ${r.school}</div>` 
+                    ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 600;">🏫 ${r.school}</div>` 
                     : '';
                 
                 let leerkrachtWeergave = `
@@ -2336,12 +2336,27 @@ window.renderBeheerdersTabellen = function() {
                 `;
                 
                 return `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="vertical-align: top; padding: 15px;"><strong>${r.kist}</strong></td>
-                    <td style="vertical-align: top; padding: 15px;">${leerkrachtWeergave}</td>
-                    <td style="vertical-align: top; padding: 15px;">${periodeNaam}</td>
-                    <td style="vertical-align: top; padding: 15px;">${statusHTML}</td>
-                    <td style="vertical-align: top; padding: 15px; text-align: center;">${actieMenuHTML}</td>
+                <tr class="res-row-card" style="border-bottom: 1px solid #eee;">
+                    <td class="res-col-kist" style="vertical-align: top; padding: 14px 16px;">
+                        <span class="mobile-col-label">Leskist</span>
+                        <strong style="font-size: 14px; color: #0f172a;">${r.kist}</strong>
+                    </td>
+                    <td class="res-col-leerkracht" style="vertical-align: top; padding: 14px 16px;">
+                        <span class="mobile-col-label">Leerkracht &amp; Locatie</span>
+                        ${leerkrachtWeergave}
+                    </td>
+                    <td class="res-col-periode" style="vertical-align: top; padding: 14px 16px;">
+                        <span class="mobile-col-label">Uitleenperiode</span>
+                        <div style="font-size: 13px; color: #334155; font-weight: 500;">📅 ${periodeNaam}</div>
+                    </td>
+                    <td class="res-col-status" style="vertical-align: top; padding: 14px 16px;">
+                        <span class="mobile-col-label">Status &amp; Logboek</span>
+                        ${statusHTML}
+                    </td>
+                    <td class="res-col-actie" style="vertical-align: top; padding: 14px 16px; text-align: center;">
+                        <span class="mobile-col-label">Beheer</span>
+                        ${actieMenuHTML}
+                    </td>
                 </tr>`;
             }).join('');
         }
