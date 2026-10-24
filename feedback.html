@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Feedback & Ervaringen</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261024b">
+    <link rel="stylesheet" href="style.css?v=20261024d">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -28,16 +28,79 @@
 
         .feedback-container {
             width: 100%;
-            max-width: 780px;
-            background: rgba(255, 255, 255, 0.88);
+            max-width: 1240px;
+            background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1.5px solid var(--glass-border);
             border-radius: 28px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
-            padding: 40px;
+            padding: 40px 48px;
             box-sizing: border-box;
             animation: fadeIn 0.4s ease;
+            margin: 20px auto;
+        }
+
+        .feedback-columns-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .feedback-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .feedback-back-link {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--slate-600);
+            text-decoration: none;
+            background: rgba(241, 245, 249, 0.85);
+            padding: 8px 16px;
+            border-radius: 9999px;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s ease;
+        }
+
+        .feedback-back-link:hover {
+            color: var(--slate-900);
+            border-color: var(--ww-green);
+            background: #ffffff;
+            transform: translateX(-2px);
+        }
+
+        .submit-action-card {
+            background: linear-gradient(135deg, rgba(240, 253, 244, 0.8) 0%, rgba(236, 253, 245, 0.8) 100%);
+            border: 1.5px solid #bbf7d0;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(140, 198, 63, 0.08);
+        }
+
+        @media (max-width: 980px) {
+            .feedback-columns-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .feedback-container {
+                padding: 28px 20px;
+                border-radius: 20px;
+            }
+            .feedback-back-link {
+                position: static;
+                margin-bottom: 16px;
+                display: inline-flex;
+            }
         }
 
         @keyframes fadeIn {
@@ -410,6 +473,7 @@
 <div class="feedback-container">
     <div id="feedbackFormView">
         <div class="feedback-header">
+            <a href="index.html" class="feedback-back-link">← Terug naar Dashboard</a>
             <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="feedback-logo">
             <br>
             <span class="feedback-badge">✨ Verwonderlab Ervaringen • Stichting Wonderwijs</span>
@@ -436,160 +500,173 @@
         </div>
 
         <form id="feedbackMainForm">
-            <!-- VRAAG 1: STERREN RATING -->
-            <div class="section-box" id="secSterrenContainer">
-                <h3 id="secSterrenTitel">⭐ 1. Algemene beoordeling</h3>
-                <p class="section-desc" id="secSterrenDesc">Hoe beoordeel je deze leskist over het geheel genomen?</p>
-                
-                <div class="star-rating-row">
-                    <button type="button" class="star-btn" data-val="1">★</button>
-                    <button type="button" class="star-btn" data-val="2">★</button>
-                    <button type="button" class="star-btn" data-val="3">★</button>
-                    <button type="button" class="star-btn" data-val="4">★</button>
-                    <button type="button" class="star-btn" data-val="5">★</button>
-                    <span id="starRatingLabel" class="star-label-text">Selecteer een score</span>
+            <div class="feedback-columns-layout">
+                <!-- LINKER KOLOM: BEOORDELING, ENTHOUSIASME, ERVARINGEN, EXTRA VRAGEN -->
+                <div class="feedback-col">
+                    <!-- VRAAG 1: STERREN RATING -->
+                    <div class="section-box" id="secSterrenContainer">
+                        <h3 id="secSterrenTitel">⭐ 1. Algemene beoordeling</h3>
+                        <p class="section-desc" id="secSterrenDesc">Hoe beoordeel je deze leskist over het geheel genomen?</p>
+                        
+                        <div class="star-rating-row">
+                            <button type="button" class="star-btn" data-val="1">★</button>
+                            <button type="button" class="star-btn" data-val="2">★</button>
+                            <button type="button" class="star-btn" data-val="3">★</button>
+                            <button type="button" class="star-btn" data-val="4">★</button>
+                            <button type="button" class="star-btn" data-val="5">★</button>
+                            <span id="starRatingLabel" class="star-label-text">Selecteer een score</span>
+                        </div>
+                        <input type="hidden" id="sterrenInput" name="sterren" value="5" required>
+                    </div>
+
+                    <!-- VRAAG 2: ERVARING IN DE KLAS -->
+                    <div class="section-box" id="secEnthousiasmeContainer">
+                        <h3 id="secEnthousiasmeTitel">👥 2. Ervaring & enthousiasme in de klas</h3>
+                        <p class="section-desc" id="secEnthousiasmeDesc">Hoe hebben de leerlingen het werken met dit materiaal ervaren?</p>
+
+                        <div class="choice-pills-grid" id="enthousiasmeGroup">
+                            <label class="choice-pill-label selected" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                                <input type="radio" name="enthousiasme" value="Zeer enthousiast" checked>
+                                <span>🤩 Zeer enthousiast!</span>
+                            </label>
+                            <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                                <input type="radio" name="enthousiasme" value="Positief & betrokken">
+                                <span>🙂 Positief & betrokken</span>
+                            </label>
+                            <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                                <input type="radio" name="enthousiasme" value="Wisselende reacties">
+                                <span>😐 Wisselende reacties</span>
+                            </label>
+                            <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                                <input type="radio" name="enthousiasme" value="Moeite met motiveren">
+                                <span>😕 Moeite met motiveren</span>
+                            </label>
+                        </div>
+
+                        <div id="compleetheidContainer" style="margin-top: 16px;">
+                            <label id="compleetheidLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                                Kwaliteit & compleetheid van de kist:
+                            </label>
+                            <div class="choice-pills-grid" id="compleetheidGroup">
+                                <label class="choice-pill-label selected" onclick="window.selectPill(this, 'compleetheidGroup')">
+                                    <input type="radio" name="compleetStatus" value="Helemaal compleet en klaar" checked>
+                                    <span>✅ Helemaal compleet & gebruiksklaar</span>
+                                </label>
+                                <label class="choice-pill-label" onclick="window.selectPill(this, 'compleetheidGroup')">
+                                    <input type="radio" name="compleetStatus" value="Onderdeel ontbrak">
+                                    <span>⚠️ Er ontbrak een klein onderdeel</span>
+                                </label>
+                                <label class="choice-pill-label" onclick="window.selectPill(this, 'compleetheidGroup')">
+                                    <input type="radio" name="compleetStatus" value="Storing / defect">
+                                    <span>🔧 Technisch mankement ervaren</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="toelichtingContainer" style="margin-top: 18px;">
+                            <label id="toelichtingLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                                Toelichting of ervaringen uit de les:
+                            </label>
+                            <textarea id="toelichtingInput" class="form-control-text" rows="3" placeholder="Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht wellicht helpen?"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- CONTAINER VOOR DYNAMISCHE AANVULLENDE VRAGEN -->
+                    <div id="extraVragenContainer"></div>
                 </div>
-                <input type="hidden" id="sterrenInput" name="sterren" value="5" required>
-            </div>
 
-            <!-- VRAAG 2: ERVARING IN DE KLAS -->
-            <div class="section-box" id="secEnthousiasmeContainer">
-                <h3 id="secEnthousiasmeTitel">👥 2. Ervaring & enthousiasme in de klas</h3>
-                <p class="section-desc" id="secEnthousiasmeDesc">Hoe hebben de leerlingen het werken met dit materiaal ervaren?</p>
+                <!-- RECHTER KOLOM: DIGITALE GELETTERDHEID, FOTO'S & ACTIEKNOP -->
+                <div class="feedback-col">
+                    <!-- VRAAG 3: DIGITALE GELETTERDHEID (SLO DOELEN) -->
+                    <div class="section-box" id="secDgContainer">
+                        <h3 id="secDgTitel">🎯 3. Doelen Digitale Geletterdheid (DG)</h3>
+                        <p class="section-desc" id="secDgDesc">Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?</p>
 
-                <div class="choice-pills-grid" id="enthousiasmeGroup">
-                    <label class="choice-pill-label selected" onclick="window.selectPill(this, 'enthousiasmeGroup')">
-                        <input type="radio" name="enthousiasme" value="Zeer enthousiast" checked>
-                        <span>🤩 Zeer enthousiast!</span>
-                    </label>
-                    <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
-                        <input type="radio" name="enthousiasme" value="Positief & betrokken">
-                        <span>🙂 Positief & betrokken</span>
-                    </label>
-                    <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
-                        <input type="radio" name="enthousiasme" value="Wisselende reacties">
-                        <span>😐 Wisselende reacties</span>
-                    </label>
-                    <label class="choice-pill-label" onclick="window.selectPill(this, 'enthousiasmeGroup')">
-                        <input type="radio" name="enthousiasme" value="Moeite met motiveren">
-                        <span>😕 Moeite met motiveren</span>
-                    </label>
-                </div>
+                        <div class="dg-domains-grid" id="dgDomainsContainer">
+                            <label class="dg-domain-card selected" onclick="window.toggleDgCard(this)">
+                                <input type="checkbox" name="dgDomeinen" value="Computational Thinking & Programmeren" checked>
+                                <div>
+                                    <div class="dg-title">🧠 Computational Thinking</div>
+                                    <div class="dg-desc">Algoritmes, probleemoplossend denken, logica, debuggen en robots programmeren.</div>
+                                </div>
+                            </label>
 
-                <div id="compleetheidContainer" style="margin-top: 16px;">
-                    <label id="compleetheidLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
-                        Kwaliteit & compleetheid van de kist:
-                    </label>
-                    <div class="choice-pills-grid" id="compleetheidGroup">
-                        <label class="choice-pill-label selected" onclick="window.selectPill(this, 'compleetheidGroup')">
-                            <input type="radio" name="compleetStatus" value="Helemaal compleet en klaar" checked>
-                            <span>✅ Helemaal compleet & gebruiksklaar</span>
-                        </label>
-                        <label class="choice-pill-label" onclick="window.selectPill(this, 'compleetheidGroup')">
-                            <input type="radio" name="compleetStatus" value="Onderdeel ontbrak">
-                            <span>⚠️ Er ontbrak een klein onderdeel</span>
-                        </label>
-                        <label class="choice-pill-label" onclick="window.selectPill(this, 'compleetheidGroup')">
-                            <input type="radio" name="compleetStatus" value="Storing / defect">
-                            <span>🔧 Technisch mankement ervaren</span>
-                        </label>
+                            <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
+                                <input type="checkbox" name="dgDomeinen" value="ICT-basisvaardigheden">
+                                <div>
+                                    <div class="dg-title">💻 ICT-basisvaardigheden</div>
+                                    <div class="dg-desc">Hardware en sensoren bedienen, iPads/laptops, opslag en softwarefuncties verkennen.</div>
+                                </div>
+                            </label>
+
+                            <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
+                                <input type="checkbox" name="dgDomeinen" value="Mediawijsheid & Maatschappij">
+                                <div>
+                                    <div class="dg-title">🌐 Mediawijsheid</div>
+                                    <div class="dg-desc">Online veiligheid, privacy, samenwerken, omgangsvormen en media-creatie (bijv. podcast/video).</div>
+                                </div>
+                            </label>
+
+                            <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
+                                <input type="checkbox" name="dgDomeinen" value="Digitale Informatievaardigheden">
+                                <div>
+                                    <div class="dg-title">🔍 Informatievaardigheden</div>
+                                    <div class="dg-desc">Gericht zoeken, informatie selecteren, presenteren en de betrouwbaarheid van bronnen beoordelen.</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div id="dgOpdrachtContainer" style="margin-top: 14px;">
+                            <label id="dgOpdrachtLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                                Specifieke lesopdracht of kerndoel (optioneel):
+                            </label>
+                            <input type="text" id="specifiekeOpdrachtInput" class="form-control-text" placeholder="Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt">
+                        </div>
+                    </div>
+
+                    <!-- VRAAG 4: FOTO'S & MEDIA VAN HET PROJECT -->
+                    <div class="section-box" id="secFotosContainer">
+                        <h3 id="secFotosTitel">📸 4. Foto's & Resultaten delen (Optioneel)</h3>
+                        <p class="section-desc" id="secFotosDesc">
+                            Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat. 
+                            <br><span id="secFotosAvg" style="font-size: 11.5px; color: var(--slate-500); font-style: italic;">* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school.</span>
+                        </p>
+
+                        <div class="foto-upload-dropzone" onclick="document.getElementById('feedbackFotoUploadInput').click()">
+                            <div style="font-size: 32px; margin-bottom: 6px;">📷</div>
+                            <strong style="color: var(--slate-900); font-size: 14px;">Klik hier om foto's toe te voegen</strong>
+                            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--slate-500);">Kies foto's vanaf je computer, tablet of direct via je camera</p>
+                            <input type="file" id="feedbackFotoUploadInput" accept="image/*" multiple style="display: none;" onchange="window.handleFotoUpload(event)">
+                        </div>
+
+                        <div id="fotoPreviewsContainer" class="foto-previews-grid"></div>
+
+                        <div id="onedriveContainer" style="margin-top: 18px;">
+                            <label id="onedriveLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                                Of deel een link naar jullie school SharePoint / OneDrive foto-map:
+                            </label>
+                            <input type="url" id="onedriveLinkInput" class="form-control-text" placeholder="https://wonderwijs-my.sharepoint.com/...">
+                        </div>
+
+                        <div id="quoteContainer" style="margin-top: 16px;">
+                            <label id="quoteLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                                Quote van een leerling of gouden tip (optioneel):
+                            </label>
+                            <input type="text" id="quoteInput" class="form-control-text" placeholder="Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'">
+                        </div>
+                    </div>
+
+                    <!-- VERZEND ACTIEKAART -->
+                    <div class="submit-action-card">
+                        <button type="submit" id="btnSubmitFeedback" class="btn-submit-feedback" style="margin-top: 0;">
+                            <span>🚀</span> Verstuur Feedback naar het Verwonderlab
+                        </button>
+                        <div style="text-align: center; font-size: 12px; color: var(--slate-500); margin-top: 12px;">
+                            🔒 Veilig opgeslagen in de centrale Wonderwijs Verwonderlab cloud
+                        </div>
                     </div>
                 </div>
-
-                <div id="toelichtingContainer" style="margin-top: 18px;">
-                    <label id="toelichtingLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
-                        Toelichting of ervaringen uit de les:
-                    </label>
-                    <textarea id="toelichtingInput" class="form-control-text" rows="3" placeholder="Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht wellicht helpen?"></textarea>
-                </div>
             </div>
-
-            <!-- VRAAG 3: DIGITALE GELETTERDHEID (SLO DOELEN) -->
-            <div class="section-box" id="secDgContainer">
-                <h3 id="secDgTitel">🎯 3. Doelen Digitale Geletterdheid (DG)</h3>
-                <p class="section-desc" id="secDgDesc">Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?</p>
-
-                <div class="dg-domains-grid" id="dgDomainsContainer">
-                    <label class="dg-domain-card selected" onclick="window.toggleDgCard(this)">
-                        <input type="checkbox" name="dgDomeinen" value="Computational Thinking & Programmeren" checked>
-                        <div>
-                            <div class="dg-title">🧠 Computational Thinking</div>
-                            <div class="dg-desc">Algoritmes, probleemoplossend denken, logica, debuggen en robots programmeren.</div>
-                        </div>
-                    </label>
-
-                    <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
-                        <input type="checkbox" name="dgDomeinen" value="ICT-basisvaardigheden">
-                        <div>
-                            <div class="dg-title">💻 ICT-basisvaardigheden</div>
-                            <div class="dg-desc">Hardware en sensoren bedienen, iPads/laptops, opslag en softwarefuncties verkennen.</div>
-                        </div>
-                    </label>
-
-                    <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
-                        <input type="checkbox" name="dgDomeinen" value="Mediawijsheid & Maatschappij">
-                        <div>
-                            <div class="dg-title">🌐 Mediawijsheid</div>
-                            <div class="dg-desc">Online veiligheid, privacy, samenwerken, omgangsvormen en media-creatie (bijv. podcast/video).</div>
-                        </div>
-                    </label>
-
-                    <label class="dg-domain-card" onclick="window.toggleDgCard(this)">
-                        <input type="checkbox" name="dgDomeinen" value="Digitale Informatievaardigheden">
-                        <div>
-                            <div class="dg-title">🔍 Informatievaardigheden</div>
-                            <div class="dg-desc">Gericht zoeken, informatie selecteren, presenteren en de betrouwbaarheid van bronnen beoordelen.</div>
-                        </div>
-                    </label>
-                </div>
-
-                <div id="dgOpdrachtContainer" style="margin-top: 14px;">
-                    <label id="dgOpdrachtLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
-                        Specifieke lesopdracht of kerndoel (optioneel):
-                    </label>
-                    <input type="text" id="specifiekeOpdrachtInput" class="form-control-text" placeholder="Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt">
-                </div>
-            </div>
-
-            <!-- VRAAG 4: FOTO'S & MEDIA VAN HET PROJECT -->
-            <div class="section-box" id="secFotosContainer">
-                <h3 id="secFotosTitel">📸 4. Foto's & Resultaten delen (Optioneel)</h3>
-                <p class="section-desc" id="secFotosDesc">
-                    Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat. 
-                    <br><span id="secFotosAvg" style="font-size: 11.5px; color: var(--slate-500); font-style: italic;">* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school.</span>
-                </p>
-
-                <div class="foto-upload-dropzone" onclick="document.getElementById('feedbackFotoUploadInput').click()">
-                    <div style="font-size: 32px; margin-bottom: 6px;">📷</div>
-                    <strong style="color: var(--slate-900); font-size: 14px;">Klik hier om foto's toe te voegen</strong>
-                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--slate-500);">Kies foto's vanaf je computer, tablet of direct via je camera</p>
-                    <input type="file" id="feedbackFotoUploadInput" accept="image/*" multiple style="display: none;" onchange="window.handleFotoUpload(event)">
-                </div>
-
-                <div id="fotoPreviewsContainer" class="foto-previews-grid"></div>
-
-                <div id="onedriveContainer" style="margin-top: 18px;">
-                    <label id="onedriveLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
-                        Of deel een link naar jullie school SharePoint / OneDrive foto-map:
-                    </label>
-                    <input type="url" id="onedriveLinkInput" class="form-control-text" placeholder="https://wonderwijs-my.sharepoint.com/...">
-                </div>
-
-                <div id="quoteContainer" style="margin-top: 16px;">
-                    <label id="quoteLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
-                        Quote van een leerling of gouden tip (optioneel):
-                    </label>
-                    <input type="text" id="quoteInput" class="form-control-text" placeholder="Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'">
-                </div>
-            </div>
-
-            <!-- CONTAINER VOOR DYNAMISCHE AANVULLENDE VRAGEN -->
-            <div id="extraVragenContainer"></div>
-
-            <!-- VERZENDEN -->
-            <button type="submit" id="btnSubmitFeedback" class="btn-submit-feedback">
-                <span>🚀</span> Verstuur Feedback naar het Verwonderlab
-            </button>
         </form>
     </div>
 

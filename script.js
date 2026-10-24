@@ -103,6 +103,450 @@ window.getAfbeeldingVoorKist = function(naam) {
     return 'Verwonderlab.jpg';
 };
 
+window.vindKistVoorIdee = function(idee) {
+    if (!idee) return { id: '', naam: 'Verwonderlab Leskist' };
+
+    // 1. Directe kistId koppeling als die geldig is
+    if (idee.kistId && typeof leskisten !== 'undefined' && leskisten.length > 0) {
+        const direct = leskisten.find(k => k.id == idee.kistId);
+        if (direct) return direct;
+    }
+
+    const tekst = ((idee.titel || '') + ' ' + (idee.beschrijving || '') + ' ' + (idee.kistNaam || '')).toLowerCase();
+
+    // 2. Slimme patroonherkenning op basis van onderwerp
+    if (typeof leskisten !== 'undefined' && leskisten.length > 0) {
+        const patronen = [
+            { sleutel: ['green screen', 'greenscreen', 'journaal', 'weerbericht', 'studio', 'film'], kistTerm: 'green screen' },
+            { sleutel: ['3d pen', '3dpennen', 'filament', 'brug', 'bruggen'], kistTerm: '3d pen' },
+            { sleutel: ['3d printer', '3d print', '3dprinter'], kistTerm: '3d print' },
+            { sleutel: ['bee-bot', 'beebot', 'bijtje', 'schat', 'boerderij'], kistTerm: 'bee-bot' },
+            { sleutel: ['blue-bot', 'bluebot'], kistTerm: 'blue-bot' },
+            { sleutel: ['dash', 'dot', 'dans', 'dance', 'choreografie'], kistTerm: 'dash' },
+            { sleutel: ['makey makey', 'makey', 'fruit', 'stroomkring', 'geleiding'], kistTerm: 'makey' },
+            { sleutel: ['micro:bit', 'microbit', 'stappen', 'teller', 'alarm'], kistTerm: 'micro:bit' },
+            { sleutel: ['spike essential', 'lego essential', 'kermis', 'reuzenrad'], kistTerm: 'spike essential' },
+            { sleutel: ['spike prime', 'lego spike', 'afval', 'sorteerder', 'sorteer'], kistTerm: 'spike prime' },
+            { sleutel: ['podcast', 'radio', 'interview', 'microfoon', 'luister'], kistTerm: 'podcast' },
+            { sleutel: ['piximakey', 'stop-motion', 'animatie', 'klei', 'filmpje'], kistTerm: 'piximakey' },
+            { sleutel: ['ozobot', 'doolhof', 'kleurcode'], kistTerm: 'ozobot' },
+            { sleutel: ['classvr', 'vr bril', 'expeditie', 'virtual reality', 'vr'], kistTerm: 'vr' },
+            { sleutel: ['infento pro'], kistTerm: 'infento pro' },
+            { sleutel: ['infento'], kistTerm: 'infento' },
+            { sleutel: ['intelino'], kistTerm: 'intelino' },
+            { sleutel: ['sphero'], kistTerm: 'sphero' },
+            { sleutel: ['mtiny'], kistTerm: 'mtiny' },
+            { sleutel: ['cue'], kistTerm: 'cue' },
+            { sleutel: ['drone'], kistTerm: 'drone' },
+            { sleutel: ['duplo'], kistTerm: 'duplo' },
+            { sleutel: ['microscoop', 'easiscope'], kistTerm: 'microscoop' }
+        ];
+
+        for (const p of patronen) {
+            if (p.sleutel.some(s => tekst.includes(s))) {
+                const kistMatch = leskisten.find(k => k.naam && k.naam.toLowerCase().includes(p.kistTerm));
+                if (kistMatch) return kistMatch;
+            }
+        }
+
+        // Match op basis van canonieke kistNaam als die niet per ongeluk "3d pennen" is voor een ander onderwerp
+        if (idee.kistNaam && !(idee.kistNaam.toLowerCase().includes('3d') && (tekst.includes('green screen') || tekst.includes('dash') || tekst.includes('bee-bot')))) {
+            const kn = idee.kistNaam.toLowerCase();
+            const matchKist = leskisten.find(k => k.naam && (k.naam.toLowerCase() === kn || k.naam.toLowerCase().includes(kn) || kn.includes(k.naam.toLowerCase())));
+            if (matchKist) return matchKist;
+        }
+
+        // Match op basis van de titel van het lesidee
+        if (idee.titel) {
+            const it = idee.titel.toLowerCase();
+            const matchTitel = leskisten.find(k => k.naam && (it.includes(k.naam.toLowerCase()) || k.naam.toLowerCase().includes(it.split(':')[0])));
+            if (matchTitel) return matchTitel;
+        }
+    }
+
+    // Veilige fallback: detecteer de echte naam. NOOIT blind leskisten[0] pakken!
+    const veiligeNaam = window.detecteerKistNaam(idee.titel, idee.beschrijving);
+    return { id: '', naam: veiligeNaam };
+};
+
+window.getTemplateLesbriefVoorKist = function(kistNaam, idee) {
+    const tekst = ((kistNaam || '') + ' ' + (idee ? ((idee.titel || '') + ' ' + (idee.beschrijving || '')) : '')).toLowerCase();
+
+    // 1. GREEN SCREEN STUDIO
+    if (tekst.includes('green screen') || tekst.includes('greenscreen') || tekst.includes('journaal') || tekst.includes('weerbericht')) {
+        return {
+            tijd: "75 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "35 min", afsluiting: "15 min" },
+            organisatie: "Studioteams van 4: Presentator, Cameraman, Regisseur/Script, Geluid/Props",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23a Creëren met technologie",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken' (camera, microfoon, chroma-key en digitale achtergronden).",
+                    "Kerndoel 1: Praktische vaardigheden (22b) 'Digitale media en info': Begrijpen hoe media worden geproduceerd, hoe framing werkt en dat beeldmateriaal digitaal gemanipuleerd kan worden.",
+                    "Kerndoel 3: De gedigitaliseerde wereld (24b) 'Jezelf en de ander': Respectvol samenwerken in een mediateam en presentatievaardigheden ontwikkelen."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Uitleggen hoe een groen scherm (chroma-keying) werkt. 2. Een beknopt videoscript schrijven en presenteren voor de camera. 3. Verschillende digitale tools (camera, microfoon, achtergronden) combineren tot één video-uitzending."
+            },
+            kistMateriaal: "Groot groen chroma-key scherm met uitschuifbaar statief, iPad-statief met stevige klem, externe richtmicrofoon met verlengkabel, 2 LED studiolampen met diffusers",
+            klasMateriaal: "iPads of tablets met app (bijv. Green Screen by Do Ink of iMovie), verkleedkleren of decor-attributen, digibord voor vertoning",
+            voorbereiding: "Span het groene doek kreukvrij op tegen een egale muur en zorg voor gelijkmatige verlichting zonder harde slagschaduwen.",
+            inleiding: "Toon een fragment van het echte Jeugdjournaal en direct daarna 'behind the scenes' beelden met het groene doek. Leg het principe van chroma-keying uit: de computer vervangt de specifieke groene kleur door een foto of video.",
+            kern: "1. Format & Script: Teams schrijven een strak draaiboek van max. 60 seconden.<br>2. Achtergronden: Zoek een dynamische weerkaart of nieuwsomgeving.<br>3. Kledingcheck: Géén groene kleding aan!<br>4. Opname & Mix: Neem de uitzending live op met Do Ink.",
+            afsluiting: "Klassikale première op het digibord en reflectie op framing en nepnieuws in de media.",
+            differentiatie: {
+                uitdaging: "Voeg 'Picture-in-Picture' toe met een live schakeling naar een verslaggever ter plaatse.",
+                ondersteuning: "Gebruik een voorgedrukt invul-script met vaste zinnen en pictogrammen."
+            }
+        };
+    }
+
+    // 2. 3D PENNEN
+    if (tekst.includes('3d pen') || tekst.includes('3dpennen') || tekst.includes('filament') || tekst.includes('brug')) {
+        return {
+            tijd: "60 minuten",
+            tijdsopbouw: { voorbereiding: "5 min", inleiding: "10 min", kern: "35 min", afsluiting: "15 min" },
+            organisatie: "Duo's per 3D pen en hittebestendige tekenmat",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23a Creëren met technologie",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken' (2D blauwdrukken, hittebestendige mallen en vloeibaar polymeer).",
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen': Begrijpen hoe additive manufacturing (laag-voor-laag 3D-modelleren) werkt.",
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Ruimtelijke constructielogica': Driehoeksverbindingen vs. vierkante dragers toepassen."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Veilig werken met een 3D pen en PLA bioplastic. 2. Een dragend vakwerk ontwerpen met driehoeksconstructies. 3. Losse 2D-componenten in de ruimte aan elkaar lassen tot een stevig 3D-bouwwerk."
+            },
+            kistMateriaal: "Set van 12 ergonomische 3D pennen, veilige laagvoltage voedingen/kabels, siliconen hittebestendige tekenmatten met rasters, siliconen vingerbeschermers, nozzle-reinigers, ontwerpsjablonen",
+            klasMateriaal: "PLA bioplastic filament (diverse kleuren), scharen, testgewichten of waterflesjes voor de sterktemeting, houten steunblokken",
+            voorbereiding: "Sluit adapters aan op veilige stekkerdozen en leg de matjes klaar. Zorg voor goede ventilatie in het lokaal.",
+            inleiding: "Veiligheidsinstructie: penpunt wordt 190°C, nooit aanraken! Demonstreer hoe je in 2D tekent en balkjes omhoog in de lucht trekt.",
+            kern: "1. Blauwdruk: Schets een dragend vakwerk op papier met driehoeken.<br>2. 2D Zijkanten: Teken de zijkanten op het matje.<br>3. 3D Lassen: Zet ze rechtop en verbind ze met dwarse stutbalken.<br>4. Sterktetest: Meet hoeveel gewicht de brug kan dragen.",
+            afsluiting: "Klassikale draagkrachtmeting tussen twee tafels. Bespreek waarom driehoeken constructief sterker zijn dan vierkanten.",
+            differentiatie: {
+                uitdaging: "Ontwerp een beweegbare ophaalbrug of een boogbrugconstructie.",
+                ondersteuning: "Gebruik transparant bakpapier over voorgedrukte sjablonen."
+            }
+        };
+    }
+
+    // 3. BEE-BOT
+    if (tekst.includes('bee-bot') || tekst.includes('beebot') || tekst.includes('bijtje')) {
+        return {
+            tijd: "45 minuten",
+            tijdsopbouw: { voorbereiding: "5 min", inleiding: "10 min", kern: "25 min", afsluiting: "10 min" },
+            organisatie: "Groepjes van 3 à 4 kleuters rondom een vloermat",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23b Programmeren",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: ontdekt stappenplan en algoritme; zet stappen in volgorde en herstelt fouten'.",
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: hardwareknoppen bedienen, instructies invoeren en geheugen wissen'.",
+                    "Kerndoel 1: Praktische vaardigheden (22c) 'Data: pictogrammen en symbolen koppelen aan fysieke acties'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Een stappenplan bedenken van punt A naar B. 2. Ruimtelijke begrippen (vooruit, links, rechts, achteruit) toepassen. 3. Begrijpen dat de robot eerst gewist moet worden ('X') voor een nieuwe route."
+            },
+            kistMateriaal: "6 gele Bee-Bot robots, laadstation met adapter, boerderij vloermat, schatkaart vloermat, fysieke richtingspijlen",
+            klasMateriaal: "Houten blokken (als hekjes/obstakels), speelgoeddiertjes, schatkistjes/fiches",
+            voorbereiding: "Laad de Bee-Bots vooraf op en leg de themamatten vlak op de grond of tafels.",
+            inleiding: "Introduceer Bee-Bot in de kring. Laat kinderen zelf 'robot' spelen en commando's uitvoeren.",
+            kern: "1. Plaats een schat en een obstakel.<br>2. Leg eerst de fysieke pijlenkaarten op een rij.<br>3. Tel de stappen hardop.<br>4. Voer de code in op Bee-Bot en druk op GO.<br>5. Foutje? Samen debuggen met het kruisje 'X'!",
+            afsluiting: "Kringgesprek over computergeheugen en het belang van 'wissen' voor elke nieuwe start.",
+            differentiatie: {
+                uitdaging: "Programmeer een geheime route voor een ander groepje.",
+                ondersteuning: "Loop de route eerst met een speelfiguurtje stap voor stap over de mat."
+            }
+        };
+    }
+
+    // 4. DASH & DOT ROBOT
+    if (tekst.includes('dash') || tekst.includes('dot') || tekst.includes('robot dance')) {
+        return {
+            tijd: "60 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "30 min", afsluiting: "15 min" },
+            organisatie: "Tweetallen of drietallen met 1 tablet en 1 Dash robot",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23b Programmeren",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: sequenties ontwerpen, loops (herhalingen) toepassen en systematisch debuggen'.",
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: draadloze Bluetooth-koppeling en sensoraansturing'.",
+                    "Kerndoel 3: De gedigitaliseerde wereld (24b) 'Jezelf en de ander: creatieve expressie en samenwerking in teams'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Een choreografie ontwerpen in blokcode. 2. Herhaallussen (loops) gebruiken op de beat van de muziek. 3. Systematisch bugs opsporen."
+            },
+            kistMateriaal: "Dash robots, laadkabels, oranje accessoires (konijnenoren/staart), optionele xylofoon en balwerper",
+            klasMateriaal: "Tablets met app 'Blockly for Dash & Dot', schilderstape voor dansvloertjes, muziekbox",
+            voorbereiding: "Laad de robots op, installeer de Blockly app en plak dansvlakken af met tape.",
+            inleiding: "Demonstreer één dansmove met lichteffecten. Leg uit dat robots instructies nodig hebben (algoritme).",
+            kern: "1. Dance Challenge: Ontwerp een routine van 30 seconden.<br>2. Gebruik herhaallussen voor efficiënte code.<br>3. Voeg geluiden en LED-effecten toe.<br>4. Test en corrigeer afstanden.",
+            afsluiting: "De Wonderwijs Robot Dance Battle met klassikale jurering en reflectie.",
+            differentiatie: {
+                uitdaging: "Laat Dash reageren op de ingebouwde afstandssensor met een pirouette.",
+                ondersteuning: "Gebruik fysieke pijlenkaarten om de routine eerst op tafel uit te leggen."
+            }
+        };
+    }
+
+    // 5. MAKEY MAKEY
+    if (tekst.includes('makey') || tekst.includes('fruit') || tekst.includes('stroomkring')) {
+        return {
+            tijd: "60 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "25 min", afsluiting: "10 min" },
+            organisatie: "Tweetallen per Makey Makey kit en laptop/Chromebook",
+            dgDoelen: {
+                domein: "Domein 1: Praktische Kennis — Kerndoel 22a Digitale Systemen",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: begrijpen hoe invoerapparaten en gesloten elektrische stroomkringen met aarding werken'.",
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken': fysieke voorwerpen transformeren tot interactieve technologie.",
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren': gebeurtenisgestuurde interactie ('Wanneer toets ingedrukt -> speel geluid')."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Uitleggen wat het verschil is tussen geleiders en isolatoren. 2. Een gesloten stroomkring maken met aarding. 3. Fysieke voorwerpen koppelen aan interactieve computerprogramma's."
+            },
+            kistMateriaal: "Makey Makey printplaten, rode USB-kabels, sets gekleurde krokodillenklemmen, aardingsdraden",
+            klasMateriaal: "Laptops/Chromebooks met Chrome browser, vers fruit (bananen, appels), potloden, aluminiumfolie",
+            voorbereiding: "Sluit de Makey Makey boards aan op laptops en open de online piano app.",
+            inleiding: "Demonstreer een banaan die piano speelt door zelf de aardingsdraad vast te houden. Leg gesloten stroomkringen uit.",
+            kern: "1. Verbind de aarding (Earth) met je hand.<br>2. Sluit krokodillenklemmen aan op Space, Up, Down, Left, Right.<br>3. Test geleiding van verschillende voorwerpen in het lokaal.<br>4. Bouw een werkend instrument of interactieve quiz.",
+            afsluiting: "Klassikale demonstratie van de meest creatieve instrumenten.",
+            differentiatie: {
+                uitdaging: "Bouw een custom game controller in Scratch met aluminiumfolie vloertegels.",
+                ondersteuning: "Gebruik een eenvoudig testcircuit met alleen bananen en de online piano."
+            }
+        };
+    }
+
+    // 6. MICRO:BIT
+    if (tekst.includes('micro:bit') || tekst.includes('microbit') || tekst.includes('stappen')) {
+        return {
+            tijd: "60 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "10 min", kern: "30 min", afsluiting: "10 min" },
+            organisatie: "Duo's met 1 Micro:bit en 1 Chromebook/laptop",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23b Programmeren",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: variabelen (teller + 1), sensordata (versnellingsmeter shake) en if/else-logica'.",
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: microprocessor, sensoren, LED-matrix en firmware flashen'.",
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken': programmeren en fysieke wearable koppelen."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Een versnellingsmetersensor programmeren. 2. Een variabele aanmaken en ophogen met 1. 3. Een werkende wearable stappenteller maken en testen."
+            },
+            kistMateriaal: "Micro:bit v2 microcontrollers, batterijhouders (2x AAA), USB-kabels, elastische polsbanden, krokodillenklemmen",
+            klasMateriaal: "Chromebooks met MakeCode editor, gymkleding of beweegruimte",
+            voorbereiding: "Zorg dat de MakeCode pagina klaarstaat en de batterijhouders voorzien zijn van volle batterijen.",
+            inleiding: "Bespreek hoe smartwatches stappen tellen met bewegingssensoren. Toon de versnellingsmeter op de Micro:bit.",
+            kern: "1. Maak variabele 'stappen'.<br>2. Programmeer 'bij schudden -> verander stappen met 1'.<br>3. Toon het getal op het 5x5 LED-scherm.<br>4. Download het .hex bestand naar de Micro:bit.<br>5. Bevestig aan de enkel en loop een testrondje van 50 stappen!",
+            afsluiting: "Vergelijk de gemeten stappen met de werkelijk getelde stappen en kalibreer de gevoeligheid.",
+            differentiatie: {
+                uitdaging: "Programmeer een feestelijk animatie-icoon en geluidje zodra de 100 stappen bereikt zijn.",
+                ondersteuning: "Gebruik kant-en-klare codekaarten voor de blokkenstructuur."
+            }
+        };
+    }
+
+    // 7. LEGO SPIKE PRIME
+    if (tekst.includes('spike prime') || tekst.includes('lego spike') || tekst.includes('afval')) {
+        return {
+            tijd: "90 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "45 min", afsluiting: "20 min" },
+            organisatie: "Groepjes van 3: Constructeur, Software-engineer, Tester",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23b Programmeren",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: complexe beslisstructuren (Als... Dan... Anders...), sensorkalibratie en servomotoraansturing'.",
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken: mechanische grijpers, hefbomen en optische sensoren'.",
+                    "Kerndoel 3: De gedigitaliseerde wereld (24c) 'Samenleving en wereld: automatisering en robotica in circulaire economie'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Een geautomatiseerde sorteermachine ontwerpen en bouwen. 2. Een if/else-algoritme programmeren op basis van sensordata. 3. Uitleggen hoe industriële automatisering bijdraagt aan recycling."
+            },
+            kistMateriaal: "LEGO Spike Prime sets (grote hub, servomotoren, kleurensensor, afstandssensor, tandwielen, hefbomen)",
+            klasMateriaal: "Laptops/Chromebooks met SPIKE app, gekleurde teststeentjes (geel = plastic, blauw = papier, rood = restafval)",
+            voorbereiding: "Laad de hubs op en zet bakjes klaar met afval-steentjes.",
+            inleiding: "Bespreek moderne recyclingfabrieken en het belang van sensoren om materialen te onderscheiden.",
+            kern: "1. Bouw een sorteerarm met een servomotor.<br>2. Monteer de kleurensensor boven de sorteerplek.<br>3. Programmeer if/else: Geel -> Bak 1, Blauw -> Bak 2, Anders -> Bak 3.<br>4. Stresstest met 10 willekeurige blokjes.",
+            afsluiting: "Presentatie van de sorteerstraten en reflectie op computer vision en AI in fabrieken.",
+            differentiatie: {
+                uitdaging: "Laat de ultrasone sensor meten wanneer een bak vol is en een waarschuwingsgeluid geven.",
+                ondersteuning: "Geef een stroomdiagram van het beslisalgoritme mee."
+            }
+        };
+    }
+
+    // 8. PODCAST STUDIO
+    if (tekst.includes('podcast') || tekst.includes('radio') || tekst.includes('interview')) {
+        return {
+            tijd: "75 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "35 min", afsluiting: "15 min" },
+            organisatie: "Redactiegroepjes van 4: Presentator, Gast, Geluidstechnicus, Tijdwaarnemer",
+            dgDoelen: {
+                domein: "Domein 1: Praktische Kennis — Kerndoel 22b Digitale Media & Informatie",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 1: Praktische vaardigheden (22b) 'Digitale media en info: journalistieke vraagstelling, bronbeoordeling en framing'.",
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken': mengpaneel, microfoons en live sound effects mixen.",
+                    "Kerndoel 3: De gedigitaliseerde wereld (24a) 'Veiligheid & privacy: toestemming voor audio-opname en auteursrecht van muziek'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Een journalistiek interview voorbereiden met open vragen. 2. Professionele audioapparatuur bedienen. 3. Een boeiende audio-opname maken met jingles en strakke timing."
+            },
+            kistMateriaal: "Podcast mengtafel met sound pads, broadcast condensatormicrofoons op bureauarmen, popfilters, over-ear studiokoptelefoons, XLR-kabels, SD-kaart",
+            klasMateriaal: "Laptop/Chromebook met Audacity of Soundtrap, kladblokken voor het draaiboek",
+            voorbereiding: "Zet de set klaar in een rustige hoek en test de microfoonkanalen.",
+            inleiding: "Luister naar een fragment van 1 minuut uit een jeugdpodcast. Bespreek microfoondiscipline en open versus gesloten vragen.",
+            kern: "1. Kies een prikkelend thema.<br>2. Maak een strak draaiboek (Jingle -> Vraag 1-3 -> Dilemma -> Outro).<br>3. Wijs geluidseffecten toe onder de sound pads.<br>4. Neem de podcast van maximaal 5 minuten op in één take!",
+            afsluiting: "Klassikaal luistercafé met tops en tips op presentatie en dynamiek.",
+            differentiatie: {
+                uitdaging: "Componeer een eigen jingle met rechtenvrije loops.",
+                ondersteuning: "Gebruik een vragenkaart met 10 sterke starters voor open interviewvragen."
+            }
+        };
+    }
+
+    // 9. PIXIMAKEY
+    if (tekst.includes('piximakey') || tekst.includes('stop-motion') || tekst.includes('animatie')) {
+        return {
+            tijd: "75 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "35 min", afsluiting: "15 min" },
+            organisatie: "Creatieve filmteams van 3: Animator, Cameraregisseur, Scenarist",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23a Creëren met technologie",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken: decorbouw, kleifiguren en digitale stop-motion frame-capturing'.",
+                    "Kerndoel 1: Praktische vaardigheden (22b) 'Digitale media en info: filmcontinuïteit, camerastandpunten en visuele storytelling'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Een kort storyboard ontwerpen met begin, midden en eind. 2. De stop-motion techniek (beeld-voor-beeld) toepassen met 12 frames per seconde. 3. Geduldig millimeter-verplaatsingen maken voor een vloeiende animatie."
+            },
+            kistMateriaal: "Houten Piximakey studio koffers met verstelbare tablet/telefoonstandaard, achtergrondvellen, modelleerklei, spatels",
+            klasMateriaal: "Tablets/smartphones met de gratis Piximakey animatie app, LEGO minifiguren, papieren knutselspullen",
+            voorbereiding: "Plaats de Piximakey studio's stevig op tafels en zorg voor stabiel licht.",
+            inleiding: "Toon een korte stop-motion film (bijv. Shaun het Schaap). Laat zien dat 1 seconde film uit 12 losse foto's bestaat.",
+            kern: "1. Storyboard van 6 scènes tekenen.<br>2. Kleipoppetjes en decors boetseren.<br>3. Tablet stabiel in de houder klemmen.<br>4. Beeld-voor-beeld opnemen met millimeter-aanpassingen met de onion-skin functie.<br>5. Geluidseffecten en stemmen inspreken.",
+            afsluiting: "Wonderwijs Filmfestival: bekijk elkaars animaties op het grote scherm.",
+            differentiatie: {
+                uitdaging: "Voeg camerabewegingen (panning) toe door de camera op een rails te schuiven.",
+                ondersteuning: "Gebruik kant-en-klare LEGO figuurtjes in plaats van klei."
+            }
+        };
+    }
+
+    // 10. OZOBOT
+    if (tekst.includes('ozobot') || tekst.includes('kleurcode') || tekst.includes('doolhof')) {
+        return {
+            tijd: "60 minuten",
+            tijdsopbouw: { voorbereiding: "5 min", inleiding: "15 min", kern: "30 min", afsluiting: "10 min" },
+            organisatie: "Tweetallen met 1 Ozobot en stiften",
+            dgDoelen: {
+                domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23b Programmeren",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: optische kleurcodes (snelheid, richting, spins) en algoritmes ontwerpen'.",
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: optische lijnsensoren en kalibratie op papier'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Zwarte lijnsporen tekenen die optische sensoren kunnen volgen. 2. Kleurvolgordes (rood-groen-blauw) gebruiken als programmeerinstructies. 3. Doolhoven ontwerpen met logische kruispunten."
+            },
+            kistMateriaal: "Ozobot Evo / Bit robotjes in laadetui, set officiële kleurcode-stiften (zwart, rood, groen, blauw), kalibratiekaarten",
+            klasMateriaal: "Wit A4/A3 papier, linialen, stiften",
+            voorbereiding: "Laad de robotjes op en leg wit papier en stiften klaar.",
+            inleiding: "Demonstreer hoe de Ozobot een zwarte lijn volgt en reageert met licht op gekleurde vakjes.",
+            kern: "1. Teken een doorlopende zwarte lijn van 5 mm dikte.<br>2. Voeg een turbocode (blauw-groen-rood) in.<br>3. Ontwerp een doolhof met 3 mogelijke uitgangen.<br>4. Test en kalibreer op de zwarte stip.",
+            afsluiting: "Ozobot Grand Prix: wie navigeert het doolhof in de snelste tijd?",
+            differentiatie: {
+                uitdaging: "Programmeer Ozobot via OzoBlockly in de webbrowser.",
+                ondersteuning: "Gebruik voorgedrukte doolhofbladen met stippellijnen."
+            }
+        };
+    }
+
+    // 11. CLASSVR
+    if (tekst.includes('classvr') || tekst.includes('vr') || tekst.includes('virtual reality') || tekst.includes('expeditie')) {
+        return {
+            tijd: "60 minuten",
+            tijdsopbouw: { voorbereiding: "10 min", inleiding: "10 min", kern: "30 min", afsluiting: "10 min" },
+            organisatie: "Tweetallen: om en om 10 minuten kijken en noteren",
+            dgDoelen: {
+                domein: "Domein 1: Praktische Kennis — Kerndoel 22b Digitale Media & Informatie",
+                kerndoelenWonderwijs: [
+                    "Kerndoel 1: Praktische vaardigheden (22b) 'Digitale media en info: kritisch onderzoeken hoe virtuele werelden (VR, AR, simulaties) onze waarneming beïnvloeden'.",
+                    "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: gyroscopen, sensoren en stereoscopische lenzen die 3D diepte creëren'.",
+                    "Kerndoel 3: De gedigitaliseerde wereld (24b) 'Jezelf en de ander: gezonde kijkdiscipline en schermbalans'."
+                ],
+                leerlingDoelen: "De leerling kan: 1. Uitleggen hoe Virtual Reality een 3D-diepte illusie wekt. 2. Gerichte onderzoeksvragen beantwoorden op basis van een virtuele verkenning. 3. Kritisch reflecteren op de kansen en gevaren van virtuele werelden."
+            },
+            kistMateriaal: "ClassVR virtual reality brillen in transportkoffer met ingebouwd snellader-systeem, docententablet met ClassVR beheerportaal",
+            klasMateriaal: "Klassikale werkbladen over het lesthema (bijv. menselijk lichaam, zonnestelsel), potloden, stabiel schoolnetwerk",
+            voorbereiding: "Controleer batterijen en wifi-verbinding en laad de afspeellijst in het docentenportaal.",
+            inleiding: "Kijkprotocol: zittend rondkijken, bril met twee handen vasthouden. Leg kort de werking van stereoscopisch zicht uit.",
+            kern: "1. Synchrone lancering via het docentenportaal.<br>2. Onderzoeker A verkent de 3D-wereld op focuspunten.<br>3. Co-piloot B stelt vragen vanaf het werkblad.<br>4. Na 10 minuten wisselen van rol.<br>5. Schetsen van de waarnemingen.",
+            afsluiting: "Klassikaal napraten over het verschil tussen een 2D schoolboek en een 3D virtuele ervaring.",
+            differentiatie: {
+                uitdaging: "Onderzoek hoe chirurgen of piloten VR gebruiken in professionele trainingen.",
+                ondersteuning: "Kortere sessies van 3-5 minuten voor leerlingen die gevoelig zijn voor beweging."
+            }
+        };
+    }
+
+    // 12. STANDAARD TEMPLATE VOOR OVERIGE KISTEN
+    return {
+        tijd: "60 minuten",
+        tijdsopbouw: { voorbereiding: "10 min", inleiding: "15 min", kern: "25 min", afsluiting: "10 min" },
+        organisatie: "Tweetallen of groepjes van 4",
+        dgDoelen: {
+            domein: "Domein 2: Ontwerpen & Maken — Kerndoel 23a Creëren met technologie",
+            kerndoelenWonderwijs: [
+                "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken'.",
+                "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: bediening en doelgericht gebruik'."
+            ],
+            leerlingDoelen: "De leerling kan doelgericht experimenteren met het materiaal en samenwerken aan een creatieve oplossing."
+        },
+        kistMateriaal: `Verwonderlab leskist '${kistNaam}' met bijbehorende accessoires en handleiding`,
+        klasMateriaal: "Digibord, tablets of laptops, schrijfspullen",
+        voorbereiding: "Zet de materialen klaar en controleer de werking.",
+        inleiding: "Activeer voorkennis en bespreek de doelen van de les.",
+        kern: "Leerlingen gaan actief en onderzoekend aan de slag in tweetallen.",
+        afsluiting: "Bespreek de resultaten klassikaal.",
+        differentiatie: { uitdaging: "Geef een verdiepende ontwerpopdracht.", ondersteuning: "Bied extra stappenondersteuning." }
+    };
+};
+
+window.getPrimaireDgDoelVoorIdee = function(idee) {
+    if (idee && idee.lesbrief && idee.lesbrief.dgDoelen && idee.lesbrief.dgDoelen.kerndoelenWonderwijs && idee.lesbrief.dgDoelen.kerndoelenWonderwijs.length > 0) {
+        return idee.lesbrief.dgDoelen.kerndoelenWonderwijs[0];
+    }
+    const kistNaam = (idee ? (idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving)) : '').toLowerCase();
+    const tekst = ((idee ? ((idee.titel || '') + ' ' + (idee.beschrijving || '')) : '') + ' ' + kistNaam).toLowerCase();
+
+    if (tekst.includes('green screen') || tekst.includes('greenscreen') || tekst.includes('journaal') || tekst.includes('weerbericht')) {
+        return "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken' & 22b Digitale media en info";
+    }
+    if (tekst.includes('3d pen') || tekst.includes('3dpennen') || tekst.includes('3d print') || tekst.includes('filament') || tekst.includes('brug')) {
+        return "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken' & 22a Digitale systemen";
+    }
+    if (tekst.includes('dash') || tekst.includes('robot dance') || tekst.includes('dans')) {
+        return "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: loops en sequenties' & 22a Hardwarekoppeling";
+    }
+    if (tekst.includes('bee-bot') || tekst.includes('beebot') || tekst.includes('schat')) {
+        return "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: stappenplan & algoritme' & 22a Knoppenbediening";
+    }
+    if (tekst.includes('makey') || tekst.includes('fruit') || tekst.includes('stroomkring')) {
+        return "Kerndoel 1: Praktische vaardigheden (22a) 'Digitale systemen: stroomkringen & geleiding' & 23a Creëren";
+    }
+    if (tekst.includes('micro:bit') || tekst.includes('microbit') || tekst.includes('stappen')) {
+        return "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: sensordata & variabelen' & 22a Microcontrollers";
+    }
+    if (tekst.includes('spike essential') || tekst.includes('kermis')) {
+        return "Kerndoel 2: Ontwerpen en maken (23a) 'Creëren met technologie & mechanica' & 23b Programmeren";
+    }
+    if (tekst.includes('spike prime') || tekst.includes('afval') || tekst.includes('sorteerder')) {
+        return "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren: if/else beslisstructuren' & 23a Constructies";
+    }
+    if (tekst.includes('podcast') || tekst.includes('radio') || tekst.includes('interview')) {
+        return "Kerndoel 1: Praktische vaardigheden (22b) 'Digitale media & interviews' & 23a 'Audio-montage'";
+    }
+    if (tekst.includes('piximakey') || tekst.includes('stop-motion') || tekst.includes('animatie')) {
+        return "Kerndoel 2: Ontwerpen en maken (23a) 'Creëren met technologie & stop-motion' & 22b Digitale media";
+    }
+    if (tekst.includes('ozobot') || tekst.includes('doolhof') || tekst.includes('kleurcode')) {
+        return "Kerndoel 2: Ontwerpen en maken (23b) 'Programmeren met kleurcodes' & 22a Optische sensoren";
+    }
+    if (tekst.includes('classvr') || tekst.includes('vr') || tekst.includes('expeditie')) {
+        return "Kerndoel 1: Praktische vaardigheden (22b) 'Digitale media: immersive VR & 3D' & 24b Balans";
+    }
+    return "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken'";
+};
+
 let periodes = safeGetLocal('ww_periodes_v11', [{ id: 1, naam: "Periode 1 schooljaar 2026/2027", start: "2026-08-31", eind: "2026-09-20" }]);
 let scholen = safeGetLocal('ww_scholen_v1', [{ id: 1, naam: "Binnenstebuiten" }, { id: 2, naam: "De Wegwijzer" }]);
 let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
@@ -648,17 +1092,38 @@ window.verrijkLesideeen = function(ideeenLijst) {
         return [...standaardLesideeen];
     }
     return ideeenLijst.map(idee => {
-        const match = standaardLesideeen.find(s => 
-            s.id == idee.id || 
-            (idee.titel && s.titel.toLowerCase().includes(idee.titel.toLowerCase())) ||
-            (s.titel && idee.titel && s.titel.toLowerCase().includes(idee.titel.toLowerCase().split(':')[0])) ||
-            (idee.titel && s.kistNaam && idee.titel.toLowerCase().includes(s.kistNaam.toLowerCase())) ||
-            (idee.kistNaam && s.kistNaam && idee.kistNaam.toLowerCase() === s.kistNaam.toLowerCase())
-        );
-        const kistNaam = idee.kistNaam || (match ? match.kistNaam : window.detecteerKistNaam(idee.titel, idee.beschrijving));
+        const tekst = ((idee.titel || '') + ' ' + (idee.beschrijving || '') + ' ' + (idee.kistNaam || '')).toLowerCase();
+
+        // 1. Zoek match in standaardLesideeen
+        let match = standaardLesideeen.find(s => s.id == idee.id);
+        if (!match) {
+            match = standaardLesideeen.find(s => {
+                const sTitel = s.titel.toLowerCase();
+                const sKist = s.kistNaam.toLowerCase();
+                return (idee.titel && sTitel.includes(idee.titel.toLowerCase())) ||
+                       (idee.titel && idee.titel.toLowerCase().includes(sKist)) ||
+                       (idee.titel && sTitel.includes(idee.titel.toLowerCase().split(':')[0])) ||
+                       (idee.kistNaam && sKist === idee.kistNaam.toLowerCase());
+            });
+        }
+
+        // 2. Bepaal canonieke kistNaam
+        let kistNaam = match ? match.kistNaam : window.detecteerKistNaam(idee.titel, idee.beschrijving);
+        // Corrigeer als idee.kistNaam foutief '3d pen' bevat voor een heel ander onderwerp (bijv. greenscreen of dash)
+        if (idee.kistNaam && !(idee.kistNaam.toLowerCase().includes('3d') && (tekst.includes('green screen') || tekst.includes('dash') || tekst.includes('bee-bot') || tekst.includes('makey') || tekst.includes('micro:bit')))) {
+            kistNaam = idee.kistNaam;
+        }
+
+        const template = window.getTemplateLesbriefVoorKist(kistNaam, idee);
         const afbeelding = (match ? match.afbeelding : (idee.afbeelding && !idee.afbeelding.includes('dashrobot') && !idee.afbeelding.includes('beebot') ? idee.afbeelding : window.getAfbeeldingVoorKist(kistNaam)));
-        const lesbrief = (match ? match.lesbrief : (idee.lesbrief || null));
-        const bouw = match ? match.bouw : (idee.bouw || "Alle groepen");
+
+        // 3. Zorg dat lesbrief compleet is en nooit '3d pennen' bevat voor andere lessen
+        let lesbrief = idee.lesbrief;
+        if (!lesbrief || !lesbrief.kistMateriaal || !lesbrief.dgDoelen || (lesbrief.kistMateriaal.toLowerCase().includes('3d pen') && !kistNaam.toLowerCase().includes('3d pen'))) {
+            lesbrief = match ? match.lesbrief : template;
+        }
+
+        const bouw = match ? match.bouw : (idee.bouw || idee.doelgroep || "Alle groepen");
         const titel = match ? match.titel : idee.titel;
         const beschrijving = match ? match.beschrijving : idee.beschrijving;
         const categorie = match ? match.categorie : (idee.categorie || "Programmeren");
@@ -1398,22 +1863,10 @@ window.openLesModal = function(id) {
     const idee = lesideeen.find(i => i.id == id);
     if (!idee) return;
 
-    let kist = null;
-    if (idee.kistId) {
-        kist = leskisten.find(k => k.id == idee.kistId);
-    }
-    if (!kist && idee.titel) {
-        kist = leskisten.find(k => k.naam && (
-            k.naam.toLowerCase().includes(idee.titel.toLowerCase()) || 
-            idee.titel.toLowerCase().includes(k.naam.toLowerCase())
-        ));
-    }
-    if (!kist && leskisten.length > 0) {
-        kist = leskisten[0];
-    }
-
-    const kistNaam = kist ? kist.naam : (idee.kistNaam || "Verwonderlab Leskist");
-    const kistIdParam = kist ? (kist.id || encodeURIComponent(kist.naam)) : '';
+    // 1. Zoek de echte kist via vindKistVoorIdee (NOOIT blind terugvallen op leskisten[0]!)
+    const kist = window.vindKistVoorIdee(idee);
+    const kistNaam = kist ? kist.naam : (idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving));
+    const kistIdParam = (kist && kist.id) ? (kist.id || encodeURIComponent(kist.naam)) : encodeURIComponent(kistNaam);
     const reserveerUrl = `reserveren.html?kist=${encodeURIComponent(kistIdParam)}`;
 
     const titleEl = document.getElementById('lesModalTitle');
@@ -1422,11 +1875,19 @@ window.openLesModal = function(id) {
     const bodyEl = document.getElementById('lesModalBody');
     if (!bodyEl) return;
 
-    const lb = idee.lesbrief || {};
+    // 2. Haal lesbrief op of vul aan met authentiek template voor deze specifieke kist
+    const template = window.getTemplateLesbriefVoorKist(kistNaam, idee);
+    let lb = idee.lesbrief || {};
+    
+    // Voorkom '3d pennen' verontreiniging op niet-3d lessen
+    if (!lb.kistMateriaal || (lb.kistMateriaal.toLowerCase().includes('3d pen') && !kistNaam.toLowerCase().includes('3d pen'))) {
+        lb = { ...template, ...lb, kistMateriaal: template.kistMateriaal, klasMateriaal: template.klasMateriaal || lb.klasMateriaal };
+    }
+
     const doelgroep = idee.doelgroep || idee.bouw || 'Alle groepen';
     const moeilijkheid = idee.moeilijkheid || (doelgroep.includes('1-2') ? 'Beginner ⭐' : (doelgroep.includes('7-8') ? 'Uitdagend ⭐⭐⭐' : 'Gemiddeld ⭐⭐'));
-    const tijdOpbouw = lb.tijdsopbouw || {};
-    const dg = lb.dgDoelen || {};
+    const tijdOpbouw = lb.tijdsopbouw || template.tijdsopbouw || {};
+    const dg = lb.dgDoelen || template.dgDoelen || {};
     const bestanden = idee.bestanden || [];
 
     let filesHtml = '';
@@ -1468,13 +1929,17 @@ window.openLesModal = function(id) {
         </div>`;
     }
 
+    const dgKerndoelen = (dg.kerndoelenWonderwijs && Array.isArray(dg.kerndoelenWonderwijs) && dg.kerndoelenWonderwijs.length > 0)
+        ? dg.kerndoelenWonderwijs
+        : (template.dgDoelen && template.dgDoelen.kerndoelenWonderwijs ? template.dgDoelen.kerndoelenWonderwijs : []);
+
     bodyEl.innerHTML = `
         <!-- Meta badges rij -->
         <div class="les-meta-badges" style="margin-bottom: 18px;">
             <span class="les-meta-badge primary">🎯 Bouw: ${doelgroep}</span>
             <span class="les-meta-badge accent">⚡ Niveau: ${moeilijkheid}</span>
-            <span class="les-meta-badge">⏱️ Duur: ${lb.tijd || '60 min'}</span>
-            <span class="les-meta-badge">👥 ${lb.organisatie || 'In tweetallen'}</span>
+            <span class="les-meta-badge">⏱️ Duur: ${lb.tijd || template.tijd || '60 min'}</span>
+            <span class="les-meta-badge">👥 ${lb.organisatie || template.organisatie || 'In tweetallen'}</span>
             <span class="les-meta-badge" style="background: #e0e7ff; color: #3730a3;">🏷️ ${idee.categorie || 'Lesidee'}</span>
         </div>
 
@@ -1495,32 +1960,41 @@ window.openLesModal = function(id) {
         <!-- Korte introductie -->
         ${idee.beschrijving ? `
         <div style="margin-bottom: 22px;">
-            <h4 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; color: var(--slate-400); margin: 0 0 6px 0;">Lesomschrijving</h4>
+            <h4 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; color: var(--slate-400); margin: 0 0 6px 0;">Lesomschrijving & Doel</h4>
             <p style="color: var(--slate-700); font-size: 14px; line-height: 1.65; margin: 0;">${idee.beschrijving}</p>
         </div>` : ''}
 
         <!-- Doelen Digitale Geletterdheid (Wonderwijs) -->
         <div class="lesbrief-section">
-            <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🧠 Raakvlakken met de Wonderwijs Leerlijn Digitale Geletterdheid</h4>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <span>🧠</span> <span>Raakvlakken met de Wonderwijs Leerlijn Digitale Geletterdheid</span>
+                </h4>
+                <span style="font-size: 11px; font-weight: 700; background: rgba(140, 198, 63, 0.18); color: #166534; padding: 4px 10px; border-radius: 9999px;">Wonderwijs Curriculum 2026</span>
+            </div>
             <div class="lesbrief-dg-box">
                 <div class="dg-domain-badge">
-                    <span>${dg.domein || 'Wonderwijs Digitale Geletterdheid'}</span>
+                    <span>${dg.domein || template.dgDoelen.domein || 'Domein 2: Ontwerpen & Maken'}</span>
                 </div>
-                ${dg.kerndoelenWonderwijs && Array.isArray(dg.kerndoelenWonderwijs) && dg.kerndoelenWonderwijs.length > 0 ? `
-                <div style="margin-top: 10px;">
-                    <strong style="color: #0f172a; font-size: 13px;">Gekoppelde kerndoelen & domeinen uit de leerlijn:</strong>
-                    <ul class="dg-goals-list">
-                        ${dg.kerndoelenWonderwijs.map(k => `<li>${k}</li>`).join('')}
-                    </ul>
+                ${dgKerndoelen && dgKerndoelen.length > 0 ? `
+                <div style="margin-top: 12px;">
+                    <strong style="color: #0f172a; font-size: 13px; display: block; margin-bottom: 8px;">🎯 Gekoppelde kerndoelen & domeinen uit de leerlijn:</strong>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${dgKerndoelen.map(k => `
+                            <div class="dg-kerndoel-chip-card">
+                                <span style="color: #16a34a; font-size: 15px; font-weight: 900; line-height: 1;">✓</span>
+                                <span style="font-size: 13px; color: #1e293b; line-height: 1.5; font-weight: 600;">${k}</span>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>` : ''}
-                ${dg.leerlingDoelen ? `
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1;">
-                    <strong style="color: #166534; font-size: 13px;">Wat leert de leerling tijdens deze les?</strong>
-                    <p style="margin: 4px 0 0 0; color: #334155; font-size: 13px; line-height: 1.55;">${dg.leerlingDoelen}</p>
-                </div>` : (lb.doelen ? `
-                <div style="margin-top: 8px;">
-                    <p style="margin: 0; color: #334155; font-size: 13px; line-height: 1.55;">${lb.doelen}</p>
-                </div>` : '')}
+                ${(dg.leerlingDoelen || template.dgDoelen.leerlingDoelen) ? `
+                <div style="margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed #cbd5e1;">
+                    <strong style="color: #166534; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        <span>🌱</span> <span>Wat leert de leerling tijdens deze les?</span>
+                    </strong>
+                    <p style="margin: 6px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">${dg.leerlingDoelen || template.dgDoelen.leerlingDoelen}</p>
+                </div>` : ''}
             </div>
         </div>
 
@@ -1529,16 +2003,16 @@ window.openLesModal = function(id) {
             <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🧰 Benodigdheden & Voorbereiding</h4>
             <div class="lesbrief-materials-card">
                 <div class="material-col">
-                    <span class="mat-label">📦 Uit het Verwonderlab (deze leskist):</span>
-                    <p>${lb.kistMateriaal || kistNaam}</p>
+                    <span class="mat-label">📦 Uit het Verwonderlab (${kistNaam}):</span>
+                    <p style="font-weight: 600; color: #1e293b;">${lb.kistMateriaal || template.kistMateriaal || kistNaam}</p>
                 </div>
                 <div class="material-col">
                     <span class="mat-label">🏫 In het eigen klaslokaal aanwezig:</span>
-                    <p>${lb.klasMateriaal || 'Tablets of laptops, digibord, schrijfspullen'}</p>
+                    <p>${lb.klasMateriaal || template.klasMateriaal || 'Tablets of laptops, digibord, schrijfspullen'}</p>
                 </div>
                 <div class="prep-note">
-                    <strong>💡 Praktische voorbereiding leerkracht (${tijdOpbouw.voorbereiding || lb.voorbereidingTijd || '10 min'}):</strong>
-                    <span>${lb.voorbereiding || 'Zet de materialen klaar en controleer de acculading.'}</span>
+                    <strong>💡 Praktische voorbereiding leerkracht (${tijdOpbouw.voorbereiding || lb.voorbereidingTijd || template.tijdsopbouw.voorbereiding || '10 min'}):</strong>
+                    <span>${lb.voorbereiding || template.voorbereiding || 'Zet de materialen klaar en controleer de acculading.'}</span>
                 </div>
             </div>
         </div>
@@ -1549,33 +2023,33 @@ window.openLesModal = function(id) {
             <div class="lesbrief-step-card step-inleiding">
                 <div class="step-header">
                     <span class="step-num">1</span>
-                    <strong style="color: #1e3a8a;">Inleiding & Prikkeling (${tijdOpbouw.inleiding || lb.inleidingTijd || '15 min'})</strong>
+                    <strong style="color: #1e3a8a;">Inleiding & Prikkeling (${tijdOpbouw.inleiding || lb.inleidingTijd || template.tijdsopbouw.inleiding || '15 min'})</strong>
                 </div>
-                <div class="step-content">${lb.inleiding || 'Introduceer het onderwerp en activeer voorkennis bij de leerlingen.'}</div>
+                <div class="step-content">${lb.inleiding || template.inleiding || 'Introduceer het onderwerp en activeer voorkennis bij de leerlingen.'}</div>
             </div>
             <div class="lesbrief-step-card step-kern">
                 <div class="step-header">
                     <span class="step-num">2</span>
-                    <strong style="color: #14532d;">Kernactiviteit & Challenge (${tijdOpbouw.kern || lb.kernTijd || '30 min'})</strong>
+                    <strong style="color: #14532d;">Kernactiviteit & Challenge (${tijdOpbouw.kern || lb.kernTijd || template.tijdsopbouw.kern || '30 min'})</strong>
                 </div>
-                <div class="step-content">${lb.kern || 'Leerlingen gaan actief en zelfstandig of in tweetallen aan de slag met de opdracht.'}</div>
+                <div class="step-content">${lb.kern || template.kern || 'Leerlingen gaan actief en zelfstandig of in tweetallen aan de slag met de opdracht.'}</div>
             </div>
             <div class="lesbrief-step-card step-afsluiting">
                 <div class="step-header">
                     <span class="step-num">3</span>
-                    <strong style="color: #78350f;">Demonstratie, Evaluatie & Reflectie (${tijdOpbouw.afsluiting || lb.afsluitingTijd || '15 min'})</strong>
+                    <strong style="color: #78350f;">Demonstratie, Evaluatie & Reflectie (${tijdOpbouw.afsluiting || lb.afsluitingTijd || template.tijdsopbouw.afsluiting || '15 min'})</strong>
                 </div>
-                <div class="step-content">${lb.afsluiting || 'Presenteer resultaten klassikaal en bespreek wat er goed ging en wat beter kon.'}</div>
+                <div class="step-content">${lb.afsluiting || template.afsluiting || 'Presenteer resultaten klassikaal en bespreek wat er goed ging en wat beter kon.'}</div>
             </div>
         </div>
 
         <!-- Differentiatie & Tips -->
-        ${(lb.differentiatie || lb.tips) ? `
+        ${(lb.differentiatie || lb.tips || template.differentiatie) ? `
         <div class="lesbrief-section">
             <h4 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin: 0 0 10px 0;">🌟 Differentiatie & Verdieping</h4>
             <div class="lesbrief-diff-card">
-                ${lb.differentiatie && lb.differentiatie.uitdaging ? `<div class="diff-star">${lb.differentiatie.uitdaging}</div>` : ''}
-                ${lb.differentiatie && lb.differentiatie.ondersteuning ? `<div class="diff-support">${lb.differentiatie.ondersteuning}</div>` : ''}
+                ${(lb.differentiatie && lb.differentiatie.uitdaging) ? `<div class="diff-star">${lb.differentiatie.uitdaging}</div>` : (template.differentiatie ? `<div class="diff-star">${template.differentiatie.uitdaging}</div>` : '')}
+                ${(lb.differentiatie && lb.differentiatie.ondersteuning) ? `<div class="diff-support">${lb.differentiatie.ondersteuning}</div>` : (template.differentiatie ? `<div class="diff-support">${template.differentiatie.ondersteuning}</div>` : '')}
                 ${(!lb.differentiatie && lb.tips) ? `<div>💡 ${lb.tips}</div>` : ''}
             </div>
         </div>` : ''}
@@ -1684,7 +2158,9 @@ window.renderLesideeenGrid = function() {
         gridHtml += "<div style='grid-column: 1 / -1; padding: 40px; text-align: center; background: white; border-radius: 12px; color: #64748b; border: 1px solid #e2e8f0;'>Geen lesideeën gevonden voor de huidige selectie.</div>";
     } else {
         gefilterdeIdeeen.forEach(idee => {
-            const kistNaam = idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving);
+            const kistObj = window.vindKistVoorIdee(idee);
+            const kistNaam = kistObj.naam || idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving);
+            const primaireDoel = window.getPrimaireDgDoelVoorIdee(idee);
             const bouwBadge = idee.doelgroep || idee.bouw || "Alle groepen";
             const categorieBadge = idee.categorie || "Inspiratie";
             const moeilijkheid = idee.moeilijkheid || (bouwBadge.includes("1-2") ? "Beginner ⭐" : (bouwBadge.includes("7-8") ? "Uitdagend ⭐⭐⭐" : "Gemiddeld ⭐⭐"));
@@ -1708,8 +2184,13 @@ window.renderLesideeenGrid = function() {
 
                     <h3 style="font-size: 18px; font-weight: 800; color: var(--slate-950); margin: 0 0 10px 0; line-height: 1.35;">${idee.titel}</h3>
                     
-                    <div class="idea-material-tag" style="margin-bottom: 12px;">
+                    <div class="idea-material-tag" style="margin-bottom: 8px;">
                         <span>📦</span> <span>Leskist: <strong>${kistNaam}</strong></span>
+                    </div>
+
+                    <div class="idea-dg-goal-tag" style="margin-bottom: 14px;">
+                        <span style="font-size: 14px; line-height: 1;">🎯</span>
+                        <span>Doel DG: <strong>${primaireDoel}</strong></span>
                     </div>
 
                     <p style="color: var(--slate-600); font-size: 13.5px; line-height: 1.6; margin-bottom: 20px; flex-grow: 1;">${idee.beschrijving || ""}</p>
