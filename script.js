@@ -613,6 +613,34 @@ let feedbackConfig = safeGetLocal('ww_feedback_config_v1', defaultFeedbackConfig
 if (!feedbackConfig.secties) feedbackConfig.secties = defaultFeedbackConfig.secties;
 if (!feedbackConfig.extraVragen) feedbackConfig.extraVragen = [];
 
+const defaultEmailTemplates = {
+    goedkeuring: {
+        onderwerp: "✅ Goedgekeurd: Reservering {kist} - Verwonderlab Wonderwijs",
+        tekst: `Beste {naam},
+
+Goed nieuws! Je reserveringsaanvraag voor '{kist}' via het Verwonderlab Portaal is goedgekeurd door de beheerder.
+
+Reserveringsdetails:
+• Lesmateriaal: {kist}
+• Periode: {periode}
+• Locatie / School: {school}
+• Status: Goedgekeurd
+
+Je kunt het materiaal op de afgesproken startdatum ophalen. Zorg ervoor dat het materiaal aan het einde van de periode weer compleet en netjes wordt ingeleverd voor de volgende leerkracht.
+
+Bekijk je reserveringen en tips in het Verwonderlab Portaal:
+{portal_link}
+
+Met vriendelijke groet,
+{beheerder}
+Verwonderlab Wonderwijs
+Afzender: verwonderlab@wonderwijs.nl`
+    }
+};
+
+let emailTemplates = safeGetLocal('ww_email_templates_v1', defaultEmailTemplates);
+if (!emailTemplates.goedkeuring) emailTemplates.goedkeuring = defaultEmailTemplates.goedkeuring;
+
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
 const standaardLesideeen = [
 
@@ -1393,6 +1421,7 @@ function slaDataOp() {
         localStorage.setItem('ww_meldingen_v1', JSON.stringify(meldingen));
         localStorage.setItem('ww_feedback_v1', JSON.stringify(feedbackLijst));
         localStorage.setItem('ww_feedback_config_v1', JSON.stringify(feedbackConfig));
+        localStorage.setItem('ww_email_templates_v1', JSON.stringify(emailTemplates));
     } catch(e) { console.error("Opslagfout", e); }
 }
 
@@ -1499,6 +1528,20 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     localStorage.setItem('ww_feedback_config_v1', JSON.stringify(feedbackConfig));
                     if (typeof window.renderFeedbackConfigTab === "function") {
                         window.renderFeedbackConfigTab();
+                    }
+                }
+            }
+        }, checkError);
+
+        onSnapshot(doc(db, "instellingen", "email_templates"), (snap) => {
+            if (snap.exists()) {
+                const cloudTpl = snap.data();
+                if (cloudTpl) {
+                    emailTemplates = { ...defaultEmailTemplates, ...cloudTpl };
+                    if (!emailTemplates.goedkeuring) emailTemplates.goedkeuring = defaultEmailTemplates.goedkeuring;
+                    localStorage.setItem('ww_email_templates_v1', JSON.stringify(emailTemplates));
+                    if (typeof window.laadEmailTemplatesInAdmin === "function") {
+                        window.laadEmailTemplatesInAdmin();
                     }
                 }
             }
@@ -1681,6 +1724,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.updateMeldingStatusInCloud = async function(id, status) { await setDoc(doc(db, "meldingen", id.toString()), {status: status}, {merge: true}); };
         window.saveFeedbackToCloud = async function(newData) { await setDoc(doc(db, "feedback", newData.id.toString()), newData); };
         window.saveFeedbackConfigToCloud = async function(cfg) { await setDoc(doc(db, "instellingen", "feedback_config"), cfg, { merge: true }); };
+        window.saveEmailTemplatesToCloud = async function(tpl) { await setDoc(doc(db, "instellingen", "email_templates"), tpl, { merge: true }); };
         window.saveUserPreferenceToCloud = async function(email, schoolNaam) {
             if (!db || !email) return;
             try {
@@ -3101,6 +3145,9 @@ window.switchAdminTab = function(tabId, btnElement) {
     if (tabId === 'tab-feedbackformulier' && typeof window.renderFeedbackConfigTab === 'function') {
         window.renderFeedbackConfigTab();
     }
+    if (tabId === 'tab-emailtemplate' && typeof window.laadEmailTemplatesInAdmin === 'function') {
+        window.laadEmailTemplatesInAdmin();
+    }
 };
 
 
@@ -3789,27 +3836,26 @@ window.verstuurGoedkeuringsMail = async function(r, per) {
         return;
     }
 
-    const mailOnderwerp = `✅ Goedgekeurd: Reservering ${kistNaam} - Verwonderlab Wonderwijs`;
-    const mailTekst = 
-`Beste ${docentNaam},
+    const templates = (typeof window.getEmailTemplates === 'function') ? window.getEmailTemplates() : defaultEmailTemplates;
+    const tpl = (templates && templates.goedkeuring) ? templates.goedkeuring : defaultEmailTemplates.goedkeuring;
 
-Goed nieuws! Je reserveringsaanvraag voor '${kistNaam}' via het Verwonderlab Portaal is goedgekeurd door de beheerder.
+    const portalLink = "https://verwonderlabportaal.vercel.app/";
+    const vervang = (txt) => {
+        return (txt || "")
+            .replace(/\{naam\}/g, docentNaam)
+            .replace(/\{docent\}/g, docentNaam)
+            .replace(/\{kist\}/g, kistNaam)
+            .replace(/\{materiaal\}/g, kistNaam)
+            .replace(/\{periode\}/g, periodeNaam)
+            .replace(/\{school\}/g, schoolNaam)
+            .replace(/\{locatie\}/g, schoolNaam)
+            .replace(/\{beheerder\}/g, beheerderNaam)
+            .replace(/\{portal_link\}/g, portalLink)
+            .replace(/\{datum\}/g, new Date().toLocaleDateString('nl-NL'));
+    };
 
-Reserveringsdetails:
-• Lesmateriaal: ${kistNaam}
-• Periode: ${periodeNaam}
-• Locatie / School: ${schoolNaam}
-• Status: Goedgekeurd
-
-Je kunt het materiaal op de afgesproken startdatum ophalen. Zorg ervoor dat het materiaal aan het einde van de periode weer compleet en netjes wordt ingeleverd voor de volgende leerkracht.
-
-Bekijk je reserveringen en tips in het Verwonderlab Portaal:
-https://verwonderlabportaal.vercel.app/
-
-Met vriendelijke groet,
-${beheerderNaam}
-Verwonderlab Wonderwijs
-Afzender: verwonderlab@wonderwijs.nl`;
+    const mailOnderwerp = vervang(tpl.onderwerp || defaultEmailTemplates.goedkeuring.onderwerp);
+    const mailTekst = vervang(tpl.tekst || defaultEmailTemplates.goedkeuring.tekst);
 
     // 1. Probeer automatische verzending via Vercel Serverless API (/api/send-email)
     let isVerzondenViaServer = false;
@@ -4826,9 +4872,154 @@ window.resetFeedbackConfig = async function() {
     }
 };
 
+// ==========================================
+// E-MAILTEMPLATE BEHEER VOOR GOEDKEURINGEN
+// ==========================================
+window.getEmailTemplates = function() {
+    return emailTemplates || defaultEmailTemplates;
+};
+
+window.laadEmailTemplatesInAdmin = function() {
+    const tpls = window.getEmailTemplates();
+    const gk = tpls.goedkeuring || defaultEmailTemplates.goedkeuring;
+
+    const onderwerpInput = document.getElementById('emailTplOnderwerp');
+    const tekstTextarea = document.getElementById('emailTplTekst');
+
+    if (onderwerpInput) onderwerpInput.value = gk.onderwerp || defaultEmailTemplates.goedkeuring.onderwerp;
+    if (tekstTextarea) tekstTextarea.value = gk.tekst || defaultEmailTemplates.goedkeuring.tekst;
+
+    window.updateEmailPreview();
+};
+
+window.updateEmailPreview = function() {
+    const onderwerpInput = document.getElementById('emailTplOnderwerp');
+    const tekstTextarea = document.getElementById('emailTplTekst');
+    const previewOnderwerp = document.getElementById('emailPreviewOnderwerp');
+    const previewTekst = document.getElementById('emailPreviewTekst');
+
+    const rawOnderwerp = (onderwerpInput && onderwerpInput.value) ? onderwerpInput.value : (emailTemplates.goedkeuring?.onderwerp || defaultEmailTemplates.goedkeuring.onderwerp);
+    const rawTekst = (tekstTextarea && tekstTextarea.value) ? tekstTextarea.value : (emailTemplates.goedkeuring?.tekst || defaultEmailTemplates.goedkeuring.tekst);
+
+    const beheerderNaam = localStorage.getItem('ww_huidige_leerkracht') || "Beheerder Verwonderlab";
+
+    const sampleVervang = (txt) => {
+        return (txt || "")
+            .replace(/\{naam\}/g, "Juf Sanne")
+            .replace(/\{docent\}/g, "Juf Sanne")
+            .replace(/\{kist\}/g, "Dash & Dot Robot Kist")
+            .replace(/\{materiaal\}/g, "Dash & Dot Robot Kist")
+            .replace(/\{periode\}/g, "Periode 2 (03-11 t/m 18-12)")
+            .replace(/\{school\}/g, "De Wegwijzer")
+            .replace(/\{locatie\}/g, "De Wegwijzer")
+            .replace(/\{beheerder\}/g, beheerderNaam)
+            .replace(/\{portal_link\}/g, "https://verwonderlabportaal.vercel.app/")
+            .replace(/\{datum\}/g, new Date().toLocaleDateString('nl-NL'));
+    };
+
+    if (previewOnderwerp) previewOnderwerp.innerText = sampleVervang(rawOnderwerp);
+    if (previewTekst) previewTekst.innerText = sampleVervang(rawTekst);
+};
+
+window.insertVariableInEmail = function(tag) {
+    const textarea = document.getElementById('emailTplTekst');
+    if (!textarea) return;
+
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const text = textarea.value;
+
+    textarea.value = text.substring(0, start) + tag + text.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+    textarea.focus();
+
+    window.updateEmailPreview();
+};
+
+window.saveEmailTemplate = async function() {
+    const onderwerpInput = document.getElementById('emailTplOnderwerp');
+    const tekstTextarea = document.getElementById('emailTplTekst');
+    const saveIcon = document.getElementById('saveEmailTplIcon');
+
+    const onderwerp = onderwerpInput ? onderwerpInput.value.trim() : "";
+    const tekst = tekstTextarea ? tekstTextarea.value.trim() : "";
+
+    if (!onderwerp) {
+        alert("⚠️ Geef een e-mailonderwerp op.");
+        return;
+    }
+    if (!tekst) {
+        alert("⚠️ Geef de e-mailtekst op.");
+        return;
+    }
+
+    emailTemplates.goedkeuring = {
+        onderwerp: onderwerp,
+        tekst: tekst,
+        gewijzigdOp: new Date().toISOString()
+    };
+
+    slaDataOp();
+
+    if (saveIcon) saveIcon.innerText = "⏳";
+    if (typeof window.saveEmailTemplatesToCloud === "function") {
+        await window.saveEmailTemplatesToCloud(emailTemplates);
+    }
+    if (saveIcon) saveIcon.innerText = "✅";
+
+    setTimeout(() => {
+        if (saveIcon) saveIcon.innerText = "💾";
+    }, 2000);
+
+    alert("✅ E-mailtemplate voor goedkeuringen is succesvol opgeslagen!\n\nWanneer je een reservering goedkeurt, wordt voortaan deze aangepaste tekst en onderwerp klaargezet in Microsoft Outlook.");
+};
+
+window.resetEmailTemplate = async function() {
+    if (confirm("Weet je zeker dat je de e-mailtemplate voor goedkeuringen wilt resetten naar de standaard Wonderwijs tekst?")) {
+        emailTemplates.goedkeuring = JSON.parse(JSON.stringify(defaultEmailTemplates.goedkeuring));
+        slaDataOp();
+        if (typeof window.saveEmailTemplatesToCloud === "function") {
+            await window.saveEmailTemplatesToCloud(emailTemplates);
+        }
+        window.laadEmailTemplatesInAdmin();
+        alert("🔄 De standaard e-mailtemplate is hersteld!");
+    }
+};
+
+window.testGoedkeuringsMail = function() {
+    const onderwerpInput = document.getElementById('emailTplOnderwerp');
+    const tekstTextarea = document.getElementById('emailTplTekst');
+
+    const rawOnderwerp = (onderwerpInput && onderwerpInput.value) ? onderwerpInput.value : (emailTemplates.goedkeuring?.onderwerp || defaultEmailTemplates.goedkeuring.onderwerp);
+    const rawTekst = (tekstTextarea && tekstTextarea.value) ? tekstTextarea.value : (emailTemplates.goedkeuring?.tekst || defaultEmailTemplates.goedkeuring.tekst);
+    const beheerderNaam = localStorage.getItem('ww_huidige_leerkracht') || "Beheerder Verwonderlab";
+
+    const sampleVervang = (txt) => {
+        return (txt || "")
+            .replace(/\{naam\}/g, "Juf Sanne")
+            .replace(/\{docent\}/g, "Juf Sanne")
+            .replace(/\{kist\}/g, "Dash & Dot Robot Kist")
+            .replace(/\{materiaal\}/g, "Dash & Dot Robot Kist")
+            .replace(/\{periode\}/g, "Periode 2 (03-11 t/m 18-12)")
+            .replace(/\{school\}/g, "De Wegwijzer")
+            .replace(/\{locatie\}/g, "De Wegwijzer")
+            .replace(/\{beheerder\}/g, beheerderNaam)
+            .replace(/\{portal_link\}/g, "https://verwonderlabportaal.vercel.app/")
+            .replace(/\{datum\}/g, new Date().toLocaleDateString('nl-NL'));
+    };
+
+    const testSubject = sampleVervang(rawOnderwerp);
+    const testBody = sampleVervang(rawTekst);
+
+    window.openInOutlook("sanne.vanderwal@wonderwijs.nl", testSubject, testBody);
+};
+
 // Start eventuele deep link routering bij het laden
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.checkUrlReservationParam === 'function') {
         window.checkUrlReservationParam();
+    }
+    if (document.getElementById('emailTplOnderwerp') && typeof window.laadEmailTemplatesInAdmin === 'function') {
+        window.laadEmailTemplatesInAdmin();
     }
 });

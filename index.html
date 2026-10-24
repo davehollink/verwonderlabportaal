@@ -152,6 +152,7 @@
             <div class="admin-tabs">
                 <button class="admin-tab-btn active" onclick="switchAdminTab('tab-reserveringen', this)">Reserveringen</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-statistieken', this)">📊 Statistieken & Inzichten</button>
+                <button id="btnTabEmailTemplate" class="admin-tab-btn" onclick="switchAdminTab('tab-emailtemplate', this)">✉️ E-mailtemplates</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-feedbackformulier', this)">📝 Feedbackformulier</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-periodes', this)">Periodes beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-scholen', this)">Locaties beheer</button>
@@ -167,7 +168,10 @@
                             <h2 style="margin: 0 0 5px 0;">Actuele reserveringen</h2>
                             <p id="reserveringenAantalTekst" style="margin: 0; font-size: 13px; color: #64748b;">Overzicht van alle binnengekomen aanvragen</p>
                         </div>
-                        <div class="admin-header-actions">
+                        <div class="admin-header-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="pill-btn secondary" onclick="switchAdminTab('tab-emailtemplate', document.getElementById('btnTabEmailTemplate'))" style="font-size: 13px; padding: 9px 15px; border-radius: 8px;">
+                                <span>✉️</span> Goedkeuringsmail aanpassen
+                            </button>
                             <button class="btn-green-action" onclick="window.downloadReserveringenPDF()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-size: 13px; border-radius: 8px; background: #8CC63F; color: white; border: none; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(140, 198, 63, 0.3);">
                                 <span>📄</span> Download als PDF (Print)
                             </button>
@@ -443,6 +447,138 @@
                     </div>
                     <div class="table-responsive-wrapper">
                         <table class="data-table"><thead><tr><th>Titel</th><th>Beschrijving</th><th style="text-align: right;">Actie</th></tr></thead><tbody id="adminLesideeenBody"></tbody></table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB: E-MAILTEMPLATE BEHEER (GOEDKEURINGSMAIL) -->
+            <div id="tab-emailtemplate" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 25px;">
+                        <div>
+                            <h2 style="margin: 0 0 6px 0; display: flex; align-items: center; gap: 10px;">
+                                <span>✉️</span> E-mailtemplate Goedkeuring
+                            </h2>
+                            <p style="margin: 0; font-size: 13.5px; color: #64748b; max-width: 680px; line-height: 1.5;">
+                                Pas hier het onderwerp en de inhoud aan van het e-mailbericht dat automatisch geopend wordt in Microsoft Outlook wanneer je als beheerder een reserveringsaanvraag goedkeurt.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="pill-btn secondary" onclick="window.testGoedkeuringsMail()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-size: 13px; font-weight: 700; border-radius: 10px;">
+                                <span>🧪</span> Test in Microsoft Outlook
+                            </button>
+                            <button type="button" class="pill-btn secondary" onclick="window.resetEmailTemplate()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 10px; color: #dc2626; border-color: #fca5a5; background: #fff5f5;">
+                                <span>🔄</span> Herstel Standaard
+                            </button>
+                            <button type="button" class="btn-green-action" onclick="window.saveEmailTemplate()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; font-size: 13.5px; font-weight: 800; border-radius: 10px; background: #8CC63F; color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(140, 198, 63, 0.35);">
+                                <span id="saveEmailTplIcon">💾</span> Wijzigingen Opslaan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; align-items: start;">
+                        <!-- LINKERKOLOM: EDITOR -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="config-card" style="margin-bottom: 0;">
+                                <div class="config-card-header">
+                                    <div>
+                                        <h3 class="config-card-title"><span>✏️</span> E-mail Onderwerp &amp; Inhoud</h3>
+                                        <p class="config-card-subtitle">Typ je tekst en klik op een variabele om deze direct in te voegen.</p>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 16px;">
+                                    <div>
+                                        <label style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                                            Onderwerp van de e-mail (Subject):
+                                        </label>
+                                        <input type="text" id="emailTplOnderwerp" class="form-control-text" style="width: 100%; font-weight: 600;" placeholder="Bijv. ✅ Goedgekeurd: Reservering {kist} - Verwonderlab Wonderwijs" oninput="window.updateEmailPreview()">
+                                    </div>
+
+                                    <div>
+                                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                                            <span>⚡</span> Beschikbare Variabelen (klik om in te voegen in de tekst):
+                                        </label>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                            <button type="button" class="pill-btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 700; background: #f1f5f9;" onclick="window.insertVariableInEmail('{naam}')" title="Naam van de leerkracht die gereserveerd heeft">
+                                                +{naam}
+                                            </button>
+                                            <button type="button" class="pill-btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 700; background: #f1f5f9;" onclick="window.insertVariableInEmail('{kist}')" title="Naam van de leskist of het materiaal">
+                                                +{kist}
+                                            </button>
+                                            <button type="button" class="pill-btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 700; background: #f1f5f9;" onclick="window.insertVariableInEmail('{periode}')" title="Gereserveerde periode en data">
+                                                +{periode}
+                                            </button>
+                                            <button type="button" class="pill-btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 700; background: #f1f5f9;" onclick="window.insertVariableInEmail('{school}')" title="Schoollocatie van de aanvrager">
+                                                +{school}
+                                            </button>
+                                            <button type="button" class="pill-btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 700; background: #f1f5f9;" onclick="window.insertVariableInEmail('{beheerder}')" title="Jouw naam als beheerder">
+                                                +{beheerder}
+                                            </button>
+                                            <button type="button" class="pill-btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: 700; background: #f1f5f9;" onclick="window.insertVariableInEmail('{portal_link}')" title="Link naar het online portaal">
+                                                +{portal_link}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+                                            Inhoud van het bericht (Body):
+                                        </label>
+                                        <textarea id="emailTplTekst" class="form-control-text" rows="14" style="width: 100%; font-family: monospace, inherit; font-size: 13px; line-height: 1.6; resize: vertical;" placeholder="Beste {naam}, ..." oninput="window.updateEmailPreview()"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px; font-size: 12.5px; color: #64748b; line-height: 1.5;">
+                                <strong style="color: #0f172a; display: block; margin-bottom: 4px;">💡 Hoe werkt het?</strong>
+                                Zodra je in het reserveringenoverzicht op <strong>✔ Accepteren</strong> klikt, vult het systeem automatisch alle actuele gegevens van de leerkracht in op basis van deze template. Vervolgens opent jouw geïnstalleerde <strong>Microsoft Outlook</strong> desktop-app met deze e-mail kant-en-klaar geopend.
+                            </div>
+                        </div>
+
+                        <!-- RECHTERKOLOM: LIVE VOORBEELD IN OUTLOOK STIJL -->
+                        <div>
+                            <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); overflow: hidden;">
+                                <!-- Window header -->
+                                <div style="background: #0078d4; color: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px;">
+                                        <span>📧</span> Microsoft Outlook &bull; Bevestiging Goedkeuring
+                                    </div>
+                                    <span style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-weight: 600;">Live Voorbeeld</span>
+                                </div>
+
+                                <!-- Email meta bar -->
+                                <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 18px; font-size: 13px; display: flex; flex-direction: column; gap: 8px;">
+                                    <div style="display: flex; gap: 8px;">
+                                        <strong style="color: #64748b; min-width: 65px;">Aan:</strong>
+                                        <span style="color: #0f172a; font-weight: 600;">Juf Sanne &lt;sanne.vanderwal@wonderwijs.nl&gt;</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <strong style="color: #64748b; min-width: 65px;">Van:</strong>
+                                        <span style="color: #0f172a;">Verwonderlab &lt;verwonderlab@wonderwijs.nl&gt;</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; align-items: baseline;">
+                                        <strong style="color: #64748b; min-width: 65px;">Onderwerp:</strong>
+                                        <span id="emailPreviewOnderwerp" style="color: #0f172a; font-weight: 700; word-break: break-word;">-</span>
+                                    </div>
+                                </div>
+
+                                <!-- Email body preview -->
+                                <div style="padding: 20px; background: white; min-height: 280px;">
+                                    <div id="emailPreviewTekst" style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.65; color: #1e293b;">-</div>
+                                </div>
+
+                                <!-- Footer actions in preview -->
+                                <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <span style="font-size: 11.5px; color: #64748b;">
+                                        Preview toont voorbeeldgegevens (Juf Sanne, Dash Robot, De Wegwijzer)
+                                    </span>
+                                    <button type="button" onclick="window.testGoedkeuringsMail()" class="pill-btn primary" style="font-size: 12px; padding: 6px 14px;">
+                                        <span>🚀</span> Open dit voorbeeld in Outlook
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -1208,8 +1344,8 @@
     }
 </script>
 
-<script src="auth-config.js?v=20261024i"></script>
-<script src="auth.js?v=20261024i"></script>
-<script src="script.js?v=20261024i"></script>
+<script src="auth-config.js?v=20261024k"></script>
+<script src="auth.js?v=20261024k"></script>
+<script src="script.js?v=20261024k"></script>
 </body>
 </html>
