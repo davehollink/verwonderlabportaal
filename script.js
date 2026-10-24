@@ -1614,49 +1614,11 @@ window.logoutAdmin = function() {
 };
 
 window.initMobileNavigation = function() {
-    // 1. Zorg voor mobiele toggle knop in de sidebar header op mobiele schermen
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-        let headerRow = sidebar.querySelector('.sidebar-header-row');
-        const logo = sidebar.querySelector('.logo');
-        if (!headerRow && logo) {
-            headerRow = document.createElement('div');
-            headerRow.className = 'sidebar-header-row';
-            logo.parentNode.insertBefore(headerRow, logo);
-            headerRow.appendChild(logo);
+    // 1. Verwijder eventuele oude menu-knoppen (overbodig door vaste navigatiebalk)
+    const existingToggle = document.getElementById('mobileMenuToggleBtn');
+    if (existingToggle) existingToggle.remove();
 
-            const toggleBtn = document.createElement('button');
-            toggleBtn.type = 'button';
-            toggleBtn.id = 'mobileMenuToggleBtn';
-            toggleBtn.className = 'mobile-menu-toggle-btn';
-            toggleBtn.setAttribute('aria-label', 'Toggle navigatie menu');
-            toggleBtn.innerHTML = '<span class="toggle-icon">☰</span> <span>Menu</span>';
-            toggleBtn.onclick = function() {
-                const isOpen = sidebar.classList.toggle('mobile-menu-open');
-                toggleBtn.classList.toggle('active', isOpen);
-                toggleBtn.innerHTML = isOpen 
-                    ? '<span class="toggle-icon">✕</span> <span>Sluit</span>' 
-                    : '<span class="toggle-icon">☰</span> <span>Menu</span>';
-            };
-            headerRow.appendChild(toggleBtn);
-        }
-    }
-
-    // 2. Sluit mobiel menu automatisch zodra op een menulink geklikt wordt
-    document.querySelectorAll('.sidebar .menu-item').forEach(item => {
-        item.addEventListener('click', () => {
-            if (sidebar && sidebar.classList.contains('mobile-menu-open')) {
-                sidebar.classList.remove('mobile-menu-open');
-                const btn = document.getElementById('mobileMenuToggleBtn');
-                if (btn) {
-                    btn.classList.remove('active');
-                    btn.innerHTML = '<span class="toggle-icon">☰</span> <span>Menu</span>';
-                }
-            }
-        });
-    });
-
-    // 3. Zorg voor de vaste Mobile Bottom Navigation bar onderin het scherm
+    // 2. Zorg voor de vaste Mobile Bottom Navigation bar (zwevend dock) onderin het scherm
     let bottomNav = document.getElementById('mobileBottomNav');
     if (!bottomNav) {
         bottomNav = document.createElement('nav');
@@ -1674,27 +1636,27 @@ window.initMobileNavigation = function() {
         bottomNav.innerHTML = `
             <a href="index.html" class="bottom-nav-item ${isDashboard ? 'active' : ''}">
                 <span class="nav-icon">🏠</span>
-                <span>Home</span>
+                <span class="nav-label">Home</span>
             </a>
             <a href="reserveren.html" class="bottom-nav-item ${isReserveren ? 'active' : ''}">
                 <span class="nav-icon">📅</span>
-                <span>Reserveren</span>
+                <span class="nav-label">Reserveren</span>
             </a>
             <a href="leerlijnen.html" class="bottom-nav-item ${isLeerlijnen ? 'active' : ''}">
                 <span class="nav-icon">🎯</span>
-                <span>Leerlijnen</span>
+                <span class="nav-label">Leerlijnen</span>
             </a>
             <a href="handreiking.html" class="bottom-nav-item ${isHandreiking ? 'active' : ''}">
                 <span class="nav-icon">📖</span>
-                <span>Handreiking</span>
+                <span class="nav-label">Handreiking</span>
             </a>
             <a href="lesideeen.html" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
                 <span class="nav-icon">💡</span>
-                <span>Lesideeën</span>
+                <span class="nav-label">Lesideeën</span>
             </a>
             <a href="profiel.html" class="bottom-nav-item ${isProfiel ? 'active' : ''}">
                 <span class="nav-icon">👤</span>
-                <span>Profiel</span>
+                <span class="nav-label">Profiel</span>
             </a>
         `;
         document.body.appendChild(bottomNav);
