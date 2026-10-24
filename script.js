@@ -1370,13 +1370,22 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             }
         };
         
+        const withTimeout = (promise, ms = 4000) => Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Cloud timeout na ' + ms + 'ms')), ms))
+        ]);
+
         // Opslaan Functies
         window.saveMateriaalToCloud = async function(rawId, newData, imgData, pdfsData) {
             try {
                 if(imgData && imgData.startsWith('data:image')) {
-                    const imgRef = ref(storage, `afbeeldingen/${newData.id}`);
-                    await uploadString(imgRef, imgData, 'data_url');
-                    newData.afbeelding = await getDownloadURL(imgRef);
+                    try {
+                        const imgRef = ref(storage, `afbeeldingen/${newData.id}`);
+                        await withTimeout(uploadString(imgRef, imgData, 'data_url'), 4000);
+                        newData.afbeelding = await withTimeout(getDownloadURL(imgRef), 4000);
+                    } catch(imgErr) {
+                        console.warn("Storage upload afbeelding mislukt/timeout:", imgErr);
+                    }
                 }
                 let finalPdfs = [];
                 if (pdfsData && Array.isArray(pdfsData)) {
@@ -1386,15 +1395,16 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                             try {
                                 const ext = (pdf.naam && pdf.naam.includes('.')) ? pdf.naam.split('.').pop() : 'pdf';
                                 const pdfRef = ref(storage, `pdfs/${newData.id}_${Date.now()}_${i}.${ext}`);
-                                await uploadString(pdfRef, pdf.data, 'data_url');
+                                await withTimeout(uploadString(pdfRef, pdf.data, 'data_url'), 4000);
+                                const dlUrl = await withTimeout(getDownloadURL(pdfRef), 4000);
                                 finalPdfs.push({
                                     naam: pdf.naam,
                                     grootte: pdf.grootte || '',
                                     type: pdf.type || 'application/pdf',
-                                    data: await getDownloadURL(pdfRef)
+                                    data: dlUrl
                                 });
                             } catch(storageErr) {
-                                console.warn("Firebase Storage upload mislukt, behoud base64 fallback:", storageErr);
+                                console.warn("Firebase Storage upload mislukt of timeout, behoud base64 fallback:", storageErr);
                                 finalPdfs.push(pdf);
                             }
                         } else {
@@ -1403,7 +1413,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                 }
                 newData.pdfs = finalPdfs;
-                await setDoc(doc(db, "leskisten", newData.id.toString()), newData);
+                await withTimeout(setDoc(doc(db, "leskisten", newData.id.toString()), newData), 5000);
                 
                 // Synchroniseer ook direct lokaal geheugen
                 const idx = leskisten.findIndex(k => k.id == newData.id);
@@ -1416,7 +1426,21 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             } catch(e) { console.error("Cloud Opslag Mislukt:", e); }
         };
 
-        window.saveMeldingToCloud = async function(newData) { try { if(newData.foto && newData.foto.startsWith('data:image')) { const imgRef = ref(storage, `schades/${newData.id}`); await uploadString(imgRef, newData.foto, 'data_url'); newData.foto = await getDownloadURL(imgRef); } await setDoc(doc(db, "meldingen", newData.id.toString()), newData); } catch(e) { console.error("Opslaan Melding Mislukt:", e); } };
+        window.saveMeldingToCloud = async function(newData) {
+            try {
+                if(newData.foto && newData.foto.startsWith('data:image')) {
+                    try {
+                        const imgRef = ref(storage, `schades/${newData.id}`);
+                        await withTimeout(uploadString(imgRef, newData.foto, 'data_url'), 4000);
+                        newData.foto = await withTimeout(getDownloadURL(imgRef), 4000);
+                    } catch(err) {
+                        console.warn("Melding foto upload timeout:", err);
+                    }
+                }
+                await withTimeout(setDoc(doc(db, "meldingen", newData.id.toString()), newData), 5000);
+            } catch(e) { console.error("Opslaan Melding Mislukt:", e); }
+        };
+
         window.saveLesideeToCloud = async function(newData) {
             try {
                 if (newData.bestanden && Array.isArray(newData.bestanden) && typeof ref === 'function' && typeof uploadString === 'function') {
@@ -1427,8 +1451,9 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                             try {
                                 const safeExt = (f.naam && f.naam.includes('.')) ? f.naam.split('.').pop() : 'bin';
                                 const fileRef = ref(storage, `lesideeen_bestanden/${newData.id}_${Date.now()}_${i}.${safeExt}`);
-                                await uploadString(fileRef, f.data, 'data_url');
-                                finalFiles.push({ naam: f.naam, grootte: f.grootte, type: f.type, data: await getDownloadURL(fileRef) });
+                                await withTimeout(uploadString(fileRef, f.data, 'data_url'), 4000);
+                                const dlUrl = await withTimeout(getDownloadURL(fileRef), 4000);
+                                finalFiles.push({ naam: f.naam, grootte: f.grootte, type: f.type, data: dlUrl });
                             } catch(upErr) {
                                 console.warn("Storage upload fallback naar DataURL:", upErr);
                                 finalFiles.push(f);
@@ -1439,7 +1464,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                     newData.bestanden = finalFiles;
                 }
-                await setDoc(doc(db, "lesideeen", newData.id.toString()), newData);
+                await withTimeout(setDoc(doc(db, "lesideeen", newData.id.toString()), newData), 5000);
             } catch(e) {
                 console.error("Opslaan Lesidee Cloud Mislukt:", e);
             }
@@ -2572,9 +2597,12 @@ async function verwerkFormulier(formId, btnElement) {
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
             if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
-            if(window.saveMateriaalToCloud) await window.saveMateriaalToCloud(rawId, newData, imgData, kistPdfs); 
             window.sluitAlleModals(); 
+            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
             alert("✅ Materiaal en bijlagen succesvol opgeslagen!"); 
+            if(window.saveMateriaalToCloud) {
+                window.saveMateriaalToCloud(rawId, newData, imgData, kistPdfs).catch(err => console.error("Cloud opslag materiaal fout:", err));
+            }
         } else if (formId === 'editLesideeForm') { 
             const rawId = getVal('editLesideeId'); 
             const ideeId = rawId ? parseInt(rawId) : Date.now(); 
@@ -2628,9 +2656,12 @@ async function verwerkFormulier(formId, btnElement) {
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
             if(window.renderLesideeenGrid) window.renderLesideeenGrid(); 
-            if(window.saveLesideeToCloud) await window.saveLesideeToCloud(newData); 
             window.sluitAlleModals(); 
+            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
             alert("✅ Lesidee inclusief bijlagen en leerlijndoelen succesvol opgeslagen!"); 
+            if(window.saveLesideeToCloud) {
+                window.saveLesideeToCloud(newData).catch(err => console.error("Cloud opslag lesidee fout:", err));
+            }
         } else if (formId === 'periodeForm') { 
             const rawId = getVal('editPeriodeId'); 
             const perId = rawId ? parseInt(rawId) : Date.now(); 
@@ -2639,10 +2670,11 @@ async function verwerkFormulier(formId, btnElement) {
             if(idx > -1) periodes[idx] = { ...periodes[idx], ...newData }; else periodes.push(newData); 
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
-            if(window.savePeriodeToCloud) await window.savePeriodeToCloud(newData); 
             window.sluitAlleModals(); 
+            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
             if(window.updateKalenderEnLijst) window.updateKalenderEnLijst(); 
             alert("✅ Periode succesvol opgeslagen!"); 
+            if(window.savePeriodeToCloud) window.savePeriodeToCloud(newData).catch(console.error); 
         } else if (formId === 'schoolForm') { 
             const rawId = getVal('editSchoolId'); 
             const schoolId = rawId ? parseInt(rawId) : Date.now(); 
@@ -2651,9 +2683,10 @@ async function verwerkFormulier(formId, btnElement) {
             if(idx > -1) scholen[idx] = { ...scholen[idx], ...newData }; else scholen.push(newData); 
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
-            if(window.saveSchoolToCloud) await window.saveSchoolToCloud(newData); 
             window.sluitAlleModals(); 
+            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
             alert("✅ Locatie succesvol opgeslagen!"); 
+            if(window.saveSchoolToCloud) window.saveSchoolToCloud(newData).catch(console.error); 
         } else if (formId === 'reserveForm') { 
             const kistNaam = getVal('geselecteerdeKistNaam', 'Onbekende Kist'); 
             const gekozenPeriodeId = parseInt(getVal('periodeSelect', '0')); 
@@ -2718,9 +2751,10 @@ async function verwerkFormulier(formId, btnElement) {
         meldingen.push(nieuweMelding); 
         slaDataOp(); 
         if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
-        if(window.saveMeldingToCloud) await window.saveMeldingToCloud(nieuweMelding); 
+        if(window.saveMeldingToCloud) window.saveMeldingToCloud(nieuweMelding).catch(console.error); 
         
         window.sluitAlleModals(); 
+        if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
         const formObj = document.getElementById('storingForm'); 
         if(formObj) formObj.reset(); 
         if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; 
@@ -2762,7 +2796,15 @@ ${beschrijving}
 window.filterDocentKisten = function(doelgroep) { actieveDocentFilter = doelgroep; document.querySelectorAll('#docentKistFilters .filter-btn').forEach(btn => { btn.style.background = btn.innerText.includes(doelgroep) ? (doelgroep === 'Favorieten' ? '#ef4444' : '#8CC63F') : 'white'; btn.style.color = btn.innerText.includes(doelgroep) ? 'white' : '#64748b'; }); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); };
 window.zoekDocentKisten = function() { const input = document.getElementById('docentKistZoekInput'); if(input) { actieveDocentZoekterm = input.value.toLowerCase(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); } };
 window.toggleFavoriet = function(id, event) { event.stopPropagation(); if(mijnFavorieten.includes(id)) { mijnFavorieten = mijnFavorieten.filter(favId => favId !== id); } else { mijnFavorieten.push(id); } slaDataOp(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); };
-window.sluitAlleModals = function() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); const vid = document.getElementById('modalVideo'); if(vid) vid.src = ""; }; 
+window.sluitAlleModals = function() { 
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
+    const vid = document.getElementById('modalVideo'); 
+    if(vid) vid.src = ""; 
+    document.querySelectorAll('form button[type="submit"], form button.btn-green-action').forEach(b => {
+        b.disabled = false;
+        if (b.innerText.includes('...')) b.innerText = "Opslaan";
+    });
+}; 
 window.onclick = function(event) { if (event.target.classList.contains('modal')) window.sluitAlleModals(); };
 window.switchAdminTab = function(tabId, btnElement) { 
     document.querySelectorAll('.admin-tab-content').forEach(el => el.style.display = 'none'); 
@@ -3843,6 +3885,8 @@ window.openMateriaalModal = function(id = null) {
     } 
 
     if(window.updatePdfPreview) window.updatePdfPreview(); 
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    if (submitBtn) { submitBtn.innerText = "Opslaan"; submitBtn.disabled = false; }
     const m = document.getElementById('editLeskistModal'); 
     if(m) m.style.display = 'flex'; 
 };
