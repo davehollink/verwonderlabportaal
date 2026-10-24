@@ -1234,11 +1234,158 @@ window.toonWillekeurigeTip = function() {
     } 
 };
 
+// ==========================================
+// ATTACHMENT STORE (IndexedDB + Cloud Chunks)
+// ==========================================
+const AttachmentStore = {
+    dbPromise: null,
+    init() {
+        if (!this.dbPromise) {
+            this.dbPromise = new Promise((resolve) => {
+                if (typeof indexedDB === 'undefined') {
+                    resolve(null);
+                    return;
+                }
+                const request = indexedDB.open("VerwonderlabAttachmentsDB", 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains("files")) {
+                        db.createObjectStore("files", { keyPath: "id" });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (e) => {
+                    console.warn("IndexedDB error:", e);
+                    resolve(null);
+                };
+            });
+        }
+        return this.dbPromise;
+    },
+
+    async setFile(id, dataObj) {
+        if (!id) return false;
+        try {
+            const db = await this.init();
+            if (!db) return false;
+            return new Promise((resolve) => {
+                const tx = db.transaction("files", "readwrite");
+                const store = tx.objectStore("files");
+                store.put({ id: id, ...dataObj });
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = (err) => {
+                    console.warn("AttachmentStore setFile failed:", err);
+                    resolve(false);
+                };
+            });
+        } catch(e) {
+            console.warn("AttachmentStore setFile exception:", e);
+            return false;
+        }
+    },
+
+    async getFile(id) {
+        if (!id) return null;
+        try {
+            const db = await this.init();
+            if (!db) return null;
+            return new Promise((resolve) => {
+                const tx = db.transaction("files", "readonly");
+                const store = tx.objectStore("files");
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result ? (req.result.data || null) : null);
+                req.onerror = () => resolve(null);
+            });
+        } catch(e) {
+            console.warn("AttachmentStore getFile exception:", e);
+            return null;
+        }
+    },
+
+    async removeFile(id) {
+        if (!id) return;
+        try {
+            const db = await this.init();
+            if (!db) return;
+            return new Promise((resolve) => {
+                const tx = db.transaction("files", "readwrite");
+                const store = tx.objectStore("files");
+                store.delete(id);
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            });
+        } catch(e) { console.warn("removeFile error:", e); }
+    }
+};
+
+window.AttachmentStore = AttachmentStore;
+
+async function saveFileToCloudChunks(fileId, dataUrl) {
+    if (!window.firestoreDb || !window.firestoreDoc || !window.firestoreSetDoc || !dataUrl) return 0;
+    try {
+        const CHUNK_SIZE = 350 * 1024; // 350 KB per chunk (ruim onder 1MB Firestore limiet)
+        const totalLen = dataUrl.length;
+        const totalChunks = Math.ceil(totalLen / CHUNK_SIZE);
+        for (let c = 0; c < totalChunks; c++) {
+            const chunkPart = dataUrl.substr(c * CHUNK_SIZE, CHUNK_SIZE);
+            await window.firestoreSetDoc(window.firestoreDoc(window.firestoreDb, "bestanden_chunks", `${fileId}_c${c}`), {
+                fileId: fileId,
+                chunkIndex: c,
+                totalChunks: totalChunks,
+                data: chunkPart
+            });
+        }
+        return totalChunks;
+    } catch(err) {
+        console.warn("Opslaan cloud chunks mislukt:", err);
+        return 0;
+    }
+}
+
+async function loadFileFromCloudChunks(fileId, totalChunks) {
+    if (!window.firestoreDb || !window.firestoreDoc || !window.firestoreGetDoc || !fileId) return null;
+    try {
+        const count = totalChunks || 1;
+        let fullData = "";
+        for (let c = 0; c < count; c++) {
+            const snap = await window.firestoreGetDoc(window.firestoreDoc(window.firestoreDb, "bestanden_chunks", `${fileId}_c${c}`));
+            if (!snap.exists()) return null;
+            fullData += (snap.data().data || "");
+        }
+        return fullData.length > 0 ? fullData : null;
+    } catch(err) {
+        console.warn("Laden cloud chunks mislukt:", err);
+        return null;
+    }
+}
+window.loadFileFromCloudChunks = loadFileFromCloudChunks;
+
 function slaDataOp() {
     try {
         localStorage.setItem('ww_periodes_v11', JSON.stringify(periodes));
         localStorage.setItem('ww_reserveringen_v11', JSON.stringify(reserveringen));
-        localStorage.setItem('ww_leskisten_v15', JSON.stringify(leskisten)); 
+        
+        // Zorg dat grote base64 data nooit de 5MB quota van localStorage overschrijdt
+        try {
+            localStorage.setItem('ww_leskisten_v15', JSON.stringify(leskisten));
+        } catch(storageErr) {
+            console.warn("LocalStorage quota bijna vol, bewaar compacte leskisten metadata:", storageErr);
+            const compactKisten = leskisten.map(k => {
+                if (!k.pdfs || !Array.isArray(k.pdfs)) return k;
+                return {
+                    ...k,
+                    pdfs: k.pdfs.map(p => ({
+                        fileId: p.fileId,
+                        naam: p.naam,
+                        grootte: p.grootte,
+                        type: p.type,
+                        totalChunks: p.totalChunks
+                    }))
+                };
+            });
+            localStorage.setItem('ww_leskisten_v15', JSON.stringify(compactKisten));
+        }
+
         localStorage.setItem('ww_lesideeen_v16', JSON.stringify(lesideeen));
         localStorage.setItem('ww_scholen_v1', JSON.stringify(scholen));
         localStorage.setItem('ww_beheerders_v1', JSON.stringify(beheerdersLijst));
@@ -1259,7 +1406,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 (async () => {
     try {
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
-        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         const { getStorage, ref, uploadString, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js");
 
         const firebaseConfig = {
@@ -1275,6 +1422,11 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         const db = getFirestore(window.firebaseApp);
         const storage = getStorage(window.firebaseApp);
 
+        window.firestoreDb = db;
+        window.firestoreDoc = doc;
+        window.firestoreSetDoc = setDoc;
+        window.firestoreGetDoc = getDoc;
+
         const checkError = (err) => { 
             console.warn("Firebase snapshot error:", err); 
         };
@@ -1283,7 +1435,29 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "periodes"), (snapshot) => { if(!snapshot.empty) { periodes = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.updateAftelkalender === "function") window.updateAftelkalender(); } }, checkError);
         onSnapshot(collection(db, "scholen"), (snapshot) => { if(!snapshot.empty) { scholen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "beheerders"), (snapshot) => { if(!snapshot.empty) { beheerdersLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } else { beheerdersLijst = []; slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
-        onSnapshot(collection(db, "leskisten"), (snapshot) => { if(!snapshot.empty) { leskisten = snapshot.docs.map(d => d.data()).sort((a,b) => a.id - b.id); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(window.renderReserveringsGrid) window.renderReserveringsGrid(); } }, checkError);
+        onSnapshot(collection(db, "leskisten"), (snapshot) => { 
+            if(!snapshot.empty) { 
+                const cloudKisten = snapshot.docs.map(d => d.data());
+                leskisten = cloudKisten.map(ck => {
+                    const local = leskisten.find(lk => lk.id == ck.id);
+                    if (local && local.pdfs && local.pdfs.length > 0) {
+                        if (!ck.pdfs || ck.pdfs.length === 0) {
+                            return { ...ck, pdfs: local.pdfs };
+                        } else {
+                            const mergedPdfs = ck.pdfs.map(cp => {
+                                const lp = local.pdfs.find(p => (cp.fileId && p.fileId === cp.fileId) || (cp.naam && p.naam === cp.naam));
+                                return (lp && lp.data) ? { ...cp, data: lp.data } : cp;
+                            });
+                            return { ...ck, pdfs: mergedPdfs };
+                        }
+                    }
+                    return ck;
+                }).sort((a,b) => a.id - b.id);
+                slaDataOp(); 
+                if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+                if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
+            } 
+        }, checkError);
         onSnapshot(collection(db, "lesideeen"), (snapshot) => { 
             if(!snapshot.empty) { 
                 const cloudIdeeen = snapshot.docs.map(d => d.data());
@@ -1391,34 +1565,40 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 if (pdfsData && Array.isArray(pdfsData)) {
                     for(let i = 0; i < pdfsData.length; i++) {
                         let pdf = pdfsData[i];
+                        const fileId = pdf.fileId || `pdf_${newData.id}_${Date.now()}_${i}`;
+                        let chunkCount = pdf.totalChunks || 1;
+
                         if(pdf.data && typeof pdf.data === 'string' && pdf.data.startsWith('data:')) {
-                            try {
-                                const ext = (pdf.naam && pdf.naam.includes('.')) ? pdf.naam.split('.').pop() : 'pdf';
-                                const pdfRef = ref(storage, `pdfs/${newData.id}_${Date.now()}_${i}.${ext}`);
-                                await withTimeout(uploadString(pdfRef, pdf.data, 'data_url'), 4000);
-                                const dlUrl = await withTimeout(getDownloadURL(pdfRef), 4000);
-                                finalPdfs.push({
-                                    naam: pdf.naam,
-                                    grootte: pdf.grootte || '',
-                                    type: pdf.type || 'application/pdf',
-                                    data: dlUrl
-                                });
-                            } catch(storageErr) {
-                                console.warn("Firebase Storage upload mislukt of timeout, behoud base64 fallback:", storageErr);
-                                finalPdfs.push(pdf);
-                            }
-                        } else {
-                            finalPdfs.push(pdf);
+                            // 1. Sla altijd op in lokale IndexedDB voor instant weergave
+                            await AttachmentStore.setFile(fileId, {
+                                fileId: fileId,
+                                naam: pdf.naam,
+                                grootte: pdf.grootte || '',
+                                type: pdf.type || 'application/pdf',
+                                data: pdf.data
+                            });
+
+                            // 2. Sla op in veilige Firestore chunks (ongeacht bestandsgrootte)
+                            chunkCount = await saveFileToCloudChunks(fileId, pdf.data);
                         }
+
+                        // Hoofddocument bevat slanke metadata (nooit meer dan enkele bytes)
+                        finalPdfs.push({
+                            fileId: fileId,
+                            naam: pdf.naam,
+                            grootte: pdf.grootte || '',
+                            type: pdf.type || 'application/pdf',
+                            totalChunks: chunkCount
+                        });
                     }
                 }
-                newData.pdfs = finalPdfs;
-                await withTimeout(setDoc(doc(db, "leskisten", newData.id.toString()), newData), 5000);
+                const cloudDoc = { ...newData, pdfs: finalPdfs };
+                await withTimeout(setDoc(doc(db, "leskisten", newData.id.toString()), cloudDoc), 5000);
                 
-                // Synchroniseer ook direct lokaal geheugen
+                // Synchroniseer ook direct lokaal geheugen inclusief volledige bestanden
                 const idx = leskisten.findIndex(k => k.id == newData.id);
                 if (idx > -1) {
-                    leskisten[idx] = { ...leskisten[idx], ...newData };
+                    leskisten[idx] = { ...leskisten[idx], ...newData, pdfs: pdfsData };
                 }
                 slaDataOp();
                 if (window.renderReserveringsGrid) window.renderReserveringsGrid();
@@ -2426,9 +2606,12 @@ window.renderBeheerdersTabellen = function() {
                 ? `<span style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">In reparatie</span>` 
                 : `<span style="background: rgba(140, 198, 63, 0.12); color: var(--ww-green-dark); border: 1px solid rgba(140, 198, 63, 0.3); padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">Actief</span>`;
             let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg);
+            let pdfAdminBadge = (kist.pdfs && Array.isArray(kist.pdfs) && kist.pdfs.length > 0) 
+                ? `<div style="margin-top: 4px;"><span style="display:inline-flex; align-items:center; gap:4px; font-size:11px; color:#15803d; font-weight:700; background:#f0fdf4; border:1px solid #bbf7d0; padding:2px 7px; border-radius:6px;">📄 ${kist.pdfs.length} ${kist.pdfs.length === 1 ? 'bijlage' : 'bijlagen'}</span></div>` 
+                : '';
             return `<tr>
                 <td style="padding: 12px 18px;"><img src="${imgSource}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);"></td>
-                <td style="padding: 12px 18px;"><strong>${kist.naam}</strong><br><span style="font-size:12px; color:#64748b;">${kist.tag || ''}</span></td>
+                <td style="padding: 12px 18px;"><strong>${kist.naam}</strong><br><span style="font-size:12px; color:#64748b;">${kist.tag || ''}</span>${pdfAdminBadge}</td>
                 <td style="padding: 12px 18px;">${kist.doelgroep || 'Alle groepen'}<br><div style="margin-top: 4px;">${statusBadge}</div></td>
                 <td style="text-align: right; padding: 12px 18px; white-space: nowrap;">
                     <button class="btn-table-edit" onclick="window.openMateriaalModal(${kist.id})">✏️ Bewerken</button>
@@ -3382,7 +3565,7 @@ window.openLeskistInfo = function(id) {
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
             `;
-            kist.pdfs.forEach(pdf => {
+            kist.pdfs.forEach((pdf, pIdx) => {
                 pdfHtml += `
                     <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 2px 4px rgba(140, 198, 63, 0.08);">
                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden;">
@@ -3393,9 +3576,9 @@ window.openLeskistInfo = function(id) {
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                            <a href="${pdf.data}" target="_blank" download="${pdf.naam}" class="btn-green-action" style="padding: 7px 14px; font-size: 12px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: #8CC63F; color: white; font-weight: 700;">
-                                <span>📥</span> Download
-                            </a>
+                            <button type="button" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${pIdx}, '${kist.id}')" class="btn-green-action" style="padding: 7px 14px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; background: #8CC63F; color: white; font-weight: 700;">
+                                <span>📥</span> Bekijk / Download
+                            </button>
                         </div>
                     </div>
                 `;
@@ -3782,19 +3965,103 @@ window.handlePdfUpload = function(event) {
         const fileSizeStr = file.size > 1024 * 1024 
             ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
             : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+        const fileId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         
-        reader.onload = (e) => {
-            currentPdfs.push({
+        reader.onload = async (e) => {
+            const dataUrl = e.target.result;
+            // Sla direct op in IndexedDB (geen 5MB quota limiet)
+            await AttachmentStore.setFile(fileId, {
+                fileId: fileId,
                 naam: file.name,
                 type: file.type || 'application/pdf',
                 grootte: fileSizeStr,
-                data: e.target.result
+                data: dataUrl
+            });
+
+            currentPdfs.push({
+                fileId: fileId,
+                naam: file.name,
+                type: file.type || 'application/pdf',
+                grootte: fileSizeStr,
+                data: dataUrl
             });
             window.updatePdfPreview();
         };
         reader.readAsDataURL(file);
     });
     event.target.value = '';
+};
+
+window.viewOrDownloadPdf = async function(fileId, idx = -1, kistId = null) {
+    let pdfObj = null;
+    if (idx >= 0 && currentPdfs && currentPdfs[idx]) {
+        pdfObj = currentPdfs[idx];
+    } else if (kistId) {
+        const kist = leskisten.find(k => k.id == kistId);
+        if (kist && kist.pdfs) {
+            pdfObj = kist.pdfs.find(p => (fileId && p.fileId === fileId) || (fileId && p.naam === fileId));
+            if (!pdfObj && idx >= 0 && kist.pdfs[idx]) pdfObj = kist.pdfs[idx];
+            if (!pdfObj && kist.pdfs.length === 1) pdfObj = kist.pdfs[0];
+        }
+    }
+    
+    let dataUrl = (pdfObj && pdfObj.data) ? pdfObj.data : null;
+    const targetId = fileId || (pdfObj && pdfObj.fileId);
+    
+    // 1. Probeer IndexedDB
+    if (!dataUrl && targetId) {
+        dataUrl = await AttachmentStore.getFile(targetId);
+        if (dataUrl && pdfObj) pdfObj.data = dataUrl;
+    }
+    
+    // 2. Probeer Cloud Chunks
+    if (!dataUrl && targetId) {
+        const chunks = (pdfObj && pdfObj.totalChunks) ? pdfObj.totalChunks : 1;
+        dataUrl = await loadFileFromCloudChunks(targetId, chunks);
+        if (dataUrl) {
+            if (pdfObj) pdfObj.data = dataUrl;
+            await AttachmentStore.setFile(targetId, { ...(pdfObj || {}), data: dataUrl });
+        }
+    }
+    
+    if (dataUrl) {
+        try {
+            const arr = dataUrl.split(',');
+            const mime = (arr[0].match(/:(.*?);/) || [])[1] || 'application/pdf';
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while(n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            const blob = new Blob([u8arr], {type: mime});
+            const blobUrl = URL.createObjectURL(blob);
+            const w = window.open(blobUrl, '_blank');
+            if (!w) {
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = pdfObj ? pdfObj.naam : 'leskaart.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        } catch(blobErr) {
+            const win = window.open();
+            if (win) {
+                win.document.write(`<iframe src="${dataUrl}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+                win.document.title = (pdfObj ? pdfObj.naam : "Leskaart Bijlage");
+            } else {
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = pdfObj ? pdfObj.naam : 'leskaart.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+    } else {
+        alert("⚠️ Het document kon niet direct worden geladen. Controleer of het bestand correct is toegevoegd.");
+    }
 };
 
 window.updatePdfPreview = function() {
@@ -3811,16 +4078,16 @@ window.updatePdfPreview = function() {
             <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; min-width: 0;">
                 <span style="font-size: 20px; flex-shrink: 0;">📄</span>
                 <div style="min-width: 0; overflow: hidden;">
-                    <a href="${pdf.data}" target="_blank" download="${pdf.naam}" style="font-size: 13px; font-weight: 700; color: #1e293b; text-decoration: none; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="Klik om te bekijken/downloaden">
+                    <a href="javascript:void(0)" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${idx})" style="font-size: 13px; font-weight: 700; color: #1e293b; text-decoration: none; display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="Klik om te bekijken/downloaden">
                         ${pdf.naam}
                     </a>
                     <span style="font-size: 11px; color: #64748b;">${pdf.grootte || 'Bijlage'}</span>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                <a href="${pdf.data}" target="_blank" download="${pdf.naam}" class="btn-pdf-view" style="padding: 4px 8px; font-size: 11.5px; border-radius: 6px; background: #e0f2fe; color: #0369a1; text-decoration: none; font-weight: 600;">
+                <button type="button" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${idx})" class="btn-pdf-view" style="padding: 4px 10px; font-size: 12px; border-radius: 6px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                     👁️ Bekijk
-                </a>
+                </button>
                 <button type="button" onclick="window.removePdfFile(${idx})" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer;" title="Verwijder bijlage">
                     🗑️
                 </button>
@@ -3831,7 +4098,10 @@ window.updatePdfPreview = function() {
 
 window.removePdfFile = function(idx) {
     if (idx >= 0 && idx < currentPdfs.length) {
-        currentPdfs.splice(idx, 1);
+        const removed = currentPdfs.splice(idx, 1)[0];
+        if (removed && removed.fileId) {
+            AttachmentStore.removeFile(removed.fileId);
+        }
         window.updatePdfPreview();
     }
 };
@@ -3874,6 +4144,18 @@ window.openMateriaalModal = function(id = null) {
             if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; 
             if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; 
             currentPdfs = (kist.pdfs && Array.isArray(kist.pdfs)) ? JSON.parse(JSON.stringify(kist.pdfs)) : []; 
+
+            // Laad eventuele ontbrekende bestandsdata asynchroon uit IndexedDB
+            currentPdfs.forEach(p => {
+                if (!p.data && p.fileId) {
+                    AttachmentStore.getFile(p.fileId).then(d => {
+                        if (d) {
+                            p.data = d;
+                            window.updatePdfPreview();
+                        }
+                    });
+                }
+            });
         }
     } else { 
         document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; 
