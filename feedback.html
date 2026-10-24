@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Feedback & Ervaringen</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261023l">
+    <link rel="stylesheet" href="style.css?v=20261024b">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -413,8 +413,8 @@
             <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="feedback-logo">
             <br>
             <span class="feedback-badge">✨ Verwonderlab Ervaringen • Stichting Wonderwijs</span>
-            <h1 class="feedback-title">Hoe is het lesmateriaal bevallen?</h1>
-            <p class="feedback-subtitle">
+            <h1 id="feedbackFormTitle" class="feedback-title">Hoe is het lesmateriaal bevallen?</h1>
+            <p id="feedbackFormSubtitle" class="feedback-subtitle">
                 Jouw ervaring helpt ons om het Verwonderlab continu te verbeteren en inspiratie te delen met collega-leerkrachten!
             </p>
         </div>
@@ -437,9 +437,9 @@
 
         <form id="feedbackMainForm">
             <!-- VRAAG 1: STERREN RATING -->
-            <div class="section-box">
-                <h3>⭐ 1. Algemene beoordeling</h3>
-                <p class="section-desc">Hoe beoordeel je deze leskist over het geheel genomen?</p>
+            <div class="section-box" id="secSterrenContainer">
+                <h3 id="secSterrenTitel">⭐ 1. Algemene beoordeling</h3>
+                <p class="section-desc" id="secSterrenDesc">Hoe beoordeel je deze leskist over het geheel genomen?</p>
                 
                 <div class="star-rating-row">
                     <button type="button" class="star-btn" data-val="1">★</button>
@@ -453,9 +453,9 @@
             </div>
 
             <!-- VRAAG 2: ERVARING IN DE KLAS -->
-            <div class="section-box">
-                <h3>👥 2. Ervaring & enthousiasme in de klas</h3>
-                <p class="section-desc">Hoe hebben de leerlingen het werken met dit materiaal ervaren?</p>
+            <div class="section-box" id="secEnthousiasmeContainer">
+                <h3 id="secEnthousiasmeTitel">👥 2. Ervaring & enthousiasme in de klas</h3>
+                <p class="section-desc" id="secEnthousiasmeDesc">Hoe hebben de leerlingen het werken met dit materiaal ervaren?</p>
 
                 <div class="choice-pills-grid" id="enthousiasmeGroup">
                     <label class="choice-pill-label selected" onclick="window.selectPill(this, 'enthousiasmeGroup')">
@@ -476,8 +476,8 @@
                     </label>
                 </div>
 
-                <div style="margin-top: 16px;">
-                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                <div id="compleetheidContainer" style="margin-top: 16px;">
+                    <label id="compleetheidLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
                         Kwaliteit & compleetheid van de kist:
                     </label>
                     <div class="choice-pills-grid" id="compleetheidGroup">
@@ -496,8 +496,8 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 18px;">
-                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                <div id="toelichtingContainer" style="margin-top: 18px;">
+                    <label id="toelichtingLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
                         Toelichting of ervaringen uit de les:
                     </label>
                     <textarea id="toelichtingInput" class="form-control-text" rows="3" placeholder="Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht wellicht helpen?"></textarea>
@@ -505,11 +505,11 @@
             </div>
 
             <!-- VRAAG 3: DIGITALE GELETTERDHEID (SLO DOELEN) -->
-            <div class="section-box">
-                <h3>🎯 3. Doelen Digitale Geletterdheid (DG)</h3>
-                <p class="section-desc">Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?</p>
+            <div class="section-box" id="secDgContainer">
+                <h3 id="secDgTitel">🎯 3. Doelen Digitale Geletterdheid (DG)</h3>
+                <p class="section-desc" id="secDgDesc">Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?</p>
 
-                <div class="dg-domains-grid">
+                <div class="dg-domains-grid" id="dgDomainsContainer">
                     <label class="dg-domain-card selected" onclick="window.toggleDgCard(this)">
                         <input type="checkbox" name="dgDomeinen" value="Computational Thinking & Programmeren" checked>
                         <div>
@@ -543,8 +543,8 @@
                     </label>
                 </div>
 
-                <div style="margin-top: 14px;">
-                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                <div id="dgOpdrachtContainer" style="margin-top: 14px;">
+                    <label id="dgOpdrachtLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
                         Specifieke lesopdracht of kerndoel (optioneel):
                     </label>
                     <input type="text" id="specifiekeOpdrachtInput" class="form-control-text" placeholder="Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt">
@@ -552,11 +552,11 @@
             </div>
 
             <!-- VRAAG 4: FOTO'S & MEDIA VAN HET PROJECT -->
-            <div class="section-box">
-                <h3>📸 4. Foto's & Resultaten delen (Optioneel)</h3>
-                <p class="section-desc">
+            <div class="section-box" id="secFotosContainer">
+                <h3 id="secFotosTitel">📸 4. Foto's & Resultaten delen (Optioneel)</h3>
+                <p class="section-desc" id="secFotosDesc">
                     Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat. 
-                    <br><span style="font-size: 11.5px; color: var(--slate-500); font-style: italic;">* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school.</span>
+                    <br><span id="secFotosAvg" style="font-size: 11.5px; color: var(--slate-500); font-style: italic;">* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school.</span>
                 </p>
 
                 <div class="foto-upload-dropzone" onclick="document.getElementById('feedbackFotoUploadInput').click()">
@@ -568,20 +568,23 @@
 
                 <div id="fotoPreviewsContainer" class="foto-previews-grid"></div>
 
-                <div style="margin-top: 18px;">
-                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                <div id="onedriveContainer" style="margin-top: 18px;">
+                    <label id="onedriveLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
                         Of deel een link naar jullie school SharePoint / OneDrive foto-map:
                     </label>
                     <input type="url" id="onedriveLinkInput" class="form-control-text" placeholder="https://wonderwijs-my.sharepoint.com/...">
                 </div>
 
-                <div style="margin-top: 16px;">
-                    <label style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                <div id="quoteContainer" style="margin-top: 16px;">
+                    <label id="quoteLabel" style="display: block; font-size: 13px; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
                         Quote van een leerling of gouden tip (optioneel):
                     </label>
                     <input type="text" id="quoteInput" class="form-control-text" placeholder="Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'">
                 </div>
             </div>
+
+            <!-- CONTAINER VOOR DYNAMISCHE AANVULLENDE VRAGEN -->
+            <div id="extraVragenContainer"></div>
 
             <!-- VERZENDEN -->
             <button type="submit" id="btnSubmitFeedback" class="btn-submit-feedback">
@@ -594,12 +597,13 @@
     <div id="feedbackSuccessView" class="success-card">
         <div class="success-icon-badge">✓</div>
         <span class="feedback-badge" style="background:#dcfce7; color:#15803d;">Ontvangen & Opgeslagen</span>
-        <h2 style="font-size: 28px; font-weight: 800; color: var(--slate-950); margin: 12px 0 8px 0;">
+        <h2 id="feedbackSuccessTitle" style="font-size: 28px; font-weight: 800; color: var(--slate-950); margin: 12px 0 8px 0;">
             Hartelijk dank voor je feedback!
         </h2>
-        <p style="font-size: 15px; color: var(--slate-600); max-width: 540px; margin: 0 auto 30px auto; line-height: 1.6;">
+        <p id="feedbackSuccessSubtitle" style="font-size: 15px; color: var(--slate-600); max-width: 540px; margin: 0 auto 30px auto; line-height: 1.6;">
             We hebben jouw ervaringen, tips en eventuele foto's succesvol ontvangen. Mede dankzij jouw input kunnen we het lesmateriaal in het Verwonderlab continu verbeteren en collega's binnen Wonderwijs inspireren!
         </p>
+
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
             <a href="index.html" class="btn-green-action" style="padding: 12px 26px; font-size: 14px;">
                 <span>🏠</span> Terug naar het Dashboard
@@ -628,9 +632,381 @@ document.getElementById('displayKistNaam').innerText = paramKist;
 document.getElementById('displayPeriodeNaam').innerText = paramPeriode;
 document.getElementById('displayDocentEnSchool').innerText = `${paramDocent}${paramSchool ? ' • ' + paramSchool : ''}`;
 
-// Sterren beoordeling logica
+// ------------------------------------------
+// STANDAARD CONFIGURATIE & DYNAMISCHE UITLEZING
+// ------------------------------------------
+const defaultFeedbackConfig = {
+    titel: "Hoe is het lesmateriaal bevallen?",
+    ondertitel: "Jouw ervaring helpt ons om het Verwonderlab continu te verbeteren en inspiratie te delen met collega-leerkrachten!",
+    bedankTitel: "Hartelijk dank voor je feedback!",
+    bedankTekst: "We hebben jouw ervaringen, tips en eventuele foto's succesvol ontvangen. Mede dankzij jouw input kunnen we het lesmateriaal in het Verwonderlab continu verbeteren en collega's binnen Wonderwijs inspireren!",
+    secties: {
+        sterren: { actief: true, titel: "⭐ 1. Algemene beoordeling", toelichting: "Hoe beoordeel je deze leskist over het geheel genomen?" },
+        enthousiasme: { 
+            actief: true, 
+            titel: "👥 2. Ervaring & enthousiasme in de klas", 
+            toelichting: "Hoe hebben de leerlingen het werken met dit materiaal ervaren?",
+            opties: ["🤩 Zeer enthousiast!", "🙂 Positief & betrokken", "😐 Wisselende reacties", "😕 Moeite met motiveren"]
+        },
+        compleetheid: {
+            actief: true,
+            label: "Kwaliteit & compleetheid van de kist:",
+            opties: ["✅ Helemaal compleet & gebruiksklaar", "⚠️ Er ontbrak een klein onderdeel", "🔧 Technisch mankement ervaren"]
+        },
+        toelichting: {
+            actief: true,
+            label: "Toelichting of ervaringen uit de les:",
+            placeholder: "Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht helpen?"
+        },
+        dgDoelen: {
+            actief: true,
+            titel: "🎯 3. Doelen Digitale Geletterdheid (DG)",
+            toelichting: "Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?",
+            domeinen: [
+                { icoon: "🧠", titel: "Computational Thinking", sub: "Algoritmes, probleemoplossend denken, logica, debuggen en robots programmeren." },
+                { icoon: "💻", titel: "ICT-basisvaardigheden", sub: "Hardware en sensoren bedienen, iPads/laptops, opslag en softwarefuncties verkennen." },
+                { icoon: "🌐", titel: "Mediawijsheid", sub: "Online veiligheid, privacy, samenwerken, omgangsvormen en media-creatie (bijv. podcast/video)." },
+                { icoon: "🔍", titel: "Informatievaardigheden", sub: "Gericht zoeken, informatie selecteren, presenteren en de betrouwbaarheid van bronnen beoordelen." }
+            ],
+            opdrachtLabel: "Specifieke lesopdracht of kerndoel (optioneel):",
+            opdrachtPlaceholder: "Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt"
+        },
+        fotos: {
+            actief: true,
+            titel: "📸 4. Foto's & Resultaten delen (Optioneel)",
+            toelichting: "Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat.",
+            avg: "* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school."
+        },
+        onedrive: {
+            actief: true,
+            label: "Of deel een link naar jullie school SharePoint / OneDrive foto-map:"
+        },
+        quote: {
+            actief: true,
+            label: "Quote van een leerling of gouden tip (optioneel):",
+            placeholder: "Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'"
+        }
+    },
+    extraVragen: []
+};
+
+let activeFeedbackConfig = defaultFeedbackConfig;
+try {
+    const lk = localStorage.getItem('ww_feedback_config_v1');
+    if (lk) {
+        const parsed = JSON.parse(lk);
+        if (parsed && typeof parsed === 'object') {
+            activeFeedbackConfig = { ...defaultFeedbackConfig, ...parsed };
+            if (!activeFeedbackConfig.secties) activeFeedbackConfig.secties = defaultFeedbackConfig.secties;
+        }
+    }
+} catch(e) {}
+
+// Dynamisch toepassen van de configuratie
+function applyFeedbackConfig(cfg) {
+    if (!cfg) return;
+    activeFeedbackConfig = cfg;
+
+    if (cfg.titel && document.getElementById('feedbackFormTitle')) {
+        document.getElementById('feedbackFormTitle').innerText = cfg.titel;
+    }
+    if (cfg.ondertitel && document.getElementById('feedbackFormSubtitle')) {
+        document.getElementById('feedbackFormSubtitle').innerText = cfg.ondertitel;
+    }
+    if (cfg.bedankTitel && document.getElementById('feedbackSuccessTitle')) {
+        document.getElementById('feedbackSuccessTitle').innerText = cfg.bedankTitel;
+    }
+    if (cfg.bedankTekst && document.getElementById('feedbackSuccessSubtitle')) {
+        document.getElementById('feedbackSuccessSubtitle').innerText = cfg.bedankTekst;
+    }
+
+    const s = cfg.secties || defaultFeedbackConfig.secties;
+
+    // Vraag 1: Sterren
+    const secSterren = document.getElementById('secSterrenContainer');
+    if (secSterren) {
+        secSterren.style.display = (s.sterren && s.sterren.actief === false) ? 'none' : 'block';
+        if (s.sterren && s.sterren.titel && document.getElementById('secSterrenTitel')) document.getElementById('secSterrenTitel').innerText = s.sterren.titel;
+        if (s.sterren && s.sterren.toelichting && document.getElementById('secSterrenDesc')) document.getElementById('secSterrenDesc').innerText = s.sterren.toelichting;
+    }
+
+    // Vraag 2: Enthousiasme & compleetheid & toelichting
+    const secEnth = document.getElementById('secEnthousiasmeContainer');
+    if (secEnth) {
+        const enthActief = !s.enthousiasme || s.enthousiasme.actief !== false;
+        const complActief = !s.compleetheid || s.compleetheid.actief !== false;
+        const toelActief = !s.toelichting || s.toelichting.actief !== false;
+
+        secEnth.style.display = (!enthActief && !complActief && !toelActief) ? 'none' : 'block';
+
+        if (s.enthousiasme) {
+            if (s.enthousiasme.titel && document.getElementById('secEnthousiasmeTitel')) document.getElementById('secEnthousiasmeTitel').innerText = s.enthousiasme.titel;
+            if (s.enthousiasme.toelichting && document.getElementById('secEnthousiasmeDesc')) document.getElementById('secEnthousiasmeDesc').innerText = s.enthousiasme.toelichting;
+
+            const enthGroup = document.getElementById('enthousiasmeGroup');
+            if (enthGroup) {
+                enthGroup.style.display = enthActief ? 'grid' : 'none';
+                if (enthActief && s.enthousiasme.opties && Array.isArray(s.enthousiasme.opties) && s.enthousiasme.opties.length > 0) {
+                    enthGroup.innerHTML = s.enthousiasme.opties.map((opt, i) => `
+                        <label class="choice-pill-label ${i === 0 ? 'selected' : ''}" onclick="window.selectPill(this, 'enthousiasmeGroup')">
+                            <input type="radio" name="enthousiasme" value="${opt}" ${i === 0 ? 'checked' : ''}>
+                            <span>${opt}</span>
+                        </label>
+                    `).join('');
+                }
+            }
+        }
+
+        const compContainer = document.getElementById('compleetheidContainer');
+        if (compContainer) {
+            compContainer.style.display = complActief ? 'block' : 'none';
+            if (s.compleetheid) {
+                if (s.compleetheid.label && document.getElementById('compleetheidLabel')) document.getElementById('compleetheidLabel').innerText = s.compleetheid.label;
+                const compGroup = document.getElementById('compleetheidGroup');
+                if (compGroup && s.compleetheid.opties && Array.isArray(s.compleetheid.opties) && s.compleetheid.opties.length > 0) {
+                    compGroup.innerHTML = s.compleetheid.opties.map((opt, i) => `
+                        <label class="choice-pill-label ${i === 0 ? 'selected' : ''}" onclick="window.selectPill(this, 'compleetheidGroup')">
+                            <input type="radio" name="compleetStatus" value="${opt}" ${i === 0 ? 'checked' : ''}>
+                            <span>${opt}</span>
+                        </label>
+                    `).join('');
+                }
+            }
+        }
+
+        const toelContainer = document.getElementById('toelichtingContainer');
+        if (toelContainer) {
+            toelContainer.style.display = toelActief ? 'block' : 'none';
+            if (s.toelichting) {
+                if (s.toelichting.label && document.getElementById('toelichtingLabel')) document.getElementById('toelichtingLabel').innerText = s.toelichting.label;
+                if (s.toelichting.placeholder && document.getElementById('toelichtingInput')) document.getElementById('toelichtingInput').placeholder = s.toelichting.placeholder;
+            }
+        }
+    }
+
+    // Vraag 3: DG Doelen
+    const secDg = document.getElementById('secDgContainer');
+    if (secDg) {
+        secDg.style.display = (s.dgDoelen && s.dgDoelen.actief === false) ? 'none' : 'block';
+        if (s.dgDoelen) {
+            if (s.dgDoelen.titel && document.getElementById('secDgTitel')) document.getElementById('secDgTitel').innerText = s.dgDoelen.titel;
+            if (s.dgDoelen.toelichting && document.getElementById('secDgDesc')) document.getElementById('secDgDesc').innerText = s.dgDoelen.toelichting;
+            if (s.dgDoelen.opdrachtLabel && document.getElementById('dgOpdrachtLabel')) document.getElementById('dgOpdrachtLabel').innerText = s.dgDoelen.opdrachtLabel;
+            if (s.dgDoelen.opdrachtPlaceholder && document.getElementById('specifiekeOpdrachtInput')) document.getElementById('specifiekeOpdrachtInput').placeholder = s.dgDoelen.opdrachtPlaceholder;
+
+            const dgContainer = document.getElementById('dgDomainsContainer');
+            if (dgContainer && s.dgDoelen.domeinen && Array.isArray(s.dgDoelen.domeinen) && s.dgDoelen.domeinen.length > 0) {
+                dgContainer.innerHTML = s.dgDoelen.domeinen.map((d, i) => `
+                    <label class="dg-domain-card ${i === 0 ? 'selected' : ''}" onclick="window.toggleDgCard(this)">
+                        <input type="checkbox" name="dgDomeinen" value="${d.titel}" ${i === 0 ? 'checked' : ''}>
+                        <div>
+                            <div class="dg-title">${d.icoon || '🎯'} ${d.titel}</div>
+                            <div class="dg-desc">${d.sub || ''}</div>
+                        </div>
+                    </label>
+                `).join('');
+            }
+        }
+    }
+
+    // Vraag 4: Foto's & media & quote
+    const secFotos = document.getElementById('secFotosContainer');
+    if (secFotos) {
+        const fotosActief = !s.fotos || s.fotos.actief !== false;
+        const odActief = !s.onedrive || s.onedrive.actief !== false;
+        const quoteActief = !s.quote || s.quote.actief !== false;
+
+        secFotos.style.display = (!fotosActief && !odActief && !quoteActief) ? 'none' : 'block';
+
+        if (s.fotos) {
+            if (s.fotos.titel && document.getElementById('secFotosTitel')) document.getElementById('secFotosTitel').innerText = s.fotos.titel;
+            if (s.fotos.toelichting && document.getElementById('secFotosDesc')) document.getElementById('secFotosDesc').innerHTML = `${s.fotos.toelichting}<br><span id="secFotosAvg" style="font-size: 11.5px; color: var(--slate-500); font-style: italic;">${s.fotos.avg || ''}</span>`;
+            const dropzone = document.querySelector('.foto-upload-dropzone');
+            if (dropzone) dropzone.style.display = fotosActief ? 'block' : 'none';
+        }
+
+        const odContainer = document.getElementById('onedriveContainer');
+        if (odContainer) {
+            odContainer.style.display = odActief ? 'block' : 'none';
+            if (s.onedrive && s.onedrive.label && document.getElementById('onedriveLabel')) document.getElementById('onedriveLabel').innerText = s.onedrive.label;
+        }
+
+        const quoteContainer = document.getElementById('quoteContainer');
+        if (quoteContainer) {
+            quoteContainer.style.display = quoteActief ? 'block' : 'none';
+            if (s.quote) {
+                if (s.quote.label && document.getElementById('quoteLabel')) document.getElementById('quoteLabel').innerText = s.quote.label;
+                if (s.quote.placeholder && document.getElementById('quoteInput')) document.getElementById('quoteInput').placeholder = s.quote.placeholder;
+            }
+        }
+    }
+
+    // DYNAMISCH RENDERING VAN AANVULLENDE / EXTRA VRAGEN
+    renderExtraQuestionsInForm(cfg.extraVragen || []);
+}
+
+function renderExtraQuestionsInForm(vragen) {
+    const container = document.getElementById('extraVragenContainer');
+    if (!container) return;
+
+    if (!vragen || vragen.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="section-box" id="secExtraVragenContainer">
+            <h3>📝 Aanvullende vragen</h3>
+            <p class="section-desc">We horen daarnaast graag jouw reactie op onderstaande vragen:</p>
+            <div style="display: flex; flex-direction: column; gap: 22px; margin-top: 16px;">
+                ${vragen.map(v => renderSingleExtraQuestionField(v)).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderSingleExtraQuestionField(v) {
+    const reqMark = v.verplicht ? '<span style="color: #ef4444; font-weight: 800;"> *</span>' : '';
+    const descHTML = v.toelichting ? `<p style="margin: 0 0 8px 0; font-size: 12.5px; color: var(--slate-500);">${v.toelichting}</p>` : '';
+
+    if (v.type === 'tekst') {
+        return `
+            <div>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 4px;">
+                    ${v.vraag}${reqMark}
+                </label>
+                ${descHTML}
+                <input type="text" name="extra_${v.id}" class="form-control-text" placeholder="Jouw antwoord..." ${v.verplicht ? 'required' : ''}>
+            </div>
+        `;
+    }
+
+    if (v.type === 'textarea') {
+        return `
+            <div>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 4px;">
+                    ${v.vraag}${reqMark}
+                </label>
+                ${descHTML}
+                <textarea name="extra_${v.id}" class="form-control-text" rows="3" placeholder="Typ hier jouw toelichting..." ${v.verplicht ? 'required' : ''}></textarea>
+            </div>
+        `;
+    }
+
+    if (v.type === 'janee') {
+        return `
+            <div>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 4px;">
+                    ${v.vraag}${reqMark}
+                </label>
+                ${descHTML}
+                <div class="choice-pills-grid" id="group_extra_${v.id}">
+                    <label class="choice-pill-label" onclick="window.selectPill(this, 'group_extra_${v.id}')">
+                        <input type="radio" name="extra_${v.id}" value="Ja" ${v.verplicht ? 'required' : ''}>
+                        <span>👍 Ja</span>
+                    </label>
+                    <label class="choice-pill-label" onclick="window.selectPill(this, 'group_extra_${v.id}')">
+                        <input type="radio" name="extra_${v.id}" value="Nee" ${v.verplicht ? 'required' : ''}>
+                        <span>👎 Nee</span>
+                    </label>
+                </div>
+            </div>
+        `;
+    }
+
+    if (v.type === 'radio') {
+        const opties = Array.isArray(v.opties) ? v.opties : (v.opties || '').split(',');
+        return `
+            <div>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 4px;">
+                    ${v.vraag}${reqMark}
+                </label>
+                ${descHTML}
+                <div class="choice-pills-grid" id="group_extra_${v.id}">
+                    ${opties.map((opt, i) => `
+                        <label class="choice-pill-label" onclick="window.selectPill(this, 'group_extra_${v.id}')">
+                            <input type="radio" name="extra_${v.id}" value="${opt.trim()}" ${v.verplicht ? 'required' : ''}>
+                            <span>${opt.trim()}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    if (v.type === 'checkbox') {
+        const opties = Array.isArray(v.opties) ? v.opties : (v.opties || '').split(',');
+        return `
+            <div>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 4px;">
+                    ${v.vraag}${reqMark}
+                </label>
+                ${descHTML}
+                <div class="choice-pills-grid" id="group_extra_${v.id}">
+                    ${opties.map(opt => `
+                        <label class="choice-pill-label" onclick="window.togglePillCheckbox(this)">
+                            <input type="checkbox" name="extra_${v.id}" value="${opt.trim()}">
+                            <span>${opt.trim()}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    if (v.type === 'sterren') {
+        return `
+            <div>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 4px;">
+                    ${v.vraag}${reqMark}
+                </label>
+                ${descHTML}
+                <div class="star-rating-row" id="star_row_${v.id}">
+                    <button type="button" class="star-btn" onclick="window.setCustomStars(${v.id}, 1)">★</button>
+                    <button type="button" class="star-btn" onclick="window.setCustomStars(${v.id}, 2)">★</button>
+                    <button type="button" class="star-btn" onclick="window.setCustomStars(${v.id}, 3)">★</button>
+                    <button type="button" class="star-btn" onclick="window.setCustomStars(${v.id}, 4)">★</button>
+                    <button type="button" class="star-btn active" onclick="window.setCustomStars(${v.id}, 5)">★</button>
+                    <span id="star_label_${v.id}" class="star-label-text">5 van 5 sterren</span>
+                    <input type="hidden" name="extra_${v.id}" id="star_input_${v.id}" value="5">
+                </div>
+            </div>
+        `;
+    }
+
+    return '';
+}
+
+window.togglePillCheckbox = function(labelEl) {
+    const cb = labelEl.querySelector('input[type="checkbox"]');
+    if (!cb) return;
+    setTimeout(() => {
+        labelEl.classList.toggle('selected', cb.checked);
+    }, 10);
+};
+
+window.setCustomStars = function(id, val) {
+    const row = document.getElementById(`star_row_${id}`);
+    const input = document.getElementById(`star_input_${id}`);
+    const label = document.getElementById(`star_label_${id}`);
+    if (input) input.value = val;
+    if (label) label.innerText = `${val} van 5 sterren`;
+    if (row) {
+        const btns = row.querySelectorAll('.star-btn');
+        btns.forEach((btn, idx) => {
+            btn.classList.toggle('active', idx < val);
+        });
+    }
+};
+
+// Pas initiële configuratie direct toe
+applyFeedbackConfig(activeFeedbackConfig);
+
+// ------------------------------------------
+// STERREN BEOORDELING BASIS
+// ------------------------------------------
 let gekozenSterren = 5;
-const starBtns = document.querySelectorAll('.star-btn');
+const starBtns = document.querySelectorAll('#secSterrenContainer .star-btn');
 const starLabel = document.getElementById('starRatingLabel');
 const sterrenInput = document.getElementById('sterrenInput');
 
@@ -644,12 +1020,12 @@ const starTexts = {
 
 function setStars(val) {
     gekozenSterren = val;
-    sterrenInput.value = val;
+    if (sterrenInput) sterrenInput.value = val;
     starBtns.forEach(btn => {
         const btnVal = parseInt(btn.getAttribute('data-val'));
         btn.classList.toggle('active', btnVal <= val);
     });
-    starLabel.innerText = starTexts[val] || `${val} sterren`;
+    if (starLabel) starLabel.innerText = starTexts[val] || `${val} sterren`;
 }
 
 starBtns.forEach(btn => {
@@ -712,7 +1088,9 @@ window.removeFoto = function(idx) {
     renderFotoPreviews();
 };
 
-// Formulier Verzenden
+// ------------------------------------------
+// FORMULIER VERZENDEN
+// ------------------------------------------
 document.getElementById('feedbackMainForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -723,6 +1101,31 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
     const geselecteerdeDomeinen = Array.from(document.querySelectorAll('input[name="dgDomeinen"]:checked')).map(el => el.value);
     const geselecteerdEnthousiasme = document.querySelector('input[name="enthousiasme"]:checked') ? document.querySelector('input[name="enthousiasme"]:checked').value : 'Zeer enthousiast';
     const geselecteerdeCompleetheid = document.querySelector('input[name="compleetStatus"]:checked') ? document.querySelector('input[name="compleetStatus"]:checked').value : 'Helemaal compleet en klaar';
+
+    // Aanvullende vragen antwoorden verzamelen
+    const extraAntwoorden = [];
+    (activeFeedbackConfig.extraVragen || []).forEach(v => {
+        let antwoord = "";
+        if (v.type === 'tekst' || v.type === 'textarea') {
+            const el = document.querySelector(`[name="extra_${v.id}"]`);
+            if (el) antwoord = el.value.trim();
+        } else if (v.type === 'radio' || v.type === 'janee') {
+            const el = document.querySelector(`input[name="extra_${v.id}"]:checked`);
+            if (el) antwoord = el.value;
+        } else if (v.type === 'checkbox') {
+            const els = document.querySelectorAll(`input[name="extra_${v.id}"]:checked`);
+            antwoord = Array.from(els).map(e => e.value).join(', ');
+        } else if (v.type === 'sterren') {
+            const el = document.querySelector(`input[name="extra_${v.id}"]`);
+            if (el) antwoord = `${el.value} van 5 sterren`;
+        }
+        extraAntwoorden.push({
+            vraagId: v.id,
+            vraag: v.vraag,
+            type: v.type,
+            antwoord: antwoord
+        });
+    });
 
     const feedbackData = {
         id: Date.now(),
@@ -735,12 +1138,13 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
         sterren: gekozenSterren,
         enthousiasme: geselecteerdEnthousiasme,
         compleetheid: geselecteerdeCompleetheid,
-        toelichting: document.getElementById('toelichtingInput').value.trim(),
+        toelichting: document.getElementById('toelichtingInput') ? document.getElementById('toelichtingInput').value.trim() : '',
         dgDomeinen: geselecteerdeDomeinen,
-        specifiekeOpdracht: document.getElementById('specifiekeOpdrachtInput').value.trim(),
-        onedriveLink: document.getElementById('onedriveLinkInput').value.trim(),
-        quote: document.getElementById('quoteInput').value.trim(),
+        specifiekeOpdracht: document.getElementById('specifiekeOpdrachtInput') ? document.getElementById('specifiekeOpdrachtInput').value.trim() : '',
+        onedriveLink: document.getElementById('onedriveLinkInput') ? document.getElementById('onedriveLinkInput').value.trim() : '',
+        quote: document.getElementById('quoteInput') ? document.getElementById('quoteInput').value.trim() : '',
         fotos: geuploadeFotosBase64,
+        extraAntwoorden: extraAntwoorden,
         datum: new Date().toISOString()
     };
 
@@ -797,6 +1201,37 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
     document.getElementById('feedbackSuccessView').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+// Asynchrone Firestore Cloud Sync voor de meest actuele configuratie
+(async () => {
+    try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
+        const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
+            authDomain: "verwonderlab-portaal.firebaseapp.com",
+            projectId: "verwonderlab-portaal",
+            storageBucket: "verwonderlab-portaal.firebasestorage.app",
+            messagingSenderId: "778630419427",
+            appId: "1:778630419427:web:02d9ddd753f3efed2846d6"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const snap = await getDoc(doc(db, "instellingen", "feedback_config"));
+        if (snap.exists()) {
+            const cloudCfg = snap.data();
+            if (cloudCfg) {
+                applyFeedbackConfig({ ...defaultFeedbackConfig, ...cloudCfg });
+                localStorage.setItem('ww_feedback_config_v1', JSON.stringify(cloudCfg));
+            }
+        }
+    } catch(err) {
+        console.log("Lokale feedbackconfiguratie blijft actief.");
+    }
+})();
+
 </script>
 
 </body>

@@ -2390,4 +2390,189 @@ body::after {
     transform: translateY(-1px);
 }
 
+/* =========================================================
+   20. FEEDBACKFORMULIER BEHEER (ADMIN CONFIGURATIE)
+   ========================================================= */
 
+.config-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.config-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+.config-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.config-card-title {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.config-card-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.45;
+}
+
+/* Moderne Toggle Switch */
+.switch-toggle {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 34px;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.switch-toggle input:checked + .switch-slider {
+    background-color: var(--ww-green);
+}
+
+.switch-toggle input:checked + .switch-slider:before {
+    transform: translateX(20px);
+}
+
+/* Vragen lijst & Items */
+.custom-question-card {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s ease;
+}
+
+.custom-question-card:hover {
+    background: #ffffff;
+    border-color: #bbf7d0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.custom-question-card.inactive {
+    opacity: 0.55;
+    background: #f1f5f9;
+}
+
+.badge-question-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.badge-required {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 7px;
+    border-radius: 9999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-icon-action {
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #475569;
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
+.btn-icon-action:hover {
+    border-color: #94a3b8;
+    color: #0f172a;
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+
+.btn-icon-action.danger:hover {
+    border-color: #f87171;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+/* DG Domein Editor Chips */
+.dg-domain-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+}
+
+.dg-domain-item-row input[type="text"] {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12.5px;
+    background: white;
+}

@@ -22,21 +22,26 @@ function safeGetLocal(key, defaultData) {
 
 window.openInOutlook = function(to, subject, body) {
     const cleanTo = (to || "").trim();
-    const encodedTo = encodeURIComponent(cleanTo);
     const encodedSubject = encodeURIComponent(subject || "");
-    const encodedBody = encodeURIComponent(body || "");
+    // Zorg dat regeleindes correct worden gecodeerd voor Outlook Desktop client
+    const formattedBody = (body || "").replace(/\r?\n/g, '\r\n');
+    const encodedBody = encodeURIComponent(formattedBody);
 
-    // 1. Direct Outlook Web Deeplink voor Microsoft 365 (Stichting Wonderwijs)
-    const outlookWebUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodedTo}&subject=${encodedSubject}&body=${encodedBody}`;
+    // mailto: triggert direct de geïnstalleerde Microsoft Outlook Desktop app van het besturingssysteem
+    const mailtoUrl = `mailto:${cleanTo}?subject=${encodedSubject}&body=${encodedBody}`;
 
-    // Probeer direct Outlook Web te openen in een nieuw tabblad
-    const outlookWindow = window.open(outlookWebUrl, '_blank');
-
-    // 2. Fallback: als pop-up venster wordt geblokkeerd of lokale Outlook client actief is
-    if (!outlookWindow || outlookWindow.closed || typeof outlookWindow.closed === 'undefined') {
-        window.location.href = `mailto:${cleanTo}?subject=${encodedSubject}&body=${encodedBody}`;
-    }
+    const tempLink = document.createElement('a');
+    tempLink.href = mailtoUrl;
+    tempLink.style.display = 'none';
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    setTimeout(() => {
+        if (tempLink.parentNode) {
+            tempLink.parentNode.removeChild(tempLink);
+        }
+    }, 400);
 };
+
 
 window.detecteerKistNaam = function(titel, beschrijving) {
     const text = ((titel || '') + ' ' + (beschrijving || '')).toLowerCase();
@@ -105,8 +110,68 @@ let beheerdersLijst = safeGetLocal('ww_beheerders_v1', []);
 let mijnFavorieten = safeGetLocal('ww_favorieten_v1', []); 
 let meldingen = safeGetLocal('ww_meldingen_v1', []); 
 let feedbackLijst = safeGetLocal('ww_feedback_v1', []);
+const defaultFeedbackConfig = {
+    titel: "Hoe is het lesmateriaal bevallen?",
+    ondertitel: "Jouw ervaring helpt ons om het Verwonderlab continu te verbeteren en inspiratie te delen met collega-leerkrachten!",
+    bedankTitel: "Hartelijk dank voor je feedback!",
+    bedankTekst: "We hebben jouw ervaringen, tips en eventuele foto's succesvol ontvangen. Mede dankzij jouw input kunnen we het lesmateriaal in het Verwonderlab continu verbeteren en collega's binnen Wonderwijs inspireren!",
+    secties: {
+        sterren: { actief: true, titel: "⭐ 1. Algemene beoordeling", toelichting: "Hoe beoordeel je deze leskist over het geheel genomen?" },
+        enthousiasme: { 
+            actief: true, 
+            titel: "👥 2. Ervaring & enthousiasme in de klas", 
+            toelichting: "Hoe hebben de leerlingen het werken met dit materiaal ervaren?",
+            opties: ["🤩 Zeer enthousiast!", "🙂 Positief & betrokken", "😐 Wisselende reacties", "😕 Moeite met motiveren"]
+        },
+        compleetheid: {
+            actief: true,
+            label: "Kwaliteit & compleetheid van de kist:",
+            opties: ["✅ Helemaal compleet & gebruiksklaar", "⚠️ Er ontbrak een klein onderdeel", "🔧 Technisch mankement ervaren"]
+        },
+        toelichting: {
+            actief: true,
+            label: "Toelichting of ervaringen uit de les:",
+            placeholder: "Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht helpen?"
+        },
+        dgDoelen: {
+            actief: true,
+            titel: "🎯 3. Doelen Digitale Geletterdheid (DG)",
+            toelichting: "Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?",
+            domeinen: [
+                { icoon: "🧠", titel: "Computational Thinking", sub: "Algoritmes, probleemoplossend denken, logica, debuggen en robots programmeren." },
+                { icoon: "💻", titel: "ICT-basisvaardigheden", sub: "Hardware en sensoren bedienen, iPads/laptops, opslag en softwarefuncties verkennen." },
+                { icoon: "🌐", titel: "Mediawijsheid", sub: "Online veiligheid, privacy, samenwerken, omgangsvormen en media-creatie (bijv. podcast/video)." },
+                { icoon: "🔍", titel: "Informatievaardigheden", sub: "Gericht zoeken, informatie selecteren, presenteren en de betrouwbaarheid van bronnen beoordelen." }
+            ],
+            opdrachtLabel: "Specifieke lesopdracht of kerndoel (optioneel):",
+            opdrachtPlaceholder: "Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt"
+        },
+        fotos: {
+            actief: true,
+            titel: "📸 4. Foto's & Resultaten delen (Optioneel)",
+            toelichting: "Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat.",
+            avg: "* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school."
+        },
+        onedrive: {
+            actief: true,
+            label: "Of deel een link naar jullie school SharePoint / OneDrive foto-map:"
+        },
+        quote: {
+            actief: true,
+            label: "Quote van een leerling of gouden tip (optioneel):",
+            placeholder: "Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'"
+        }
+    },
+    extraVragen: []
+};
+
+let feedbackConfig = safeGetLocal('ww_feedback_config_v1', defaultFeedbackConfig);
+if (!feedbackConfig.secties) feedbackConfig.secties = defaultFeedbackConfig.secties;
+if (!feedbackConfig.extraVragen) feedbackConfig.extraVragen = [];
+
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
 const standaardLesideeen = [
+
     {
         "id": 1,
         "titel": "Dansende Robots: De Wonderwijs Robot Dance Battle",
@@ -715,8 +780,10 @@ function slaDataOp() {
         localStorage.setItem('ww_favorieten_v1', JSON.stringify(mijnFavorieten));
         localStorage.setItem('ww_meldingen_v1', JSON.stringify(meldingen));
         localStorage.setItem('ww_feedback_v1', JSON.stringify(feedbackLijst));
+        localStorage.setItem('ww_feedback_config_v1', JSON.stringify(feedbackConfig));
     } catch(e) { console.error("Opslagfout", e); }
 }
+
 
 const getVal = (id, def = "") => { const el = document.getElementById(id); return el ? el.value : def; };
 const getCheck = (id, def = true) => { const el = document.getElementById(id); return el ? el.checked : def; };
@@ -765,6 +832,20 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); } }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "feedback"), (snapshot) => { if(!snapshot.empty) { feedbackLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+        onSnapshot(doc(db, "instellingen", "feedback_config"), (snap) => {
+            if (snap.exists()) {
+                const cloudConfig = snap.data();
+                if (cloudConfig) {
+                    feedbackConfig = { ...defaultFeedbackConfig, ...cloudConfig };
+                    if (!feedbackConfig.secties) feedbackConfig.secties = defaultFeedbackConfig.secties;
+                    if (!feedbackConfig.extraVragen) feedbackConfig.extraVragen = [];
+                    localStorage.setItem('ww_feedback_config_v1', JSON.stringify(feedbackConfig));
+                    if (typeof window.renderFeedbackConfigTab === "function") {
+                        window.renderFeedbackConfigTab();
+                    }
+                }
+            }
+        }, checkError);
 
         // Voortgang realtime ophalen en direct toepassen op de vinkjes
         onSnapshot(collection(db, "voortgang"), (snapshot) => { 
@@ -866,6 +947,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.deleteMeldingFromCloud = async function(id) { await deleteDoc(doc(db, "meldingen", id.toString())); };
         window.updateMeldingStatusInCloud = async function(id, status) { await setDoc(doc(db, "meldingen", id.toString()), {status: status}, {merge: true}); };
         window.saveFeedbackToCloud = async function(newData) { await setDoc(doc(db, "feedback", newData.id.toString()), newData); };
+        window.saveFeedbackConfigToCloud = async function(cfg) { await setDoc(doc(db, "instellingen", "feedback_config"), cfg, { merge: true }); };
 
     } catch (error) { 
         console.error("Firebase module overgeslagen. Lokaal actief."); 
@@ -1986,7 +2068,11 @@ window.switchAdminTab = function(tabId, btnElement) {
     if (tabId === 'tab-reserveringen' && typeof window.renderBeheerdersTabellen === 'function') {
         window.renderBeheerdersTabellen();
     }
+    if (tabId === 'tab-feedbackformulier' && typeof window.renderFeedbackConfigTab === 'function') {
+        window.renderFeedbackConfigTab();
+    }
 };
+
 
 // ==========================================
 // RESERVERINGEN FILTERING & PDF EXPORT
@@ -2865,8 +2951,26 @@ window.bekijkIngevuldeFeedback = function(resId) {
         }
     }
 
+    const extraVragenContainer = document.getElementById('feedbackModalExtraVragenContainer');
+    const extraVragenList = document.getElementById('feedbackModalExtraVragenList');
+    if (extraVragenContainer && extraVragenList) {
+        const extraAntwoorden = item.extraAntwoorden || [];
+        if (Array.isArray(extraAntwoorden) && extraAntwoorden.length > 0) {
+            extraVragenList.innerHTML = extraAntwoorden.map(ea => `
+                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 14px;">
+                    <div style="font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 3px;">${ea.vraag}</div>
+                    <div style="font-size: 13.5px; font-weight: 700; color: #0f172a;">${ea.antwoord || '<em style="color:#94a3b8; font-weight:normal;">Niet beantwoord</em>'}</div>
+                </div>
+            `).join('');
+            extraVragenContainer.style.display = 'block';
+        } else {
+            extraVragenContainer.style.display = 'none';
+        }
+    }
+
     modal.style.display = 'flex';
 };
+
 window.toggleMeldingStatus = async function(id) { let m = meldingen.find(x => x.id == id); if(m) { m.status = m.status === 'Open' ? 'Opgelost' : 'Open'; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateMeldingStatusInCloud) await window.updateMeldingStatusInCloud(id, m.status); } }
 window.deleteMelding = async function(id) { if(confirm("Weet je zeker dat je deze melding wilt verwijderen?")) { meldingen = meldingen.filter(m => m.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteMeldingFromCloud) await window.deleteMeldingFromCloud(id); } }
 window.deletePeriode = function(id) { if(confirm("Weet je zeker dat je deze periode wilt verwijderen?")) { periodes = periodes.filter(p => p.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deletePeriodeFromCloud) window.deletePeriodeFromCloud(id); } }
@@ -2934,6 +3038,391 @@ window.reproduceerVinkjes = function() {
             updateVoortgang(card.id);
         }
     }); 
+};
+
+// ==========================================
+// FEEDBACKFORMULIER CONFIGURATIE & BEHEER
+// ==========================================
+
+window.renderFeedbackConfigTab = function() {
+    if (!feedbackConfig) feedbackConfig = defaultFeedbackConfig;
+    if (!feedbackConfig.secties) feedbackConfig.secties = defaultFeedbackConfig.secties;
+    if (!feedbackConfig.extraVragen) feedbackConfig.extraVragen = [];
+
+    // Blok 1: Algemene Titels & Teksten
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val !== undefined ? val : ''; };
+    const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+
+    setVal('cfgFormTitel', feedbackConfig.titel || defaultFeedbackConfig.titel);
+    setVal('cfgFormOndertitel', feedbackConfig.ondertitel || defaultFeedbackConfig.ondertitel);
+    setVal('cfgBedankTitel', feedbackConfig.bedankTitel || defaultFeedbackConfig.bedankTitel);
+    setVal('cfgBedankTekst', feedbackConfig.bedankTekst || defaultFeedbackConfig.bedankTekst);
+
+    const s = feedbackConfig.secties;
+
+    // Vraag 1: Sterren
+    const sterrenSec = s.sterren || defaultFeedbackConfig.secties.sterren;
+    setCheck('cfgSecSterrenActief', sterrenSec.actief !== false);
+    setVal('cfgSecSterrenTitel', sterrenSec.titel || defaultFeedbackConfig.secties.sterren.titel);
+    setVal('cfgSecSterrenToelichting', sterrenSec.toelichting || defaultFeedbackConfig.secties.sterren.toelichting);
+
+    // Vraag 2: Enthousiasme
+    const enthSec = s.enthousiasme || defaultFeedbackConfig.secties.enthousiasme;
+    setCheck('cfgSecEnthousiasmeActief', enthSec.actief !== false);
+    setVal('cfgSecEnthousiasmeTitel', enthSec.titel || defaultFeedbackConfig.secties.enthousiasme.titel);
+    setVal('cfgSecEnthousiasmeToelichting', enthSec.toelichting || defaultFeedbackConfig.secties.enthousiasme.toelichting);
+    setVal('cfgSecEnthousiasmeOpties', Array.isArray(enthSec.opties) ? enthSec.opties.join(', ') : (enthSec.opties || defaultFeedbackConfig.secties.enthousiasme.opties.join(', ')));
+
+    // Vraag 3: Compleetheid
+    const complSec = s.compleetheid || defaultFeedbackConfig.secties.compleetheid;
+    setCheck('cfgSecCompleetheidActief', complSec.actief !== false);
+    setVal('cfgSecCompleetheidLabel', complSec.label || defaultFeedbackConfig.secties.compleetheid.label);
+    setVal('cfgSecCompleetheidOpties', Array.isArray(complSec.opties) ? complSec.opties.join(', ') : (complSec.opties || defaultFeedbackConfig.secties.compleetheid.opties.join(', ')));
+
+    // Vraag 4: Toelichting
+    const toelSec = s.toelichting || defaultFeedbackConfig.secties.toelichting;
+    setCheck('cfgSecToelichtingActief', toelSec.actief !== false);
+    setVal('cfgSecToelichtingLabel', toelSec.label || defaultFeedbackConfig.secties.toelichting.label);
+    setVal('cfgSecToelichtingPlaceholder', toelSec.placeholder || defaultFeedbackConfig.secties.toelichting.placeholder);
+
+    // Vraag 5: DG Doelen
+    const dgSec = s.dgDoelen || defaultFeedbackConfig.secties.dgDoelen;
+    setCheck('cfgSecDgActief', dgSec.actief !== false);
+    setVal('cfgSecDgTitel', dgSec.titel || defaultFeedbackConfig.secties.dgDoelen.titel);
+    setVal('cfgSecDgToelichting', dgSec.toelichting || defaultFeedbackConfig.secties.dgDoelen.toelichting);
+    setVal('cfgSecDgOpdrachtLabel', dgSec.opdrachtLabel || defaultFeedbackConfig.secties.dgDoelen.opdrachtLabel);
+    setVal('cfgSecDgOpdrachtPlaceholder', dgSec.opdrachtPlaceholder || defaultFeedbackConfig.secties.dgDoelen.opdrachtPlaceholder);
+
+    // Vraag 6: Foto's
+    const fotosSec = s.fotos || defaultFeedbackConfig.secties.fotos;
+    setCheck('cfgSecFotosActief', fotosSec.actief !== false);
+    setVal('cfgSecFotosTitel', fotosSec.titel || defaultFeedbackConfig.secties.fotos.titel);
+    setVal('cfgSecFotosToelichting', fotosSec.toelichting || defaultFeedbackConfig.secties.fotos.toelichting);
+    setVal('cfgSecFotosAvg', fotosSec.avg || defaultFeedbackConfig.secties.fotos.avg);
+
+    // Vraag 7: OneDrive / SharePoint
+    const odSec = s.onedrive || defaultFeedbackConfig.secties.onedrive;
+    setCheck('cfgSecOnedriveActief', odSec.actief !== false);
+    setVal('cfgSecOnedriveLabel', odSec.label || defaultFeedbackConfig.secties.onedrive.label);
+
+    // Vraag 8: Quote
+    const quoteSec = s.quote || defaultFeedbackConfig.secties.quote;
+    setCheck('cfgSecQuoteActief', quoteSec.actief !== false);
+    setVal('cfgSecQuoteLabel', quoteSec.label || defaultFeedbackConfig.secties.quote.label);
+    setVal('cfgSecQuotePlaceholder', quoteSec.placeholder || defaultFeedbackConfig.secties.quote.placeholder);
+
+    // Render sublijsten
+    window.renderConfigDgDomeinen();
+    window.renderConfigExtraVragen();
+};
+
+window.renderConfigDgDomeinen = function() {
+    const container = document.getElementById('cfgDgDomeinenContainer');
+    if (!container) return;
+
+    if (!feedbackConfig.secties.dgDoelen.domeinen) {
+        feedbackConfig.secties.dgDoelen.domeinen = defaultFeedbackConfig.secties.dgDoelen.domeinen;
+    }
+    const domeinen = feedbackConfig.secties.dgDoelen.domeinen;
+
+    container.innerHTML = domeinen.map((d, idx) => `
+        <div class="dg-domain-item-row">
+            <span style="font-size: 18px; width: 24px; text-align: center;">${d.icoon || '🎯'}</span>
+            <input type="text" id="cfgDgTitel_${idx}" value="${(d.titel || '').replace(/"/g, '&quot;')}" placeholder="Domeintitel..." style="max-width: 200px; font-weight: 700;">
+            <input type="text" id="cfgDgSub_${idx}" value="${(d.sub || '').replace(/"/g, '&quot;')}" placeholder="Toelichting van het domein...">
+            <button type="button" class="btn-icon-action danger" onclick="window.deleteDgDomainRow(${idx})" title="Domein verwijderen">🗑️</button>
+        </div>
+    `).join('');
+};
+
+window.addDgDomainRow = function() {
+    if (!feedbackConfig.secties.dgDoelen.domeinen) feedbackConfig.secties.dgDoelen.domeinen = [];
+    feedbackConfig.secties.dgDoelen.domeinen.push({
+        icoon: "💡",
+        titel: "Nieuw Domein",
+        sub: "Beschrijf hier de vaardigheden die binnen dit domein vallen."
+    });
+    window.renderConfigDgDomeinen();
+};
+
+window.deleteDgDomainRow = function(idx) {
+    if (feedbackConfig.secties.dgDoelen.domeinen && feedbackConfig.secties.dgDoelen.domeinen.length > 0) {
+        feedbackConfig.secties.dgDoelen.domeinen.splice(idx, 1);
+        window.renderConfigDgDomeinen();
+    }
+};
+
+window.renderConfigExtraVragen = function() {
+    const container = document.getElementById('cfgExtraVragenLijst');
+    if (!container) return;
+
+    const vragen = feedbackConfig.extraVragen || [];
+    if (vragen.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 30px 20px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 14px; color: #64748b;">
+                <span style="font-size: 28px; display: block; margin-bottom: 6px;">📋</span>
+                <strong style="color: #334155; font-size: 14px;">Nog geen aanvullende vragen toegevoegd</strong>
+                <p style="margin: 4px 0 14px 0; font-size: 12.5px;">Wil je een extra vraag stellen over bijvoorbeeld een specifiek vakgebied, aanbevelingen of leerlingreacties?</p>
+                <button type="button" class="btn-green-action" onclick="window.openExtraVraagModal()" style="font-size: 12.5px; padding: 7px 16px;">
+                    <span>➕</span> Voeg eerste vraag toe
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    const typeLabels = {
+        'tekst': 'Korte open tekst',
+        'textarea': 'Uitgebreide open tekst',
+        'radio': 'Meerkeuze (1 keuze)',
+        'checkbox': 'Selectievakjes',
+        'sterren': '1-5 Sterren',
+        'janee': 'Ja / Nee'
+    };
+
+    container.innerHTML = vragen.map((v, idx) => `
+        <div class="custom-question-card">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                    <strong style="font-size: 14px; color: #0f172a;">${v.vraag}</strong>
+                    <span class="badge-question-type">${typeLabels[v.type] || v.type}</span>
+                    ${v.verplicht ? '<span class="badge-required">Verplicht</span>' : ''}
+                </div>
+                ${v.toelichting ? `<p style="margin: 0; font-size: 12.5px; color: #64748b;">${v.toelichting}</p>` : ''}
+                ${(v.type === 'radio' || v.type === 'checkbox') && v.opties ? `
+                    <div style="margin-top: 6px; font-size: 11.5px; color: #475569;">
+                        <strong>Opties:</strong> ${Array.isArray(v.opties) ? v.opties.join(' • ') : v.opties}
+                    </div>
+                ` : ''}
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                ${idx > 0 ? `<button type="button" class="btn-icon-action" onclick="window.moveExtraVraag(${v.id}, -1)" title="Omhoog verplaatsen">⬆️</button>` : ''}
+                ${idx < vragen.length - 1 ? `<button type="button" class="btn-icon-action" onclick="window.moveExtraVraag(${v.id}, 1)" title="Omlaag verplaatsen">⬇️</button>` : ''}
+                <button type="button" class="btn-icon-action" onclick="window.openExtraVraagModal(${v.id})" title="Vraag bewerken">✏️</button>
+                <button type="button" class="btn-icon-action danger" onclick="window.deleteExtraVraag(${v.id})" title="Vraag verwijderen">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+};
+
+window.openExtraVraagModal = function(id = null) {
+    const form = document.getElementById('extraVraagForm');
+    if (!form) return;
+    form.reset();
+
+    const titleEl = document.getElementById('modalExtraVraagTitle');
+    const idInput = document.getElementById('editExtraVraagId');
+    const titelInput = document.getElementById('extraVraagTitel');
+    const toelichtingInput = document.getElementById('extraVraagToelichting');
+    const typeSelect = document.getElementById('extraVraagType');
+    const optiesInput = document.getElementById('extraVraagOpties');
+    const verplichtCb = document.getElementById('extraVraagVerplicht');
+
+    if (id) {
+        if (titleEl) titleEl.innerText = "✏️ Vraag bewerken";
+        const v = (feedbackConfig.extraVragen || []).find(x => x.id == id);
+        if (v) {
+            if (idInput) idInput.value = v.id;
+            if (titelInput) titelInput.value = v.vraag || '';
+            if (toelichtingInput) toelichtingInput.value = v.toelichting || '';
+            if (typeSelect) typeSelect.value = v.type || 'tekst';
+            if (optiesInput) optiesInput.value = Array.isArray(v.opties) ? v.opties.join(', ') : (v.opties || '');
+            if (verplichtCb) verplichtCb.checked = !!v.verplicht;
+        }
+    } else {
+        if (titleEl) titleEl.innerText = "➕ Aanvullende Vraag toevoegen";
+        if (idInput) idInput.value = "";
+        if (typeSelect) typeSelect.value = "tekst";
+        if (verplichtCb) verplichtCb.checked = false;
+    }
+
+    window.toggleExtraVraagOptiesVeld();
+    const modal = document.getElementById('extraVraagModal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.toggleExtraVraagOptiesVeld = function() {
+    const type = document.getElementById('extraVraagType') ? document.getElementById('extraVraagType').value : 'tekst';
+    const optiesGroep = document.getElementById('extraVraagOptiesGroep');
+    if (optiesGroep) {
+        optiesGroep.style.display = (type === 'radio' || type === 'checkbox') ? 'block' : 'none';
+    }
+};
+
+window.saveExtraVraag = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const rawId = document.getElementById('editExtraVraagId') ? document.getElementById('editExtraVraagId').value : '';
+    const vraagId = rawId ? parseInt(rawId) : Date.now();
+    const titel = (document.getElementById('extraVraagTitel') ? document.getElementById('extraVraagTitel').value : '').trim();
+    const toelichting = (document.getElementById('extraVraagToelichting') ? document.getElementById('extraVraagToelichting').value : '').trim();
+    const type = document.getElementById('extraVraagType') ? document.getElementById('extraVraagType').value : 'tekst';
+    const rawOpties = document.getElementById('extraVraagOpties') ? document.getElementById('extraVraagOpties').value : '';
+    const verplicht = document.getElementById('extraVraagVerplicht') ? document.getElementById('extraVraagVerplicht').checked : false;
+
+    if (!titel) {
+        alert("⚠️ Vul alstublieft een vraagstelling in.");
+        return;
+    }
+
+    let parsedOpties = [];
+    if (type === 'radio' || type === 'checkbox') {
+        parsedOpties = rawOpties.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        if (parsedOpties.length === 0) {
+            parsedOpties = ["Optie 1", "Optie 2"];
+        }
+    }
+
+    if (!feedbackConfig.extraVragen) feedbackConfig.extraVragen = [];
+
+    const existingIdx = feedbackConfig.extraVragen.findIndex(v => v.id == vraagId);
+    const questionObj = {
+        id: vraagId,
+        vraag: titel,
+        toelichting: toelichting,
+        type: type,
+        opties: parsedOpties,
+        verplicht: verplicht
+    };
+
+    if (existingIdx > -1) {
+        feedbackConfig.extraVragen[existingIdx] = questionObj;
+    } else {
+        feedbackConfig.extraVragen.push(questionObj);
+    }
+
+    slaDataOp();
+    if (window.saveFeedbackConfigToCloud) window.saveFeedbackConfigToCloud(feedbackConfig);
+    window.sluitAlleModals();
+    window.renderConfigExtraVragen();
+};
+
+window.deleteExtraVraag = function(id) {
+    if (confirm("Weet je zeker dat je deze vraag wilt verwijderen?")) {
+        feedbackConfig.extraVragen = (feedbackConfig.extraVragen || []).filter(v => v.id != id);
+        slaDataOp();
+        if (window.saveFeedbackConfigToCloud) window.saveFeedbackConfigToCloud(feedbackConfig);
+        window.renderConfigExtraVragen();
+    }
+};
+
+window.moveExtraVraag = function(id, direction) {
+    const list = feedbackConfig.extraVragen || [];
+    const idx = list.findIndex(v => v.id == id);
+    if (idx === -1) return;
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+
+    const item = list.splice(idx, 1)[0];
+    list.splice(targetIdx, 0, item);
+    feedbackConfig.extraVragen = list;
+    slaDataOp();
+    if (window.saveFeedbackConfigToCloud) window.saveFeedbackConfigToCloud(feedbackConfig);
+    window.renderConfigExtraVragen();
+};
+
+window.saveFeedbackConfig = async function() {
+    const getVal = (id, def = "") => { const el = document.getElementById(id); return el ? el.value.trim() : def; };
+    const getCheck = (id, def = true) => { const el = document.getElementById(id); return el ? el.checked : def; };
+
+    // 1. Titels
+    feedbackConfig.titel = getVal('cfgFormTitel', defaultFeedbackConfig.titel);
+    feedbackConfig.ondertitel = getVal('cfgFormOndertitel', defaultFeedbackConfig.ondertitel);
+    feedbackConfig.bedankTitel = getVal('cfgBedankTitel', defaultFeedbackConfig.bedankTitel);
+    feedbackConfig.bedankTekst = getVal('cfgBedankTekst', defaultFeedbackConfig.bedankTekst);
+
+    // 2. Secties
+    feedbackConfig.secties = feedbackConfig.secties || {};
+
+    feedbackConfig.secties.sterren = {
+        actief: getCheck('cfgSecSterrenActief', true),
+        titel: getVal('cfgSecSterrenTitel', '⭐ 1. Algemene beoordeling'),
+        toelichting: getVal('cfgSecSterrenToelichting', 'Hoe beoordeel je deze leskist over het geheel genomen?')
+    };
+
+    feedbackConfig.secties.enthousiasme = {
+        actief: getCheck('cfgSecEnthousiasmeActief', true),
+        titel: getVal('cfgSecEnthousiasmeTitel', '👥 2. Ervaring & enthousiasme in de klas'),
+        toelichting: getVal('cfgSecEnthousiasmeToelichting', 'Hoe hebben de leerlingen het werken met dit materiaal ervaren?'),
+        opties: getVal('cfgSecEnthousiasmeOpties', '').split(',').map(s => s.trim()).filter(s => s.length > 0)
+    };
+
+    feedbackConfig.secties.compleetheid = {
+        actief: getCheck('cfgSecCompleetheidActief', true),
+        label: getVal('cfgSecCompleetheidLabel', 'Kwaliteit & compleetheid van de kist:'),
+        opties: getVal('cfgSecCompleetheidOpties', '').split(',').map(s => s.trim()).filter(s => s.length > 0)
+    };
+
+    feedbackConfig.secties.toelichting = {
+        actief: getCheck('cfgSecToelichtingActief', true),
+        label: getVal('cfgSecToelichtingLabel', 'Toelichting of ervaringen uit de les:'),
+        placeholder: getVal('cfgSecToelichtingPlaceholder', '')
+    };
+
+    // DG Domeinen ophalen uit de bewerkbare inputs
+    const domeinen = feedbackConfig.secties.dgDoelen ? (feedbackConfig.secties.dgDoelen.domeinen || []) : [];
+    const updatedDomeinen = domeinen.map((d, idx) => {
+        const titelEl = document.getElementById(`cfgDgTitel_${idx}`);
+        const subEl = document.getElementById(`cfgDgSub_${idx}`);
+        return {
+            icoon: d.icoon || "🎯",
+            titel: titelEl ? titelEl.value.trim() : d.titel,
+            sub: subEl ? subEl.value.trim() : d.sub
+        };
+    });
+
+    feedbackConfig.secties.dgDoelen = {
+        actief: getCheck('cfgSecDgActief', true),
+        titel: getVal('cfgSecDgTitel', '🎯 3. Doelen Digitale Geletterdheid (DG)'),
+        toelichting: getVal('cfgSecDgToelichting', 'Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?'),
+        domeinen: updatedDomeinen.length > 0 ? updatedDomeinen : defaultFeedbackConfig.secties.dgDoelen.domeinen,
+        opdrachtLabel: getVal('cfgSecDgOpdrachtLabel', 'Specifieke lesopdracht of kerndoel (optioneel):'),
+        opdrachtPlaceholder: getVal('cfgSecDgOpdrachtPlaceholder', '')
+    };
+
+    feedbackConfig.secties.fotos = {
+        actief: getCheck('cfgSecFotosActief', true),
+        titel: getVal('cfgSecFotosTitel', '📸 4. Foto\'s & Resultaten delen (Optioneel)'),
+        toelichting: getVal('cfgSecFotosToelichting', 'Deel foto\'s van leerlingen aan het werk, van het bouwwerk of het eindresultaat.'),
+        avg: getVal('cfgSecFotosAvg', defaultFeedbackConfig.secties.fotos.avg)
+    };
+
+    feedbackConfig.secties.onedrive = {
+        actief: getCheck('cfgSecOnedriveActief', true),
+        label: getVal('cfgSecOnedriveLabel', 'Of deel een link naar jullie school SharePoint / OneDrive foto-map:')
+    };
+
+    feedbackConfig.secties.quote = {
+        actief: getCheck('cfgSecQuoteActief', true),
+        label: getVal('cfgSecQuoteLabel', 'Quote van een leerling of gouden tip (optioneel):'),
+        placeholder: getVal('cfgSecQuotePlaceholder', '')
+    };
+
+    slaDataOp();
+
+    const saveIcon = document.getElementById('saveConfigIcon');
+    if (saveIcon) saveIcon.innerText = '⏳';
+
+    if (window.saveFeedbackConfigToCloud) {
+        await window.saveFeedbackConfigToCloud(feedbackConfig);
+    }
+
+    if (saveIcon) saveIcon.innerText = '✅';
+    setTimeout(() => { if (saveIcon) saveIcon.innerText = '💾'; }, 2000);
+
+    alert("✅ Feedbackformulier configuratie succesvol opgeslagen!\n\nAlle wijzigingen in vragen, titels en opties zijn nu direct actief in het live feedbackformulier.");
+};
+
+window.resetFeedbackConfig = async function() {
+    if (confirm("Weet je zeker dat je alle vragen en instellingen van het feedbackformulier wilt resetten naar de standaard Wonderwijs waarden?")) {
+        feedbackConfig = JSON.parse(JSON.stringify(defaultFeedbackConfig));
+        slaDataOp();
+        if (window.saveFeedbackConfigToCloud) {
+            await window.saveFeedbackConfigToCloud(feedbackConfig);
+        }
+        window.renderFeedbackConfigTab();
+        alert("🔄 Feedbackformulier instellingen zijn succesvol hersteld naar standaard!");
+    }
 };
 
 // Start eventuele deep link routering bij het laden

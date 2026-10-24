@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261023l">
+    <link rel="stylesheet" href="style.css?v=20261024b">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
@@ -151,6 +151,7 @@
             <div class="admin-tabs">
                 <button class="admin-tab-btn active" onclick="switchAdminTab('tab-reserveringen', this)">Reserveringen</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-statistieken', this)">📊 Statistieken & Inzichten</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('tab-feedbackformulier', this)">📝 Feedbackformulier</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-periodes', this)">Periodes beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-scholen', this)">Locaties beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-leskisten', this)">Materialen beheer</button>
@@ -431,8 +432,319 @@
                     <table class="data-table"><thead><tr><th>Titel</th><th>Beschrijving</th><th style="text-align: right;">Actie</th></tr></thead><tbody id="adminLesideeenBody"></tbody></table>
                 </section>
             </div>
+
+            <!-- TAB: FEEDBACKFORMULIER BEHEER -->
+            <div id="tab-feedbackformulier" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 25px;">
+                        <div>
+                            <h2 style="margin: 0 0 6px 0; display: flex; align-items: center; gap: 10px;">
+                                <span>📝</span> Feedbackformulier Beheer
+                            </h2>
+                            <p style="margin: 0; font-size: 13.5px; color: #64748b; max-width: 650px; line-height: 1.5;">
+                                Beheer hier eenvoudig welke vragen, doelen en secties getoond worden in het evaluatieformulier voor leerkrachten. Pas vraagstellingen aan, schakel onderdelen in of uit, of voeg eigen aangepaste vragen toe.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="pill-btn secondary" onclick="window.open('feedback.html', '_blank')" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; font-size: 13px; font-weight: 700; border-radius: 10px;">
+                                <span>👁️</span> Test Live Formulier
+                            </button>
+                            <button class="pill-btn secondary" onclick="window.resetFeedbackConfig()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; font-size: 13px; font-weight: 700; border-radius: 10px; color: #dc2626; border-color: #fca5a5; background: #fff5f5;">
+                                <span>🔄</span> Herstel Standaard
+                            </button>
+                            <button class="btn-green-action" onclick="window.saveFeedbackConfig()" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; font-size: 13.5px; font-weight: 800; border-radius: 10px; background: #8CC63F; color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(140, 198, 63, 0.35);">
+                                <span id="saveConfigIcon">💾</span> Wijzigingen Opslaan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BLOK 1: KOPTEKSTEN & INTRODUCTIE -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div>
+                                <h3 class="config-card-title"><span>🏷️</span> Algemene Formulierteksten</h3>
+                                <p class="config-card-subtitle">De teksten die bovenaan het formulier en na het verzenden getoond worden.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+                            <div>
+                                <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                    Hoofdtitel van het formulier:
+                                </label>
+                                <input type="text" id="cfgFormTitel" class="form-control-text" style="width: 100%;" placeholder="Hoe is het lesmateriaal bevallen?">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                    Titel op bedankpagina (na verzenden):
+                                </label>
+                                <input type="text" id="cfgBedankTitel" class="form-control-text" style="width: 100%;" placeholder="Hartelijk dank voor je feedback!">
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                Subtitel / Toelichting voor leerkrachten:
+                            </label>
+                            <textarea id="cfgFormOndertitel" class="form-control-text" rows="2" style="width: 100%;" placeholder="Jouw ervaring helpt ons om het Verwonderlab continu te verbeteren..."></textarea>
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                                Bedankbericht na afronden:
+                            </label>
+                            <textarea id="cfgBedankTekst" class="form-control-text" rows="2" style="width: 100%;" placeholder="We hebben jouw ervaringen succesvol ontvangen..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- BLOK 2: STANDAARD VRAGEN & SECTIES BEHEREN -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div>
+                                <h3 class="config-card-title"><span>⚙️</span> Standaard Vragen & Secties Inrichten</h3>
+                                <p class="config-card-subtitle">Pas de vraagstellingen en antwoordopties aan, of schakel secties tijdelijk uit.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- VRAAG 1: STERREN BEOORDELING -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>⭐</span> Vraag 1: Algemene beoordeling (1-5 Sterren)
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecSterrenActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraagtitel:</label>
+                                        <input type="text" id="cfgSecSterrenTitel" class="form-control-text" style="width: 100%;" value="⭐ 1. Algemene beoordeling">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Toelichting:</label>
+                                        <input type="text" id="cfgSecSterrenToelichting" class="form-control-text" style="width: 100%;" value="Hoe beoordeel je deze leskist over het geheel genomen?">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 2: ERVARING & ENTHOUSIASME -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>👥</span> Vraag 2: Ervaring & Enthousiasme in de klas
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecEnthousiasmeActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraagtitel:</label>
+                                        <input type="text" id="cfgSecEnthousiasmeTitel" class="form-control-text" style="width: 100%;" value="👥 2. Ervaring & enthousiasme in de klas">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Toelichting:</label>
+                                        <input type="text" id="cfgSecEnthousiasmeToelichting" class="form-control-text" style="width: 100%;" value="Hoe hebben de leerlingen het werken met dit materiaal ervaren?">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; font-weight: 600; color: #64748b;">Keuze-opties enthousiasme (gescheiden door komma's):</label>
+                                    <input type="text" id="cfgSecEnthousiasmeOpties" class="form-control-text" style="width: 100%;" value="🤩 Zeer enthousiast!, 🙂 Positief & betrokken, 😐 Wisselende reacties, 😕 Moeite met motiveren">
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 3: COMPLEETHEID & STAAT -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>📦</span> Vraag 3: Compleetheid & Kwaliteit van de kist
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecCompleetheidActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="font-size: 12px; font-weight: 600; color: #64748b;">Label / Vraag:</label>
+                                    <input type="text" id="cfgSecCompleetheidLabel" class="form-control-text" style="width: 100%;" value="Kwaliteit & compleetheid van de kist:">
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; font-weight: 600; color: #64748b;">Keuze-opties compleetheid (gescheiden door komma's):</label>
+                                    <input type="text" id="cfgSecCompleetheidOpties" class="form-control-text" style="width: 100%;" value="✅ Helemaal compleet & gebruiksklaar, ⚠️ Er ontbrak een klein onderdeel, 🔧 Technisch mankement ervaren">
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 4: OPEN TOELICHTING -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>💬</span> Vraag 4: Toelichting & Leservaringen veld
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecToelichtingActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraaglabel:</label>
+                                        <input type="text" id="cfgSecToelichtingLabel" class="form-control-text" style="width: 100%;" value="Toelichting of ervaringen uit de les:">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Placeholder tekst:</label>
+                                        <input type="text" id="cfgSecToelichtingPlaceholder" class="form-control-text" style="width: 100%;" value="Vertel in een paar zinnen hoe de lessen zijn verlopen. Wat werkte fantastisch en wat kan een volgende leerkracht helpen?">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 5: DIGITALE GELETTERDHEID DOELEN -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>🎯</span> Vraag 5: Doelen Digitale Geletterdheid (SLO Leerlijn)
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecDgActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraagtitel:</label>
+                                        <input type="text" id="cfgSecDgTitel" class="form-control-text" style="width: 100%;" value="🎯 3. Doelen Digitale Geletterdheid (DG)">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Toelichting:</label>
+                                        <input type="text" id="cfgSecDgToelichting" class="form-control-text" style="width: 100%;" value="Aan welke domeinen en vaardigheden uit de leerlijn Digitale Geletterdheid is tijdens dit project gewerkt?">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 14px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-size: 12px; font-weight: 700; color: #334155;">Beschikbare Digitale Geletterdheid Domeinen:</span>
+                                        <button type="button" class="btn-green-action" onclick="window.addDgDomainRow()" style="padding: 4px 10px; font-size: 11px;">
+                                            <span>➕</span> Domein toevoegen
+                                        </button>
+                                    </div>
+                                    <div id="cfgDgDomeinenContainer"></div>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Label opdracht-veld:</label>
+                                        <input type="text" id="cfgSecDgOpdrachtLabel" class="form-control-text" style="width: 100%;" value="Specifieke lesopdracht of kerndoel (optioneel):">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Placeholder opdracht-veld:</label>
+                                        <input type="text" id="cfgSecDgOpdrachtPlaceholder" class="form-control-text" style="width: 100%;" value="Bijv. Een danswedstrijd geprogrammeerd of een stop-motion journaal over het thema 'Natuur' gemaakt">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 6: FOTO'S & MEDIA -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>📸</span> Vraag 6: Foto's & Resultaten delen
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecFotosActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraagtitel:</label>
+                                        <input type="text" id="cfgSecFotosTitel" class="form-control-text" style="width: 100%;" value="📸 4. Foto's & Resultaten delen (Optioneel)">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Toelichting:</label>
+                                        <input type="text" id="cfgSecFotosToelichting" class="form-control-text" style="width: 100%;" value="Deel foto's van leerlingen aan het werk, van het bouwwerk of het eindresultaat.">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; font-weight: 600; color: #64748b;">AVG Richtlijn / Disclaimer tekst:</label>
+                                    <input type="text" id="cfgSecFotosAvg" class="form-control-text" style="width: 100%;" value="* Let op AVG: gezichten van leerlingen uitsluitend delen conform toestemming binnen jullie school.">
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 7: SHAREPOINT / ONEDRIVE MAP LINK -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>🔗</span> Vraag 7: SharePoint / OneDrive map link
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecOnedriveActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraaglabel:</label>
+                                    <input type="text" id="cfgSecOnedriveLabel" class="form-control-text" style="width: 100%;" value="Of deel een link naar jullie school SharePoint / OneDrive foto-map:">
+                                </div>
+                            </div>
+
+                            <!-- VRAAG 8: QUOTE VAN LEERLING OF LEERKRACHT -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <strong style="color: #0f172a; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                        <span>💬</span> Vraag 8: Quote van leerling of leerkracht
+                                    </strong>
+                                    <label class="switch-toggle" title="Sectie in- of uitschakelen">
+                                        <input type="checkbox" id="cfgSecQuoteActief" checked>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Vraaglabel:</label>
+                                        <input type="text" id="cfgSecQuoteLabel" class="form-control-text" style="width: 100%;" value="Quote van een leerling of gouden tip (optioneel):">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 12px; font-weight: 600; color: #64748b;">Placeholder:</label>
+                                        <input type="text" id="cfgSecQuotePlaceholder" class="form-control-text" style="width: 100%;" value="Bijv. 'Juf, mogen we morgen weer programmeren met de robots?'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BLOK 3: AANGEPASTE EXTRA VRAGEN -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div>
+                                <h3 class="config-card-title"><span>➕</span> Aanvullende Vragen Toevoegen</h3>
+                                <p class="config-card-subtitle">Voeg eigen vragen toe aan het formulier, zoals tekstvragen, meerkeuzeopties of ja/nee-vragen.</p>
+                            </div>
+                            <button type="button" class="btn-green-action" onclick="window.openExtraVraagModal()" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 8px 16px;">
+                                <span>➕</span> Vraag toevoegen
+                            </button>
+                        </div>
+
+                        <div id="cfgExtraVragenLijst">
+                            <!-- Dynamisch gevuld via script.js -->
+                        </div>
+                    </div>
+
+                    <!-- OPSLAAN KNOPPEN BALK -->
+                    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+                        <button class="pill-btn secondary" onclick="window.resetFeedbackConfig()" style="color: #dc2626; border-color: #fca5a5;">
+                            <span>🔄</span> Herstel Standaard
+                        </button>
+                        <button class="btn-green-action" onclick="window.saveFeedbackConfig()" style="font-size: 14px; padding: 12px 28px;">
+                            <span>💾</span> Feedbackformulier Wijzigingen Opslaan
+                        </button>
+                    </div>
+                </section>
+            </div>
         </div>
     </main>
+
 </div>
 
 <!-- Modals -->
@@ -621,11 +933,60 @@
             <div id="feedbackModalQuote" style="font-style: italic; font-size: 13.5px; color: #92400e; margin-top: 4px;">...</div>
         </div>
 
+        <div id="feedbackModalExtraVragenContainer" style="margin-bottom: 20px; display: none;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px;">Aanvullende Vragen</span>
+            <div id="feedbackModalExtraVragenList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
         <div style="text-align: right; padding-top: 15px; border-top: 1px solid #e2e8f0;">
             <button class="pill-btn secondary" onclick="sluitAlleModals()">Sluiten</button>
         </div>
     </div>
 </div>
+
+<!-- Modal voor Extra / Aangepaste Vraag toevoegen of bewerken -->
+<div id="extraVraagModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalExtraVraagTitle" style="margin-top: 0; font-size: 20px;">➕ Vraag toevoegen</h2>
+        <form id="extraVraagForm" onsubmit="window.saveExtraVraag(event)">
+            <input type="hidden" id="editExtraVraagId">
+            <div class="form-group">
+                <label>Vraagstelling (verplicht):</label>
+                <input type="text" id="extraVraagTitel" class="form-control-text" placeholder="Bijv. Zou je deze leskist aanbevelen aan een collega?" required>
+            </div>
+            <div class="form-group">
+                <label>Hulptekst / Toelichting (optioneel):</label>
+                <input type="text" id="extraVraagToelichting" class="form-control-text" placeholder="Korte hint of uitleg voor de leerkracht...">
+            </div>
+            <div class="form-group">
+                <label>Type vraag:</label>
+                <select id="extraVraagType" class="form-control-text" onchange="window.toggleExtraVraagOptiesVeld()" style="background: white;">
+                    <option value="tekst">Korte open tekst (1 regel)</option>
+                    <option value="textarea">Uitgebreide open tekst (meerdere regels)</option>
+                    <option value="radio">Meerkeuze (1 antwoord selecteren)</option>
+                    <option value="checkbox">Selectievakjes (meerdere antwoorden mogelijk)</option>
+                    <option value="sterren">Beoordeling met sterren (1 t/m 5)</option>
+                    <option value="janee">Ja / Nee vraag</option>
+                </select>
+            </div>
+            <div class="form-group" id="extraVraagOptiesGroep" style="display: none;">
+                <label>Antwoordopties (gescheiden door komma's):</label>
+                <input type="text" id="extraVraagOpties" class="form-control-text" placeholder="Bijv. Ja zeker, Misschien, Nee">
+                <p style="font-size: 11px; color: #64748b; margin-top: 4px;">Typ de keuzemogelijkheden gescheiden door een komma.</p>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                <input type="checkbox" id="extraVraagVerplicht" style="width: 18px; height: 18px; accent-color: var(--ww-green);">
+                <label for="extraVraagVerplicht" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Verplicht veld (leerkracht moet dit beantwoorden)</label>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+                <button type="button" class="pill-btn secondary" onclick="sluitAlleModals()">Annuleren</button>
+                <button type="submit" class="btn-green-action" style="padding: 10px 22px;">💾 Vraag Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 <script>
     // Functionaliteit voor het openen van het beheerdersdashboard (zonder wachtwoord, geverifieerd via Microsoft SSO)
@@ -676,6 +1037,6 @@
 
 <script src="auth-config.js?v=20261023"></script>
 <script src="auth.js?v=20261023"></script>
-<script src="script.js?v=20261023l"></script>
+<script src="script.js?v=20261024b"></script>
 </body>
 </html>
