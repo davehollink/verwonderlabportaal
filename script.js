@@ -643,6 +643,78 @@ defaultWonderwijsScholen.forEach(ds => {
 });
 
 let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
+let verwijderdeReserveringen = safeGetLocal('ww_verwijderde_reserveringen_v1', []);
+reserveringen = reserveringen.filter(r => !verwijderdeReserveringen.includes(String(r.id)));
+
+window.cleanKistNaam = function(s) {
+    if (!s) return '';
+    return s.toLowerCase()
+        .replace(/\(.*?\)/g, '')
+        .replace(/groepsset/gi, '')
+        .replace(/education/gi, '')
+        .replace(/&/g, '')
+        .replace(/dot/gi, '')
+        .replace(/robot/gi, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+};
+
+window.isZelfdeKist = function(kistA, kistB, kistIdA, kistIdB) {
+    if (kistIdA && kistIdB && String(kistIdA) === String(kistIdB)) return true;
+    if (kistB && typeof kistB === 'object') {
+        if (kistIdA && kistB.id && String(kistIdA) === String(kistB.id)) return true;
+        kistB = kistB.naam || kistB.titel || '';
+    }
+    if (kistA && typeof kistA === 'object') {
+        if (kistA.id && kistIdB && String(kistA.id) === String(kistIdB)) return true;
+        kistA = kistA.naam || kistA.titel || '';
+    }
+
+    if (!kistA || !kistB) return false;
+    const a = kistA.toLowerCase().trim();
+    const b = kistB.toLowerCase().trim();
+    if (a === b) return true;
+
+    const cA = window.cleanKistNaam(a);
+    const cB = window.cleanKistNaam(b);
+    if (!cA || !cB) return false;
+    if (cA === cB) return true;
+
+    // Voorkom foutieve koppeling als cijfers verschillen (bijv. set 1 vs set 2, nr 1 vs nr 2)
+    const numA = cA.replace(/\D/g, '');
+    const numB = cB.replace(/\D/g, '');
+    if (numA !== numB) return false;
+
+    return cA.includes(cB) || cB.includes(cA);
+};
+
+window.isKistGereserveerdInPeriode = function(kistNaam, periodeId, kistId) {
+    if (!kistNaam && !kistId) return false;
+    const targetPId = parseInt(periodeId);
+    if (isNaN(targetPId)) return false;
+
+    if (typeof reserveringen === 'undefined' || !Array.isArray(reserveringen)) return false;
+
+    return reserveringen.some(r => {
+        if (!r || r.status === 'Afgewezen') return false;
+
+        let matchPeriode = false;
+        if (r.periodeId && parseInt(r.periodeId) === targetPId) {
+            matchPeriode = true;
+        } else if (typeof window.vindPeriode === 'function') {
+            const pObj = window.vindPeriode(r);
+            if (pObj && parseInt(pObj.id) === targetPId) matchPeriode = true;
+        }
+        if (!matchPeriode) {
+            const pStr = (r.periodeNaam || r.periode || '').toString();
+            const m = pStr.match(/Periode\s*(\d+)/i);
+            if (m && parseInt(m[1]) === targetPId) matchPeriode = true;
+        }
+        if (!matchPeriode) return false;
+
+        return window.isZelfdeKist(r.kist, kistNaam, r.kistId, kistId);
+    });
+};
 let beheerdersLijst = safeGetLocal('ww_beheerders_v1', []); 
 let mijnFavorieten = safeGetLocal('ww_favorieten_v1', []); 
 let meldingen = safeGetLocal('ww_meldingen_v1', []); 
@@ -1485,6 +1557,7 @@ function slaDataOp() {
     try {
         localStorage.setItem('ww_periodes_v11', JSON.stringify(periodes));
         localStorage.setItem('ww_reserveringen_v11', JSON.stringify(reserveringen));
+        localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
         
         // Zorg dat grote base64 data nooit de 5MB quota van localStorage overschrijdt
         try {
@@ -1562,9 +1635,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     if (idx > -1) periodes[idx] = cp; else periodes.push(cp);
                 });
             }
-            if (typeof window.importeerHistorischeReserveringen === 'function') {
-                window.importeerHistorischeReserveringen();
-            }
             slaDataOp(); 
             if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
             if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); 
@@ -1631,20 +1701,28 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { 
             if(!snapshot.empty) { 
                 const cloudRes = snapshot.docs.map(d => d.data());
+                // Filter items die door beheerder definitief zijn verwijderd
+                const geldigeCloudRes = cloudRes.filter(cr => {
+                    const idStr = cr.id ? cr.id.toString() : '';
+                    return !verwijderdeReserveringen.includes(idStr);
+                });
+
                 const cloudMap = new Map();
-                cloudRes.forEach(cr => cloudMap.set(cr.id.toString(), cr));
+                geldigeCloudRes.forEach(cr => cloudMap.set(cr.id.toString(), cr));
+
+                // Behoud alleen lokale reserveringen die nog niet in cloud staan en NIET verwijderd zijn
                 reserveringen.forEach(lr => {
-                    if (!cloudMap.has(lr.id.toString())) {
-                        cloudMap.set(lr.id.toString(), lr);
+                    const lrIdStr = lr.id ? lr.id.toString() : '';
+                    if (!verwijderdeReserveringen.includes(lrIdStr) && !cloudMap.has(lrIdStr)) {
+                        cloudMap.set(lrIdStr, lr);
                         if (window.addReserveringToCloud) {
                             window.addReserveringToCloud(lr).catch(e => console.warn("Cloud sync reservering:", e));
                         }
                     }
                 });
                 reserveringen = Array.from(cloudMap.values());
-            }
-            if (typeof window.importeerHistorischeReserveringen === 'function') {
-                window.importeerHistorischeReserveringen();
+            } else {
+                reserveringen = reserveringen.filter(lr => !verwijderdeReserveringen.includes(lr.id ? lr.id.toString() : ''));
             }
             slaDataOp(); 
             if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
@@ -2293,8 +2371,33 @@ window.renderReserveringsGrid = function() {
         let isKapot = kist.beschikbaar === false;
         let isFav = mijnFavorieten.includes(kist.id);
         
+        // Controleer beschikbaarheid over actieve periodes
+        const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
+        const actievePeriodes = (typeof periodes !== 'undefined' && Array.isArray(periodes)) 
+            ? periodes.filter(p => !p.eind || isNaN(new Date(p.eind).getTime()) || new Date(p.eind) >= vandaag) 
+            : [];
+        const checkPeriodes = actievePeriodes.length > 0 ? actievePeriodes : (periodes || []);
+        const bezettePeriodesCount = checkPeriodes.filter(p => typeof window.isKistGereserveerdInPeriode === 'function' && window.isKistGereserveerdInPeriode(kist.naam, p.id, kist.id)).length;
+        const isVolledigBezet = checkPeriodes.length > 0 && bezettePeriodesCount === checkPeriodes.length;
+        const vrijePeriodesCount = Math.max(0, checkPeriodes.length - bezettePeriodesCount);
+
+        let statusBadgeHtml = '';
+        if (isKapot) {
+            statusBadgeHtml = `<div style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 9px; border-radius: 20px; width: fit-content;">⚠️ In reparatie</div>`;
+        } else if (isVolledigBezet) {
+            statusBadgeHtml = `<div style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 9px; border-radius: 20px; width: fit-content;">🔒 Alle periodes volgeboekt</div>`;
+        } else if (bezettePeriodesCount > 0) {
+            statusBadgeHtml = `<div style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #475569; background: #f8fafc; border: 1px solid #cbd5e1; padding: 3px 9px; border-radius: 20px; width: fit-content;">📅 ${vrijePeriodesCount} van ${checkPeriodes.length} periodes vrij</div>`;
+        } else {
+            statusBadgeHtml = `<div style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 9px; border-radius: 20px; width: fit-content;">✅ Beschikbaar</div>`;
+        }
+
         let hartjeHtml = `<div onclick="window.toggleFavoriet(${kist.id}, event)" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;">${isFav ? '❤️' : '🤍'}</div>`;
-        let actieHtml = isKapot ? `<div style="color: #E74C3C; font-weight: bold; font-size: 13px; margin-top: auto; padding-top: 15px;">⚠️ Tijdelijk in reparatie</div>` : `<button class="btn-submit" style="margin-top: auto; background: #3e2723; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Informatie &amp; Reserveren</button>`;
+        let actieHtml = isKapot 
+            ? `<div style="color: #E74C3C; font-weight: bold; font-size: 13px; margin-top: auto; padding-top: 15px;">⚠️ Tijdelijk in reparatie</div>` 
+            : isVolledigBezet
+                ? `<button class="btn-submit" style="margin-top: auto; background: #64748b; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Bekijk details (Volgeboekt)</button>`
+                : `<button class="btn-submit" style="margin-top: auto; background: #3e2723; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Informatie &amp; Reserveren</button>`;
         let clickEvent = isKapot ? `` : `onclick="window.openLeskistInfo(${kist.id})"`;
         let styling = isKapot ? `opacity: 0.6; cursor: not-allowed;` : `cursor: pointer;`;
         let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg);
@@ -2318,7 +2421,8 @@ window.renderReserveringsGrid = function() {
             </div>
             <div style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
                 <h3 style="margin-top: 0; font-size: 18px; color: #1e293b; margin-bottom: 5px;">${kist.naam}</h3>
-                <p style="font-size: 13px; color: #64748b; margin-bottom: 10px;">${kist.tag}</p>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 8px;">${kist.tag}</p>
+                ${statusBadgeHtml}
                 ${pdfBadgeHtml}
                 ${actieHtml}
             </div>
@@ -2842,7 +2946,12 @@ window.renderBeheerdersTabellen = function() {
                     }
                 }
                 
-                let actieMenuHTML = `<button class="btn-table-delete-icon" title="Reservering verwijderen" onclick="window.actieReserveringVerwijderen(${r.id}, event)">🗑️</button>`;
+                let actieMenuHTML = `
+                    <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        <button type="button" class="btn-table-edit-icon" title="Reservering bewerken" onclick="window.openBewerkReserveringModal(${r.id}, event)" style="background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">✏️</button>
+                        <button type="button" class="btn-table-delete-icon" title="Reservering definitief verwijderen" onclick="window.actieReserveringVerwijderen(${r.id}, event)" style="background: #fee2e2; border: 1.5px solid #fecaca; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">🗑️</button>
+                    </div>
+                `;
                 
                 const docentNaam = r.leerkracht || "Onbekende leerkracht";
                 const docentEmail = r.aanvragerEmail 
@@ -3166,25 +3275,39 @@ async function verwerkFormulier(formId, btnElement) {
             if(window.saveSchoolToCloud) window.saveSchoolToCloud(newData).catch(console.error); 
         } else if (formId === 'reserveForm') { 
             const kistNaam = getVal('geselecteerdeKistNaam', 'Onbekende Kist'); 
+            const kistId = getVal('geselecteerdeKistId', ''); 
             const gekozenPeriodeId = parseInt(getVal('periodeSelect', '0')); 
             const gekozenSchool = getVal('schoolSelect'); 
             
             if(!gekozenPeriodeId || !gekozenSchool) { 
-                alert("⚠️ Selecteer alstublieft een school en een periode."); 
+                alert("⚠️ Selecteer alstublieft een school en een beschikbare periode."); 
                 if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; } 
                 return; 
             } 
             
+            // CONTROLE: Voorkom dubbele reservering voor dezelfde periode
+            if (typeof window.isKistGereserveerdInPeriode === 'function' && window.isKistGereserveerdInPeriode(kistNaam, gekozenPeriodeId, kistId)) {
+                alert(`⚠️ Helaas! Dit lesmateriaal ('${kistNaam}') is in deze periode al gereserveerd door een andere collega.\n\nHet kan daarom niet dubbel worden geboekt. Kies alstublieft een andere periode of een ander lesmateriaal.`);
+                if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
+                return;
+            }
+            
             const huidigeNaam = localStorage.getItem('ww_huidige_leerkracht') || "Onbekend";
             const huidigeEmail = localStorage.getItem('ww_huidige_email') || "Onbekend";
+
+            const gekozenPeriodeObj = periodes.find(p => p.id == gekozenPeriodeId || String(p.id) === String(gekozenPeriodeId));
+            const gekozenPeriodeNaam = gekozenPeriodeObj ? gekozenPeriodeObj.naam : `Periode ${gekozenPeriodeId} schooljaar 2026/2027`;
 
             const nieuweReservering = { 
                 id: Date.now(), 
                 kist: kistNaam, 
+                kistId: kistId || undefined,
                 leerkracht: huidigeNaam, 
                 aanvragerEmail: huidigeEmail, 
                 school: gekozenSchool, 
                 periodeId: gekozenPeriodeId, 
+                periode: gekozenPeriodeNaam,
+                periodeNaam: gekozenPeriodeNaam,
                 status: "In afwachting" 
             }; 
             
@@ -3193,6 +3316,7 @@ async function verwerkFormulier(formId, btnElement) {
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
             if(window.updateKalenderEnLijst) window.updateKalenderEnLijst(); 
             if(window.renderMijnReserveringen) window.renderMijnReserveringen(); 
+            if(window.renderReserveringsGrid) window.renderReserveringsGrid();
             if(window.addReserveringToCloud) await window.addReserveringToCloud(nieuweReservering); 
             
             window.sluitAlleModals(); 
@@ -3942,20 +4066,77 @@ window.openLeskistInfo = function(id) {
     
     const select = document.getElementById('periodeSelect');
     const submitBtn = document.getElementById('reserveSubmitBtn');
-    const bezettePeriodeIds = reserveringen.filter(r => r.kist === kist.naam && (r.status === 'In afwachting' || r.status === 'Geaccepteerd')).map(r => parseInt(r.periodeId));
+    const statusMeldingEl = document.getElementById('periodeStatusMelding');
     const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
-    const beschikbarePeriodes = periodes.filter(p => !bezettePeriodeIds.includes(parseInt(p.id)) && new Date(p.eind) >= vandaag);
+    
+    // Bepaal actieve periodes
+    const actievePeriodes = (typeof periodes !== 'undefined' && Array.isArray(periodes))
+        ? periodes.filter(p => !p.eind || isNaN(new Date(p.eind).getTime()) || new Date(p.eind) >= vandaag)
+        : [];
+    const periodesLijst = actievePeriodes.length > 0 ? actievePeriodes : (periodes || []);
+    
+    // Controleer per periode of dit materiaal al bezet is
+    const periodesStatus = periodesLijst.map(p => {
+        const bezet = typeof window.isKistGereserveerdInPeriode === 'function' 
+            ? window.isKistGereserveerdInPeriode(kist.naam, p.id, kist.id) 
+            : false;
+        return { periode: p, bezet: bezet };
+    });
+
+    const beschikbarePeriodes = periodesStatus.filter(x => !x.bezet);
+    const bezettePeriodes = periodesStatus.filter(x => x.bezet);
     
     if (select) {
         select.innerHTML = '';
         if (beschikbarePeriodes.length === 0) {
-            select.innerHTML = '<option disabled selected>Geen periodes beschikbaar</option>';
-            if(submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = "0.5"; }
+            select.innerHTML = '<option disabled selected value="">🔒 Dit materiaal is voor alle periodes reeds gereserveerd</option>';
+            periodesStatus.forEach(item => {
+                select.innerHTML += `<option value="${item.periode.id}" disabled style="color: #94a3b8; background: #f8fafc;">🔒 ${item.periode.naam} (Reeds gereserveerd)</option>`;
+            });
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.5";
+                submitBtn.style.cursor = "not-allowed";
+                submitBtn.innerHTML = '<span>🔒 Volgeboekt in alle periodes</span>';
+            }
+            if (statusMeldingEl) {
+                statusMeldingEl.innerHTML = '<span style="color: #dc2626; font-weight: 700;">⚠️ Dit materiaal is in alle periodes al gereserveerd door collega\'s en kan momenteel niet worden aangevraagd.</span>';
+                statusMeldingEl.style.display = 'block';
+            }
         } else {
-            if(submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
-            select.innerHTML = '<option disabled selected value="">-- Kies een periode --</option>';
-            beschikbarePeriodes.forEach(p => select.innerHTML += `<option value="${p.id}">${p.naam} (${p.start} t/m ${p.eind})</option>`);
+            select.innerHTML = '<option disabled selected value="">-- Kies een beschikbare periode --</option>';
+            periodesStatus.forEach(item => {
+                if (item.bezet) {
+                    select.innerHTML += `<option value="${item.periode.id}" disabled style="color: #94a3b8; background: #f8fafc;">🔒 ${item.periode.naam} (Al gereserveerd / Niet beschikbaar)</option>`;
+                } else {
+                    const datumTekst = (item.periode.start && item.periode.eind) ? ` (${item.periode.start} t/m ${item.periode.eind})` : '';
+                    select.innerHTML += `<option value="${item.periode.id}">✅ ${item.periode.naam}${datumTekst}</option>`;
+                }
+            });
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+                submitBtn.style.cursor = "pointer";
+                submitBtn.innerHTML = '<span>Reserveer dit materiaal direct</span><span style="font-size: 18px; margin-left: 4px;">→</span>';
+            }
+            if (statusMeldingEl) {
+                if (bezettePeriodes.length > 0) {
+                    statusMeldingEl.innerHTML = `<span style="color: #64748b; font-size: 12px;">ℹ️ Let op: ${bezettePeriodes.length} periode(s) met 🔒 zijn reeds gereserveerd. Kies een van de ${beschikbarePeriodes.length} vrije periodes.</span>`;
+                    statusMeldingEl.style.display = 'block';
+                } else {
+                    statusMeldingEl.innerHTML = '<span style="color: #15803d; font-size: 12px; font-weight: 600;">✅ Beschikbaar in alle getoonde periodes!</span>';
+                    statusMeldingEl.style.display = 'block';
+                }
+            }
         }
+
+        select.onchange = function() {
+            const gekozenOptie = select.options[select.selectedIndex];
+            if (gekozenOptie && gekozenOptie.disabled) {
+                alert("⚠️ Deze periode is al gereserveerd door een collega en kan niet worden gekozen. Selecteer alstublieft een beschikbare periode.");
+                select.value = "";
+            }
+        };
     }
     
     const resModal = document.getElementById('infoReserveModal');
@@ -4056,7 +4237,189 @@ Klik in Outlook op 'Verzenden' om de mail te versturen.`);
         }, 150);
     }
 };
-window.actieReserveringVerwijderen = function(id, event) { event.preventDefault(); if(confirm("Weet je zeker dat je deze reservering definitief wilt verwijderen?")) { reserveringen = reserveringen.filter(r => r.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteReserveringFromCloud) window.deleteReserveringFromCloud(id); } }
+window.actieReserveringVerwijderen = async function(id, event) {
+    if (event && event.preventDefault) event.preventDefault();
+    if (event && event.stopPropagation) event.stopPropagation();
+
+    const targetRes = reserveringen.find(r => r.id == id || String(r.id) === String(id));
+    const kistNaam = targetRes ? targetRes.kist : 'deze reservering';
+    const leerkrachtNaam = targetRes ? (targetRes.leerkracht || '') : '';
+
+    if (!confirm(`Weet je zeker dat je de reservering van '${kistNaam}' ${leerkrachtNaam ? 'voor ' + leerkrachtNaam : ''} definitief wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt.`)) {
+        return;
+    }
+
+    // 1. Voeg toe aan lijst met definitief verwijderde ID's zodat deze NOOIT meer terugkomt
+    const idStr = id.toString();
+    if (!verwijderdeReserveringen.includes(idStr)) {
+        verwijderdeReserveringen.push(idStr);
+        localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
+    }
+
+    // 2. Verwijder direct uit de lokale lijst
+    reserveringen = reserveringen.filter(r => r.id != id && String(r.id) !== idStr);
+    slaDataOp();
+
+    // 3. Update alle tabellen en overzichten direct
+    if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+    if (window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+    if (window.renderMijnReserveringen) window.renderMijnReserveringen();
+    if (window.renderStatistiekenTab) window.renderStatistiekenTab();
+    if (window.renderReserveringsGrid) window.renderReserveringsGrid();
+
+    // 4. Verwijder uit Cloud Firestore
+    if (window.deleteReserveringFromCloud) {
+        try {
+            await window.deleteReserveringFromCloud(id);
+        } catch (e) {
+            console.warn("Cloud delete reservering fout:", e);
+        }
+    }
+};
+
+window.openBewerkReserveringModal = function(id, event) {
+    if (event && event.preventDefault) event.preventDefault();
+    if (event && event.stopPropagation) event.stopPropagation();
+
+    const r = reserveringen.find(x => x.id == id || String(x.id) === String(id));
+    if (!r) {
+        alert("⚠️ Reservering niet gevonden.");
+        return;
+    }
+
+    const modal = document.getElementById('modalReserveringBewerken');
+    if (!modal) return;
+
+    if (document.getElementById('bewerkResId')) document.getElementById('bewerkResId').value = r.id;
+    if (document.getElementById('bewerkResLeerkracht')) document.getElementById('bewerkResLeerkracht').value = r.leerkracht || '';
+    if (document.getElementById('bewerkResEmail')) document.getElementById('bewerkResEmail').value = r.aanvragerEmail || '';
+    if (document.getElementById('bewerkResStatus')) document.getElementById('bewerkResStatus').value = r.status || 'In afwachting';
+    if (document.getElementById('bewerkResOpmerking')) document.getElementById('bewerkResOpmerking').value = r.opmerking || r.toelichting || '';
+
+    // Kisten dropdown
+    const kistSelect = document.getElementById('bewerkResKist');
+    if (kistSelect) {
+        const materialen = Array.from(new Set([
+            ...leskisten.map(k => k.naam || k.titel),
+            ...reserveringen.map(res => res.kist),
+            'mTiny', 'VR Brillen set 1 (4 items)', 'VR Brillen set 2 (4 items)', 'Greenscreenbox nr. 1', 'Greenscreenbox nr. 2', 'Greenscreenbox nr. 3',
+            'Infento Talent Kit (groepsset)', 'Infento: discovery set (groepsset)', 'Lego Education Spike Essential (6 boxen)', 'Lego Education Spike Prime (6 boxen)',
+            'Lego Education Bricq (2 items)', 'Micro:bit groepsset (20+ items)', 'Photon Robot', 'Dash Robot', '3d pennen groepsset (5 items)',
+            '3D printer nr. 1', '3d printer nr. 2', 'Intelino groepsset (4 items)', 'Osmo pakket A (2 items)', 'Osmo pakket B (2 items)',
+            'Sphero Indi groepsset (8 items)', 'Sphero Mini', 'Ozobot groepsset (12 items)', 'Beaverbot 1', 'Beaverbot 2', 'Easi scope (6 items) 1',
+            'Virtuali-Tee', 'Duplo Coding Express', 'Kiene Klanken en vormen', 'Piximakey nr. 1', 'Piximakey nr. 2', 'Podcaststudio klein',
+            'Podcaststudio groot', 'Plugo', 'Makey Makey', '4 iPads', 'N/A (Algemeen)'
+        ].filter(Boolean))).sort((a, b) => a.localeCompare(b, 'nl'));
+
+        kistSelect.innerHTML = materialen.map(m => {
+            const isSel = (m.toLowerCase().trim() === (r.kist || '').toLowerCase().trim()) ? 'selected' : '';
+            return `<option value="${m}" ${isSel}>${m}</option>`;
+        }).join('');
+    }
+
+    // Scholen dropdown
+    const schoolSelect = document.getElementById('bewerkResSchool');
+    if (schoolSelect) {
+        schoolSelect.innerHTML = scholen.map(s => {
+            const isSel = (s.naam.toLowerCase().trim() === (r.school || '').toLowerCase().trim()) ? 'selected' : '';
+            return `<option value="${s.naam}" ${isSel}>${s.naam}</option>`;
+        }).join('');
+    }
+
+    // Periodes dropdown
+    const periodeSelect = document.getElementById('bewerkResPeriode');
+    if (periodeSelect) {
+        const rPeriodeId = r.periodeId || (window.vindPeriode ? window.vindPeriode(r)?.id : null);
+        periodeSelect.innerHTML = periodes.map(p => {
+            const isSel = (p.id == rPeriodeId || String(p.id) === String(rPeriodeId)) ? 'selected' : '';
+            return `<option value="${p.id}" ${isSel}>${p.naam} (${p.start} t/m ${p.eind})</option>`;
+        }).join('');
+    }
+
+    modal.style.display = 'flex';
+};
+
+window.slaBewerkteReserveringOp = async function(event) {
+    if (event && event.preventDefault) event.preventDefault();
+
+    const id = document.getElementById('bewerkResId')?.value;
+    const kist = document.getElementById('bewerkResKist')?.value;
+    const leerkracht = document.getElementById('bewerkResLeerkracht')?.value.trim();
+    const email = document.getElementById('bewerkResEmail')?.value.trim();
+    const school = document.getElementById('bewerkResSchool')?.value;
+    const periodeId = document.getElementById('bewerkResPeriode')?.value;
+    const status = document.getElementById('bewerkResStatus')?.value || 'In afwachting';
+    const opmerking = document.getElementById('bewerkResOpmerking')?.value.trim();
+    const btn = document.getElementById('btnOpslaanBewerkteReservering');
+
+    if (!id || !kist || !leerkracht || !email || !school || !periodeId) {
+        alert("⚠️ Vul alstublieft alle verplichte velden in.");
+        return;
+    }
+
+    const rIdx = reserveringen.findIndex(x => x.id == id || String(x.id) === String(id));
+    if (rIdx === -1) {
+        alert("⚠️ Reservering niet gevonden.");
+        return;
+    }
+
+    const origBtnText = btn ? btn.innerText : '';
+    if (btn) {
+        btn.innerText = '⏳ Bezig met opslaan...';
+        btn.disabled = true;
+    }
+
+    const gekozenPeriodeObj = periodes.find(p => p.id == periodeId || String(p.id) === String(periodeId));
+    const gekozenPeriodeNaam = gekozenPeriodeObj ? gekozenPeriodeObj.naam : `Periode ${periodeId} schooljaar 2026/2027`;
+
+    // Pas de reservering aan
+    reserveringen[rIdx].kist = kist;
+    reserveringen[rIdx].leerkracht = leerkracht;
+    reserveringen[rIdx].aanvragerEmail = email;
+    reserveringen[rIdx].school = school;
+    reserveringen[rIdx].periodeId = parseInt(periodeId) || periodeId;
+    reserveringen[rIdx].periode = gekozenPeriodeNaam;
+    reserveringen[rIdx].periodeNaam = gekozenPeriodeNaam;
+    reserveringen[rIdx].status = status;
+    reserveringen[rIdx].toelichting = opmerking;
+    reserveringen[rIdx].opmerking = opmerking;
+
+    slaDataOp();
+
+    if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+    if (window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+    if (window.renderMijnReserveringen) window.renderMijnReserveringen();
+    if (window.renderStatistiekenTab) window.renderStatistiekenTab();
+    if (window.renderReserveringsGrid) window.renderReserveringsGrid();
+
+    // Sla direct op in Cloud Firestore
+    if (window.updateChecklistInCloud) {
+        try {
+            await window.updateChecklistInCloud(id, {
+                kist: kist,
+                leerkracht: leerkracht,
+                aanvragerEmail: email,
+                school: school,
+                periodeId: parseInt(periodeId) || periodeId,
+                periode: gekozenPeriodeNaam,
+                periodeNaam: gekozenPeriodeNaam,
+                status: status,
+                toelichting: opmerking,
+                opmerking: opmerking
+            });
+        } catch (err) {
+            console.warn("Cloud update reservering waarschuwing:", err);
+        }
+    }
+
+    if (btn) {
+        btn.innerText = origBtnText;
+        btn.disabled = false;
+    }
+
+    window.sluitAlleModals();
+    alert(`✅ Reservering voor '${kist}' (${leerkracht}) is succesvol bijgewerkt!`);
+};
 window.updateChecklist = async function(id, veld, waarde) { let r = reserveringen.find(x => x.id == id); if(r) r[veld] = waarde; slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.updateChecklistInCloud) window.updateChecklistInCloud(id, { [veld]: waarde }); }
 
 window.stuurFeedbackFormulier = function(resId) {
@@ -6763,11 +7126,17 @@ window.importeerHistorischeReserveringen = async function() {
         });
     }
 
-    // 3. Importeer alle 100 historische reserveringen (voorkom dubbelingen)
+    // 3. Importeer historische reserveringen (voorkom dubbelingen én verwijderde items)
     if (typeof historischeReserveringenData !== 'undefined' && Array.isArray(historischeReserveringenData)) {
         let nieuwAantal = 0;
         historischeReserveringenData.forEach(hr => {
-            const bestaatAl = reserveringen.some(r => r.id == hr.id);
+            const hrIdStr = hr.id.toString();
+            // Als deze reservering door een beheerder is verwijderd: NOOIT meer opnieuw importeren!
+            if (verwijderdeReserveringen.includes(hrIdStr) || verwijderdeReserveringen.includes(Number(hr.id))) {
+                return;
+            }
+
+            const bestaatAl = reserveringen.some(r => r.id == hr.id || String(r.id) === hrIdStr);
 
             if (!bestaatAl) {
                 const resObj = {
@@ -6825,7 +7194,7 @@ window.openHandmatigeReserveringModal = function() {
 
     if (kistSelect) {
         const materialen = Array.from(new Set([
-            ...leskisten.map(k => k.titel),
+            ...leskisten.map(k => k.naam || k.titel),
             ...reserveringen.map(r => r.kist),
             'mTiny', 'VR Brillen set 1 (4 items)', 'VR Brillen set 2 (4 items)', 'Greenscreenbox nr. 1', 'Greenscreenbox nr. 2', 'Greenscreenbox nr. 3',
             'Infento Talent Kit (groepsset)', 'Infento: discovery set (groepsset)', 'Lego Education Spike Essential (6 boxen)', 'Lego Education Spike Prime (6 boxen)',
@@ -6838,6 +7207,19 @@ window.openHandmatigeReserveringModal = function() {
 
         kistSelect.innerHTML = '<option value="">-- Kies lesmateriaal of leskist --</option>' + 
             materialen.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+
+        kistSelect.onchange = function() {
+            const gekozenKist = kistSelect.value;
+            if (!periodeSelect) return;
+            periodeSelect.innerHTML = '<option value="">-- Kies periode --</option>' + 
+                periodes.map(p => {
+                    const bezet = gekozenKist && typeof window.isKistGereserveerdInPeriode === 'function'
+                        ? window.isKistGereserveerdInPeriode(gekozenKist, p.id)
+                        : false;
+                    const statusLabel = bezet ? ' ⚠️ (Al bezet)' : ' ✅ (Vrij)';
+                    return `<option value="${p.id}">${p.naam}${statusLabel} (${p.start} t/m ${p.eind})</option>`;
+                }).join('');
+        };
     }
 
     if (schoolSelect) {
@@ -6871,6 +7253,12 @@ window.slaHandmatigeReserveringOp = async function(event) {
     if (!kist || !leerkracht || !email || !school || !periodeId) {
         alert('⚠️ Vul alstublieft alle verplichte velden in (Materiaal, Naam, E-mail, School en Periode).');
         return;
+    }
+
+    if (typeof window.isKistGereserveerdInPeriode === 'function' && window.isKistGereserveerdInPeriode(kist, periodeId)) {
+        if (!confirm(`⚠️ Let op: '${kist}' is in de gekozen periode al gereserveerd.\n\nWeet je zeker dat je als beheerder een extra handmatige reservering wilt opslaan voor deze periode?`)) {
+            return;
+        }
     }
 
     const origBtnText = btn ? btn.innerText : '';

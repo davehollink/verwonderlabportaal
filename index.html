@@ -1359,6 +1359,68 @@
     </div>
 </div>
 
+<!-- Modal voor Reservering Bewerken door Beheerder -->
+<div id="modalReserveringBewerken" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 580px;">
+        <span class="close-btn" onclick="window.sluitAlleModals()">&times;</span>
+        <h2 style="margin-top: 0; font-size: 20px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>✏️</span> Reservering bewerken
+        </h2>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
+            Pas het lesmateriaal, de leerkracht, school, periode of status van deze reservering aan.
+        </p>
+        <form id="formReserveringBewerken" onsubmit="window.slaBewerkteReserveringOp(event)">
+            <input type="hidden" id="bewerkResId">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Leskist / Materiaal: *</label>
+                <select id="bewerkResKist" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                    <!-- Dynamisch gevuld via script.js -->
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Naam leerkracht: *</label>
+                    <input type="text" id="bewerkResLeerkracht" class="form-control-text" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">E-mail leerkracht: *</label>
+                    <input type="email" id="bewerkResEmail" class="form-control-text" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">School / Locatie: *</label>
+                    <select id="bewerkResSchool" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                        <!-- Dynamisch gevuld via script.js -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Periode: *</label>
+                    <select id="bewerkResPeriode" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                        <!-- Dynamisch gevuld via script.js -->
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Status reservering:</label>
+                <select id="bewerkResStatus" class="form-control-text" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                    <option value="In afwachting">⏳ In afwachting</option>
+                    <option value="Geaccepteerd">✔ Geaccepteerd</option>
+                    <option value="Afgewezen">✖ Afgewezen</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Opmerking / Toelichting:</label>
+                <textarea id="bewerkResOpmerking" class="form-control-text" rows="2" placeholder="Ruimte voor opmerkingen..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                <button type="button" class="pill-btn secondary" onclick="window.sluitAlleModals()">Annuleren</button>
+                <button type="submit" id="btnOpslaanBewerkteReservering" class="btn-green-action" style="padding: 10px 22px; background: #8CC63F; border: none; font-weight: 700; border-radius: 8px; color: white; cursor: pointer;">💾 Wijzigingen Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
 <script>
     // Functionaliteit voor het openen van het beheerdersdashboard (zonder wachtwoord, geverifieerd via Microsoft SSO)
@@ -1407,8 +1469,8 @@
     }
 </script>
 
-<script src="auth-config.js?v=20261026b"></script>
-<script src="auth.js?v=20261026b"></script>
-<script src="script.js?v=20261026b"></script>
+<script src="auth-config.js?v=20261026e"></script>
+<script src="auth.js?v=20261026e"></script>
+<script src="script.js?v=20261026e"></script>
 </body>
 </html>
