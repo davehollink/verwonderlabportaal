@@ -23,7 +23,6 @@ function safeGetLocal(key, defaultData) {
 window.openInOutlook = function(to, subject, body) {
     const cleanTo = (to || "").trim();
     const encodedSubject = encodeURIComponent(subject || "");
-    // Zorg dat regeleindes correct worden gecodeerd voor Outlook Desktop client
     const formattedBody = (body || "").replace(/\r?\n/g, '\r\n');
     const encodedBody = encodeURIComponent(formattedBody);
 
@@ -3985,7 +3984,9 @@ window.verstuurGoedkeuringsMail = async function(r, per) {
     const beheerderNaam = localStorage.getItem('ww_huidige_leerkracht') || "Beheerder Verwonderlab";
 
     if (!docentEmail || !docentEmail.includes('@')) {
-        alert(`✅ Reservering voor '${kistNaam}' is geaccepteerd!\n\nLet op: er is geen e-mailadres gekoppeld aan deze aanvraag voor ${docentNaam}. Er is daarom geen e-mail verstuurd.`);
+        alert(`✅ Reservering voor '${kistNaam}' is geaccepteerd!
+
+Let op: er is geen e-mailadres gekoppeld aan deze aanvraag voor ${docentNaam}. Er is daarom geen e-mail verstuurd.`);
         return;
     }
 
@@ -4037,13 +4038,19 @@ window.verstuurGoedkeuringsMail = async function(r, per) {
     }
 
     if (isVerzondenViaServer) {
-        alert(`✅ Reservering goedgekeurd!\n\nEr is automatisch een bevestigingsmail verstuurd naar ${docentNaam} (${docentEmail}).`);
+        alert(`✅ Reservering goedgekeurd!
+
+Er is automatisch een bevestigingsmail verstuurd naar ${docentNaam} (${docentEmail}).`);
     } else {
         // 2. Open direct de geïnstalleerde Microsoft Outlook Desktop app
         window.openInOutlook(docentEmail, mailOnderwerp, mailTekst);
 
         setTimeout(() => {
-            alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!\n\nMicrosoft Outlook (geïnstalleerde app) is geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).\n\nKlik in Outlook op 'Verzenden' om de mail te versturen.`);
+            alert(`✅ Reservering voor '${kistNaam}' is goedgekeurd!
+
+Microsoft Outlook (geïnstalleerde app) is geopend met de kant-en-klare bevestigingsmail voor ${docentNaam} (${docentEmail}).
+
+Klik in Outlook op 'Verzenden' om de mail te versturen.`);
         }, 150);
     }
 };
@@ -5010,7 +5017,7 @@ window.saveFeedbackConfig = async function() {
     if (saveIcon) saveIcon.innerText = '✅';
     setTimeout(() => { if (saveIcon) saveIcon.innerText = '💾'; }, 2000);
 
-    alert("✅ Feedbackformulier configuratie succesvol opgeslagen!\n\nAlle wijzigingen in vragen, titels en opties zijn nu direct actief in het live feedbackformulier.");
+    alert("✅ Feedbackformulier configuratie succesvol opgeslagen!\\n\\nAlle wijzigingen in vragen, titels en opties zijn nu direct actief in het live feedbackformulier.");
 };
 
 window.resetFeedbackConfig = async function() {
@@ -5124,7 +5131,7 @@ window.saveEmailTemplate = async function() {
         if (saveIcon) saveIcon.innerText = "💾";
     }, 2000);
 
-    alert("✅ E-mailtemplate voor goedkeuringen is succesvol opgeslagen!\n\nWanneer je een reservering goedkeurt, wordt voortaan deze aangepaste tekst en onderwerp klaargezet in Microsoft Outlook.");
+    alert("✅ E-mailtemplate voor goedkeuringen is succesvol opgeslagen!\\n\\nWanneer je een reservering goedkeurt, wordt voortaan deze aangepaste tekst en onderwerp klaargezet in Microsoft Outlook.");
 };
 
 window.resetEmailTemplate = async function() {
@@ -5174,7 +5181,9 @@ const historischeReserveringenData = [
     "leerkracht": "Myra Janssen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "myra.janssen@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5184,7 +5193,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5194,7 +5205,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5204,7 +5217,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5214,7 +5229,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5224,7 +5241,9 @@ const historischeReserveringenData = [
     "leerkracht": "Kim Beckers",
     "school": "Tuin 17",
     "aanvragerEmail": "k.beckers@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5234,7 +5253,9 @@ const historischeReserveringenData = [
     "leerkracht": "Kim Beckers",
     "school": "Tuin 17",
     "aanvragerEmail": "k.beckers@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5244,7 +5265,9 @@ const historischeReserveringenData = [
     "leerkracht": "Timon van Diepen",
     "school": "Holthuus",
     "aanvragerEmail": "T.vanDiepen@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5254,7 +5277,9 @@ const historischeReserveringenData = [
     "leerkracht": "Doris Hoogveld",
     "school": "Stap voor Stap",
     "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5264,7 +5289,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5274,7 +5301,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5284,7 +5313,9 @@ const historischeReserveringenData = [
     "leerkracht": "Fraukje Berndsen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "f.berndsen@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5294,7 +5325,9 @@ const historischeReserveringenData = [
     "leerkracht": "Foekje Bras",
     "school": "Elstar",
     "aanvragerEmail": "f.bras@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5304,7 +5337,9 @@ const historischeReserveringenData = [
     "leerkracht": "Foekje Bras",
     "school": "Elstar",
     "aanvragerEmail": "f.bras@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5314,7 +5349,9 @@ const historischeReserveringenData = [
     "leerkracht": "Judith Stassen-Liefrink",
     "school": "SamSam",
     "aanvragerEmail": "j.stassen@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5324,7 +5361,9 @@ const historischeReserveringenData = [
     "leerkracht": "Linda Bouwmeister - Rikken",
     "school": "Sterrenbos",
     "aanvragerEmail": "l.bouwmeister@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": "Groep 8A"
   },
@@ -5334,7 +5373,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sanne Bedeaux",
     "school": "Tichelaar",
     "aanvragerEmail": "s.bedeaux@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5344,7 +5385,9 @@ const historischeReserveringenData = [
     "leerkracht": "Karin Wilmink-Nab",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "k.nab@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5354,7 +5397,9 @@ const historischeReserveringenData = [
     "leerkracht": "Nicole Storteler",
     "school": "Stap voor Stap",
     "aanvragerEmail": "n.storteler@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5364,7 +5409,9 @@ const historischeReserveringenData = [
     "leerkracht": "Nicole Storteler",
     "school": "Stap voor Stap",
     "aanvragerEmail": "n.storteler@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5374,7 +5421,9 @@ const historischeReserveringenData = [
     "leerkracht": "Else-marije van de Werken",
     "school": "Startblok",
     "aanvragerEmail": "e.vandewerken@wonderwijs.nl",
-    "periode": "Periode 4 schooljaar 2026/2027",\n    "periodeNaam": "Periode 4 schooljaar 2026/2027",\n    "periodeId": 4,
+    "periode": "Periode 4 schooljaar 2026/2027",
+    "periodeNaam": "Periode 4 schooljaar 2026/2027",
+    "periodeId": 4,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5384,7 +5433,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5394,7 +5445,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5404,7 +5457,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5414,7 +5469,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5424,7 +5481,9 @@ const historischeReserveringenData = [
     "leerkracht": "Bram Eerden",
     "school": "(ver)Wonderlab",
     "aanvragerEmail": "b.eerden@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": "Ik werk op de regenboog"
   },
@@ -5434,7 +5493,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5444,7 +5505,9 @@ const historischeReserveringenData = [
     "leerkracht": "Robin Knipping",
     "school": "Elstar",
     "aanvragerEmail": "r.knipping@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": "thema 3 groep 7/8"
   },
@@ -5454,7 +5517,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5464,7 +5529,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5474,7 +5541,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5484,7 +5553,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5494,7 +5565,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5504,7 +5577,9 @@ const historischeReserveringenData = [
     "leerkracht": "Fraukje Berndsen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "f.berndsen@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5514,7 +5589,9 @@ const historischeReserveringenData = [
     "leerkracht": "Test",
     "school": "(ver)Wonderlab",
     "aanvragerEmail": "JHendriks@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": "test"
   },
@@ -5524,7 +5601,9 @@ const historischeReserveringenData = [
     "leerkracht": "Myra Janssen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "myra.janssen@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5534,7 +5613,9 @@ const historischeReserveringenData = [
     "leerkracht": "Myra Janssen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "myra.janssen@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5544,7 +5625,9 @@ const historischeReserveringenData = [
     "leerkracht": "Doris Hoogveld",
     "school": "Stap voor Stap",
     "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "Afgewezen",
     "toelichting": ""
   },
@@ -5554,7 +5637,9 @@ const historischeReserveringenData = [
     "leerkracht": "Doris Hoogveld",
     "school": "Stap voor Stap",
     "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5564,7 +5649,9 @@ const historischeReserveringenData = [
     "leerkracht": "Linda Bouwmeister - Rikken",
     "school": "Sterrenbos",
     "aanvragerEmail": "l.bouwmeister@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": "Groep 8A Linda"
   },
@@ -5574,7 +5661,9 @@ const historischeReserveringenData = [
     "leerkracht": "Rody de Vries",
     "school": "Sterrenbos",
     "aanvragerEmail": "r.devries@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5584,7 +5673,9 @@ const historischeReserveringenData = [
     "leerkracht": "Rody de Vries",
     "school": "Sterrenbos",
     "aanvragerEmail": "r.devries@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5594,7 +5685,9 @@ const historischeReserveringenData = [
     "leerkracht": "Rody de Vries",
     "school": "Sterrenbos",
     "aanvragerEmail": "r.devries@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5604,7 +5697,9 @@ const historischeReserveringenData = [
     "leerkracht": "Rody de Vries",
     "school": "Sterrenbos",
     "aanvragerEmail": "r.devries@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5614,7 +5709,9 @@ const historischeReserveringenData = [
     "leerkracht": "Rody de Vries",
     "school": "Sterrenbos",
     "aanvragerEmail": "r.devries@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5624,7 +5721,9 @@ const historischeReserveringenData = [
     "leerkracht": "Rody de Vries",
     "school": "Sterrenbos",
     "aanvragerEmail": "r.devries@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",\n    "periodeNaam": "Periode 5 schooljaar 2026/2027",\n    "periodeId": 5,
+    "periode": "Periode 5 schooljaar 2026/2027",
+    "periodeNaam": "Periode 5 schooljaar 2026/2027",
+    "periodeId": 5,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5634,7 +5733,9 @@ const historischeReserveringenData = [
     "leerkracht": "Myra Janssen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "myra.janssen@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5644,7 +5745,9 @@ const historischeReserveringenData = [
     "leerkracht": "Jorn Hendriks",
     "school": "Stap voor Stap",
     "aanvragerEmail": "jorn.hendriks@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5654,7 +5757,9 @@ const historischeReserveringenData = [
     "leerkracht": "Koen Bleeker",
     "school": "(ver)Wonderlab",
     "aanvragerEmail": "K.Bleeker@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": "Ik werk op IKC de Regenboog"
   },
@@ -5664,7 +5769,9 @@ const historischeReserveringenData = [
     "leerkracht": "Danielle Creuwels",
     "school": "Tuin 17",
     "aanvragerEmail": "d.creuwels@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5674,7 +5781,9 @@ const historischeReserveringenData = [
     "leerkracht": "Heidi Lentjes-Van Heugten",
     "school": "Sterrenbos",
     "aanvragerEmail": "h.vanheugten@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": "Als het mogelijk is met 1 les begeleiding bij de opstart van het project."
   },
@@ -5684,7 +5793,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5694,7 +5805,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5704,7 +5817,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5714,7 +5829,9 @@ const historischeReserveringenData = [
     "leerkracht": "Lise Visser",
     "school": "Elstar",
     "aanvragerEmail": "l.visser@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5724,7 +5841,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5734,7 +5853,9 @@ const historischeReserveringenData = [
     "leerkracht": "Doris Hoogveld",
     "school": "Stap voor Stap",
     "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "Afgewezen",
     "toelichting": ""
   },
@@ -5744,7 +5865,9 @@ const historischeReserveringenData = [
     "leerkracht": "Doris Hoogveld",
     "school": "Stap voor Stap",
     "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5754,7 +5877,9 @@ const historischeReserveringenData = [
     "leerkracht": "Elize van Tongeren",
     "school": "Startblok",
     "aanvragerEmail": "e.vantongeren@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5764,7 +5889,9 @@ const historischeReserveringenData = [
     "leerkracht": "Jamie Schlief",
     "school": "Holthuus",
     "aanvragerEmail": "j.schlief@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5774,7 +5901,9 @@ const historischeReserveringenData = [
     "leerkracht": "Amanda Beekman",
     "school": "Startblok",
     "aanvragerEmail": "a.beekman@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5784,7 +5913,9 @@ const historischeReserveringenData = [
     "leerkracht": "Amanda Beekman",
     "school": "Startblok",
     "aanvragerEmail": "a.beekman@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5794,7 +5925,9 @@ const historischeReserveringenData = [
     "leerkracht": "Judith Helsen",
     "school": "Abacus",
     "aanvragerEmail": "j.helsen@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5804,7 +5937,9 @@ const historischeReserveringenData = [
     "leerkracht": "Karin Wilmink-Nab",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "k.nab@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5814,7 +5949,9 @@ const historischeReserveringenData = [
     "leerkracht": "Nicole Storteler",
     "school": "Stap voor Stap",
     "aanvragerEmail": "n.storteler@wonderwijs.nl",
-    "periode": "Periode 6 schooljaar 2026/2027",\n    "periodeNaam": "Periode 6 schooljaar 2026/2027",\n    "periodeId": 6,
+    "periode": "Periode 6 schooljaar 2026/2027",
+    "periodeNaam": "Periode 6 schooljaar 2026/2027",
+    "periodeId": 6,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5824,7 +5961,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5834,7 +5973,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5844,7 +5985,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5854,7 +5997,9 @@ const historischeReserveringenData = [
     "leerkracht": "Robin Knipping",
     "school": "Elstar",
     "aanvragerEmail": "r.knipping@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": "thema 4 groep 7/8"
   },
@@ -5864,7 +6009,9 @@ const historischeReserveringenData = [
     "leerkracht": "Lise Visser",
     "school": "Elstar",
     "aanvragerEmail": "l.visser@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5874,7 +6021,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5884,7 +6033,9 @@ const historischeReserveringenData = [
     "leerkracht": "Elize van Tongeren",
     "school": "Startblok",
     "aanvragerEmail": "e.vantongeren@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5894,7 +6045,9 @@ const historischeReserveringenData = [
     "leerkracht": "Paul Baayens",
     "school": "Esdoorn",
     "aanvragerEmail": "p.baayens@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5904,7 +6057,9 @@ const historischeReserveringenData = [
     "leerkracht": "Maaike Dukers",
     "school": "Holthuus",
     "aanvragerEmail": "m.dukers@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5914,7 +6069,9 @@ const historischeReserveringenData = [
     "leerkracht": "Maaike Dukers",
     "school": "Holthuus",
     "aanvragerEmail": "m.dukers@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5924,7 +6081,9 @@ const historischeReserveringenData = [
     "leerkracht": "Nicole Storteler",
     "school": "Stap voor Stap",
     "aanvragerEmail": "n.storteler@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5934,7 +6093,9 @@ const historischeReserveringenData = [
     "leerkracht": "Nienke Stam",
     "school": "Kameleon",
     "aanvragerEmail": "n.stam@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5944,7 +6105,9 @@ const historischeReserveringenData = [
     "leerkracht": "Henriëtte Vergoossen",
     "school": "SamSam",
     "aanvragerEmail": "h.vergoossen@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5954,7 +6117,9 @@ const historischeReserveringenData = [
     "leerkracht": "Annemarie Elkhuizen",
     "school": "Binnenstebuiten",
     "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5964,7 +6129,9 @@ const historischeReserveringenData = [
     "leerkracht": "Annemarie Elkhuizen",
     "school": "Binnenstebuiten",
     "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
-    "periode": "Periode 7 schooljaar 2026/2027",\n    "periodeNaam": "Periode 7 schooljaar 2026/2027",\n    "periodeId": 7,
+    "periode": "Periode 7 schooljaar 2026/2027",
+    "periodeNaam": "Periode 7 schooljaar 2026/2027",
+    "periodeId": 7,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5974,7 +6141,9 @@ const historischeReserveringenData = [
     "leerkracht": "Cindy Bakker",
     "school": "Tuin 17",
     "aanvragerEmail": "c.bakker@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5984,7 +6153,9 @@ const historischeReserveringenData = [
     "leerkracht": "Myra Janssen",
     "school": "Sint Jacobusschool",
     "aanvragerEmail": "myra.janssen@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -5994,7 +6165,9 @@ const historischeReserveringenData = [
     "leerkracht": "Eleonora Hendriks-Knuiman",
     "school": "Sterrenbos",
     "aanvragerEmail": "e.hendriks@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6004,7 +6177,9 @@ const historischeReserveringenData = [
     "leerkracht": "Annemarie Elkhuizen",
     "school": "Binnenstebuiten",
     "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": "Groep 6 roze, Annemarie, a.elkhuizen@wonderwijs.nl"
   },
@@ -6014,7 +6189,9 @@ const historischeReserveringenData = [
     "leerkracht": "Annemarie Elkhuizen",
     "school": "Binnenstebuiten",
     "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": "Groep 6 roze Annemarie: a.elkhuizen@wonderwijs.nl"
   },
@@ -6024,7 +6201,9 @@ const historischeReserveringenData = [
     "leerkracht": "Judith Stassen-Liefrink",
     "school": "SamSam",
     "aanvragerEmail": "j.stassen@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6034,7 +6213,9 @@ const historischeReserveringenData = [
     "leerkracht": "Robbert van der Linde",
     "school": "Esdoorn",
     "aanvragerEmail": "r.vanderlinde@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6044,7 +6225,9 @@ const historischeReserveringenData = [
     "leerkracht": "Alice Zweers",
     "school": "Startblok",
     "aanvragerEmail": "a.zweers@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6054,7 +6237,9 @@ const historischeReserveringenData = [
     "leerkracht": "Kelly van den Born",
     "school": "Regenboog",
     "aanvragerEmail": "k.vandenborn@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6064,7 +6249,9 @@ const historischeReserveringenData = [
     "leerkracht": "Sterre Witpeerd",
     "school": "Elstar",
     "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6074,7 +6261,9 @@ const historischeReserveringenData = [
     "leerkracht": "Paul Baayens",
     "school": "Esdoorn",
     "aanvragerEmail": "p.baayens@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": "Groepen 1/2"
   },
@@ -6084,7 +6273,9 @@ const historischeReserveringenData = [
     "leerkracht": "Paul Baayens",
     "school": "Esdoorn",
     "aanvragerEmail": "p.baayens@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6094,7 +6285,9 @@ const historischeReserveringenData = [
     "leerkracht": "Lisa Reijmers",
     "school": "Sterrenbos",
     "aanvragerEmail": "l.reijmers@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6104,7 +6297,9 @@ const historischeReserveringenData = [
     "leerkracht": "Amanda Beekman",
     "school": "Startblok",
     "aanvragerEmail": "a.beekman@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6114,7 +6309,9 @@ const historischeReserveringenData = [
     "leerkracht": "Amanda Beekman",
     "school": "Startblok",
     "aanvragerEmail": "a.beekman@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6124,7 +6321,9 @@ const historischeReserveringenData = [
     "leerkracht": "Nicole Storteler",
     "school": "Stap voor Stap",
     "aanvragerEmail": "n.storteler@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6134,7 +6333,9 @@ const historischeReserveringenData = [
     "leerkracht": "Else-marije van de Werken",
     "school": "Startblok",
     "aanvragerEmail": "e.vandewerken@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": "Mocht het eerder kunnen, dan houden we ons aanbevolen."
   },
@@ -6144,7 +6345,9 @@ const historischeReserveringenData = [
     "leerkracht": "Amanda Beekman",
     "school": "Startblok",
     "aanvragerEmail": "a.beekman@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6154,7 +6357,9 @@ const historischeReserveringenData = [
     "leerkracht": "Annemarie Elkhuizen",
     "school": "Binnenstebuiten",
     "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   },
@@ -6164,7 +6369,9 @@ const historischeReserveringenData = [
     "leerkracht": "Annemarie Elkhuizen",
     "school": "Binnenstebuiten",
     "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
-    "periode": "Periode 8 schooljaar 2026/2027",\n    "periodeNaam": "Periode 8 schooljaar 2026/2027",\n    "periodeId": 8,
+    "periode": "Periode 8 schooljaar 2026/2027",
+    "periodeNaam": "Periode 8 schooljaar 2026/2027",
+    "periodeId": 8,
     "status": "In afwachting",
     "toelichting": ""
   }
