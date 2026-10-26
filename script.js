@@ -63,8 +63,9 @@ window.detecteerKistNaam = function(titel, beschrijving) {
     if (text.includes('dash')) return 'Dash & Dot Robot';
     if (text.includes('cue')) return 'Cue Robot';
     if (text.includes('drone')) return 'Drones';
+    if (text.includes('beaverbot')) return 'Beaverbot';
     if (text.includes('duplo')) return 'DUPLO Coding Express';
-    if (text.includes('easiscope') || text.includes('microscoop')) return 'Easi-Scope Microscoop';
+    if (text.includes('easiscope') || text.includes('easi scope') || text.includes('easi-scope') || text.includes('microscoop')) return 'Easi-Scope Microscoop';
     if (text.includes('infento pro')) return 'Infento Pro Kit';
     if (text.includes('infento')) return 'Infento Talent Kit';
     if (text.includes('intelino') || text.includes('trein')) return 'Intelino Slimme Trein';
@@ -1767,6 +1768,23 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                 });
                 reserveringen = Array.from(cloudMap.values());
+                // Synchroniseer periodes direct met beheersysteem
+                reserveringen.forEach(r => {
+                    const pObj = window.vindPeriode(r);
+                    if (pObj && pObj.id) {
+                        r.periodeId = parseInt(pObj.id);
+                        r.periode = pObj.naam;
+                        r.periodeNaam = pObj.naam;
+                    }
+                });
+                reserveringen.sort((a, b) => {
+                    const pA = window.vindPeriode(a);
+                    const pB = window.vindPeriode(b);
+                    const idA = parseInt(pA ? pA.id : a.periodeId) || 999;
+                    const idB = parseInt(pB ? pB.id : b.periodeId) || 999;
+                    if (idA !== idB) return idA - idB;
+                    return (a.kist || '').localeCompare(b.kist || '', 'nl');
+                });
             } else {
                 reserveringen = reserveringen.filter(lr => !verwijderdeReserveringen.includes(lr.id ? lr.id.toString() : ''));
             }
@@ -1775,6 +1793,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); 
             if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); 
             if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); 
+            if(typeof window.renderReserveringsGrid === "function") window.renderReserveringsGrid(); 
         }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "feedback"), (snapshot) => { if(!snapshot.empty) { feedbackLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
@@ -2417,12 +2436,10 @@ window.renderReserveringsGrid = function() {
         let isKapot = kist.beschikbaar === false;
         let isFav = mijnFavorieten.includes(kist.id);
         
-        // Controleer beschikbaarheid over actieve periodes
-        const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
-        const actievePeriodes = (typeof periodes !== 'undefined' && Array.isArray(periodes)) 
-            ? periodes.filter(p => !p.eind || isNaN(new Date(p.eind).getTime()) || new Date(p.eind) >= vandaag) 
-            : [];
-        const checkPeriodes = actievePeriodes.length > 0 ? actievePeriodes : (periodes || []);
+        // Controleer beschikbaarheid over de officiële periodes uit het beheerderssysteem
+        const checkPeriodes = (typeof periodes !== 'undefined' && Array.isArray(periodes) && periodes.length > 0) 
+            ? periodes 
+            : defaultWonderwijsPeriodes;
         const bezettePeriodesCount = checkPeriodes.filter(p => typeof window.isKistGereserveerdInPeriode === 'function' && window.isKistGereserveerdInPeriode(kist.naam, p.id, kist.id)).length;
         const isVolledigBezet = checkPeriodes.length > 0 && bezettePeriodesCount === checkPeriodes.length;
         const vrijePeriodesCount = Math.max(0, checkPeriodes.length - bezettePeriodesCount);
@@ -2935,6 +2952,16 @@ window.renderBeheerdersTabellen = function() {
             return matchP && matchStatus && matchSchool && matchZoek;
         });
 
+        // Sorteer altijd synchroon volgens de periodes uit het beheerderssysteem (Periode 1 t/m 8)
+        gefilterdeReserveringen.sort((a, b) => {
+            const pA = window.vindPeriode(a);
+            const pB = window.vindPeriode(b);
+            const idA = parseInt(pA ? pA.id : a.periodeId) || 999;
+            const idB = parseInt(pB ? pB.id : b.periodeId) || 999;
+            if (idA !== idB) return idA - idB;
+            return (a.kist || '').localeCompare(b.kist || '', 'nl');
+        });
+
         // Werk aantal tekst bij
         const aantalTekst = document.getElementById('reserveringenAantalTekst');
         if (aantalTekst) {
@@ -2951,7 +2978,7 @@ window.renderBeheerdersTabellen = function() {
                 const periode = window.vindPeriode(r);
                 const periodeNaam = (periode && periode.naam) ? periode.naam : (r.periode || r.periodeNaam || `Periode ${r.periodeId || ''} schooljaar 2026/2027`);
                 const periodeDatumSub = (periode && periode.start && periode.eind)
-                    ? `<div style="font-size: 11.5px; color: #64748b; margin-top: 3px;">${window.formatteerDatumNL(periode.start)} t/m ${window.formatteerDatumNL(periode.eind)}</div>`
+                    ? `<div style="font-size: 11.5px; color: #475569; margin-top: 4px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 4px;"><span>🗓️</span> <span>${window.formatteerDatumNL(periode.start)} t/m ${window.formatteerDatumNL(periode.eind)}</span></div>`
                     : '';
                 let statusHTML = '';
                 
@@ -3030,9 +3057,11 @@ window.renderBeheerdersTabellen = function() {
                         <span class="mobile-col-label">Leerkracht &amp; Locatie</span>
                         ${leerkrachtWeergave}
                     </td>
-                    <td class="res-col-periode" style="vertical-align: top; padding: 14px 16px;">
+                    <td class="res-col-periode" style="vertical-align: top; padding: 14px 16px; min-width: 190px;">
                         <span class="mobile-col-label">Uitleenperiode</span>
-                        <div style="font-size: 13.5px; color: #0f172a; font-weight: 700;">📅 ${periodeNaam}</div>
+                        <div style="font-size: 13px; color: #0f172a; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; background: #f8fafc; border: 1.5px solid #cbd5e1; padding: 4px 10px; border-radius: 8px;">
+                            <span>📅</span> <span>${periodeNaam}</span>
+                        </div>
                         ${periodeDatumSub}
                     </td>
                     <td class="res-col-status" style="vertical-align: top; padding: 14px 16px;">
@@ -4115,29 +4144,31 @@ window.openLeskistInfo = function(id) {
     const statusMeldingEl = document.getElementById('periodeStatusMelding');
     const vandaag = new Date(); vandaag.setHours(0, 0, 0, 0);
     
-    // Bepaal actieve periodes
-    const actievePeriodes = (typeof periodes !== 'undefined' && Array.isArray(periodes))
-        ? periodes.filter(p => !p.eind || isNaN(new Date(p.eind).getTime()) || new Date(p.eind) >= vandaag)
-        : [];
-    const periodesLijst = actievePeriodes.length > 0 ? actievePeriodes : (periodes || []);
+    // Gebruik altijd de officiële periodes uit het beheerderssysteem
+    const periodesLijst = (typeof periodes !== 'undefined' && Array.isArray(periodes) && periodes.length > 0)
+        ? [...periodes].sort((a,b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0))
+        : defaultWonderwijsPeriodes;
     
-    // Controleer per periode of dit materiaal al bezet is
+    // Controleer per periode of dit materiaal al bezet is of reeds verstreken
     const periodesStatus = periodesLijst.map(p => {
+        const isVerstreken = p.eind && !isNaN(new Date(p.eind).getTime()) && new Date(p.eind) < vandaag;
         const bezet = typeof window.isKistGereserveerdInPeriode === 'function' 
             ? window.isKistGereserveerdInPeriode(kist.naam, p.id, kist.id) 
             : false;
-        return { periode: p, bezet: bezet };
+        return { periode: p, bezet: bezet, verstreken: isVerstreken };
     });
 
-    const beschikbarePeriodes = periodesStatus.filter(x => !x.bezet);
+    const beschikbarePeriodes = periodesStatus.filter(x => !x.bezet && !x.verstreken);
     const bezettePeriodes = periodesStatus.filter(x => x.bezet);
     
     if (select) {
         select.innerHTML = '';
         if (beschikbarePeriodes.length === 0) {
-            select.innerHTML = '<option disabled selected value="">🔒 Dit materiaal is voor alle periodes reeds gereserveerd</option>';
+            select.innerHTML = '<option disabled selected value="">🔒 Dit materiaal is voor alle periodes reeds gereserveerd of verstreken</option>';
             periodesStatus.forEach(item => {
-                select.innerHTML += `<option value="${item.periode.id}" disabled style="color: #94a3b8; background: #f8fafc;">🔒 ${item.periode.naam} (Reeds gereserveerd)</option>`;
+                const datumTekst = (item.periode.start && item.periode.eind) ? ` (${window.formatteerDatumNL(item.periode.start)} t/m ${window.formatteerDatumNL(item.periode.eind)})` : '';
+                const reden = item.verstreken ? '(Reeds verstreken)' : '(Reeds gereserveerd)';
+                select.innerHTML += `<option value="${item.periode.id}" disabled style="color: #94a3b8; background: #f8fafc;">🔒 ${item.periode.naam}${datumTekst} ${reden}</option>`;
             });
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -4153,7 +4184,9 @@ window.openLeskistInfo = function(id) {
             select.innerHTML = '<option disabled selected value="">-- Kies een beschikbare periode --</option>';
             periodesStatus.forEach(item => {
                 const datumTekst = (item.periode.start && item.periode.eind) ? ` (${window.formatteerDatumNL(item.periode.start)} t/m ${window.formatteerDatumNL(item.periode.eind)})` : '';
-                if (item.bezet) {
+                if (item.verstreken) {
+                    select.innerHTML += `<option value="${item.periode.id}" disabled style="color: #94a3b8; background: #f8fafc;">🔒 ${item.periode.naam}${datumTekst} (Reeds verstreken)</option>`;
+                } else if (item.bezet) {
                     select.innerHTML += `<option value="${item.periode.id}" disabled style="color: #94a3b8; background: #f8fafc;">🔒 ${item.periode.naam}${datumTekst} (Al gereserveerd / Niet beschikbaar)</option>`;
                 } else {
                     select.innerHTML += `<option value="${item.periode.id}">✅ ${item.periode.naam}${datumTekst}</option>`;
@@ -4167,7 +4200,7 @@ window.openLeskistInfo = function(id) {
             }
             if (statusMeldingEl) {
                 if (bezettePeriodes.length > 0) {
-                    statusMeldingEl.innerHTML = `<span style="color: #64748b; font-size: 12px;">ℹ️ Let op: ${bezettePeriodes.length} periode(s) met 🔒 zijn reeds gereserveerd. Kies een van de ${beschikbarePeriodes.length} vrije periodes.</span>`;
+                    statusMeldingEl.innerHTML = `<span style="color: #64748b; font-size: 12px;">ℹ️ Let op: ${bezettePeriodes.length} periode(s) met 🔒 zijn reeds gereserveerd door collega's. Kies een van de ${beschikbarePeriodes.length} vrije periodes.</span>`;
                     statusMeldingEl.style.display = 'block';
                 } else {
                     statusMeldingEl.innerHTML = '<span style="color: #15803d; font-size: 12px; font-weight: 600;">✅ Beschikbaar in alle getoonde periodes!</span>';
@@ -7155,8 +7188,9 @@ window.importeerHistorischeReserveringen = async function() {
         if (pObj && pObj.naam) {
             r.periode = pObj.naam;
             r.periodeNaam = pObj.naam;
-            if (pObj.id && !r.periodeId) r.periodeId = pObj.id;
+            if (pObj.id) r.periodeId = parseInt(pObj.id);
         } else if (r.periodeId) {
+            r.periodeId = parseInt(r.periodeId);
             r.periode = `Periode ${r.periodeId} schooljaar 2026/2027`;
             r.periodeNaam = `Periode ${r.periodeId} schooljaar 2026/2027`;
         }
@@ -7231,12 +7265,22 @@ window.importeerHistorischeReserveringen = async function() {
         }
     }
 
+    reserveringen.sort((a, b) => {
+        const pA = window.vindPeriode(a);
+        const pB = window.vindPeriode(b);
+        const idA = parseInt(pA ? pA.id : a.periodeId) || 999;
+        const idB = parseInt(pB ? pB.id : b.periodeId) || 999;
+        if (idA !== idB) return idA - idB;
+        return (a.kist || '').localeCompare(b.kist || '', 'nl');
+    });
+
     if (aangepast) {
         slaDataOp();
         if (typeof renderBeheerdersTabellen === 'function') renderBeheerdersTabellen();
         if (typeof window.updateKalenderEnLijst === 'function') window.updateKalenderEnLijst();
         if (typeof window.renderMijnReserveringen === 'function') window.renderMijnReserveringen();
         if (typeof window.renderStatistiekenTab === 'function') window.renderStatistiekenTab();
+        if (typeof window.renderReserveringsGrid === 'function') window.renderReserveringsGrid();
     }
 };
 
