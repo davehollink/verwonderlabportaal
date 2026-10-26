@@ -573,7 +573,9 @@ const defaultWonderwijsScholen = [
     { id: 13, naam: "Kameleon" },
     { id: 14, naam: "Abacus" },
     { id: 15, naam: "Tichelaar" },
-    { id: 16, naam: "(ver)Wonderlab" }
+    { id: 16, naam: "(ver)Wonderlab" },
+    { id: 17, naam: "Sunte Werfert" },
+    { id: 18, naam: "Okkernoot" }
 ];
 
 
@@ -5176,6 +5178,343 @@ window.testGoedkeuringsMail = function() {
 
 const historischeReserveringenData = [
   {
+    "id": 3001,
+    "kist": "N/A",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3002,
+    "kist": "VR Brillen set 2 (4 items)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3003,
+    "kist": "Sphero Mini",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3004,
+    "kist": "3d pennen groepsset (5 items)",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3005,
+    "kist": "Greenscreenstudio groot 1",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3006,
+    "kist": "Lego Education Spike Essential (6 boxen)",
+    "leerkracht": "Danielle Creuwels",
+    "school": "Tuin 17",
+    "aanvragerEmail": "d.creuwels@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3007,
+    "kist": "Lego Education Bricq (2 items)",
+    "leerkracht": "Timon van Diepen",
+    "school": "Holthuus",
+    "aanvragerEmail": "T.vanDiepen@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3008,
+    "kist": "Kiene Klanken en vormen",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3009,
+    "kist": "Ozobot groepsset (12 items)",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3010,
+    "kist": "Osmo pakket A (2 items)",
+    "leerkracht": "Lise Visser",
+    "school": "Elstar",
+    "aanvragerEmail": "l.visser@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3011,
+    "kist": "Osmo pakket B (2 items)",
+    "leerkracht": "Lise Visser",
+    "school": "Elstar",
+    "aanvragerEmail": "l.visser@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3012,
+    "kist": "4 iPads",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3013,
+    "kist": "Intelino groepsset (4 items)",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3014,
+    "kist": "Greenscreenbox nr. 2",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3015,
+    "kist": "Greenscreenbox nr. 3",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3016,
+    "kist": "Beaverbot 1",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3017,
+    "kist": "Beaverbot 2",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3018,
+    "kist": "Greenscreenstudio klein (1)",
+    "leerkracht": "Esther Aukes",
+    "school": "Sunte Werfert",
+    "aanvragerEmail": "e.aukes@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3019,
+    "kist": "Greenscreenstudio klein (1)",
+    "leerkracht": "Birgit Van Hal",
+    "school": "Sunte Werfert",
+    "aanvragerEmail": "b.vanhal@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3020,
+    "kist": "Duplo Coding Express",
+    "leerkracht": "Paul Baayens",
+    "school": "Esdoorn",
+    "aanvragerEmail": "p.baayens@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3021,
+    "kist": "Easi scope (6 items) 1",
+    "leerkracht": "Günther Wüpping",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "g.wupping@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3022,
+    "kist": "Podcaststudio groot",
+    "leerkracht": "Heli Schouten",
+    "school": "Startblok",
+    "aanvragerEmail": "h.schouten@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": "Is deze eventueel iets eerder verkrijgbaar?"
+  },
+  {
+    "id": 3023,
+    "kist": "Infento Talent Kit (groepsset)",
+    "leerkracht": "Linda Bouwmeister - Rikken",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "l.bouwmeister@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "Geaccepteerd",
+    "toelichting": "Groep 8a"
+  },
+  {
+    "id": 3024,
+    "kist": "Sphero Indi groepsset (8 items)",
+    "leerkracht": "Nicole Storteler",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "n.storteler@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3025,
+    "kist": "Cue Robot",
+    "leerkracht": "Machel Haag",
+    "school": "Esdoorn",
+    "aanvragerEmail": "m.haag@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3026,
+    "kist": "Makey Makey",
+    "leerkracht": "Machel Haag",
+    "school": "Esdoorn",
+    "aanvragerEmail": "m.haag@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3027,
+    "kist": "Lego Education Spike Prime (6 boxen)",
+    "leerkracht": "Machel Haag",
+    "school": "Esdoorn",
+    "aanvragerEmail": "m.haag@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 3028,
+    "kist": "Greenscreenstudio groot 2",
+    "leerkracht": "Milan Vigilante",
+    "school": "Okkernoot",
+    "aanvragerEmail": "m.vigilante@wonderwijs.nl",
+    "periode": "Periode 3 schooljaar 2026/2027",
+    "periodeNaam": "Periode 3 schooljaar 2026/2027",
+    "periodeId": 3,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+
+  {
     "id": 4001,
     "kist": "mTiny",
     "leerkracht": "Myra Janssen",
@@ -6428,10 +6767,7 @@ window.importeerHistorischeReserveringen = async function() {
     if (typeof historischeReserveringenData !== 'undefined' && Array.isArray(historischeReserveringenData)) {
         let nieuwAantal = 0;
         historischeReserveringenData.forEach(hr => {
-            const bestaatAl = reserveringen.some(r => 
-                r.id == hr.id || 
-                (r.kist === hr.kist && r.periodeId == hr.periodeId && (r.aanvragerEmail === hr.aanvragerEmail || r.leerkracht === hr.leerkracht))
-            );
+            const bestaatAl = reserveringen.some(r => r.id == hr.id);
 
             if (!bestaatAl) {
                 const resObj = {
