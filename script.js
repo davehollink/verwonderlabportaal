@@ -548,15 +548,83 @@ window.getPrimaireDgDoelVoorIdee = function(idee) {
 };
 
 const defaultWonderwijsPeriodes = [
-    { id: 1, naam: "Periode 1 schooljaar 2026/2027", start: "2026-08-31", eind: "2026-10-02" },
-    { id: 2, naam: "Periode 2 schooljaar 2026/2027", start: "2026-10-12", eind: "2026-11-13" },
-    { id: 3, naam: "Periode 3 schooljaar 2026/2027", start: "2026-11-23", eind: "2026-12-11" },
-    { id: 4, naam: "Periode 4 schooljaar 2026/2027", start: "2027-01-04", eind: "2027-02-05" },
-    { id: 5, naam: "Periode 5 schooljaar 2026/2027", start: "2027-02-15", eind: "2027-03-19" },
-    { id: 6, naam: "Periode 6 schooljaar 2026/2027", start: "2027-03-29", eind: "2027-04-16" },
-    { id: 7, naam: "Periode 7 schooljaar 2026/2027", start: "2027-05-03", eind: "2027-06-04" },
-    { id: 8, naam: "Periode 8 schooljaar 2026/2027", start: "2027-06-14", eind: "2027-07-16" }
+    { id: 1, naam: "Periode 1 schooljaar 2026/2027", start: "2026-08-24", eind: "2026-10-02" },
+    { id: 2, naam: "Periode 2 schooljaar 2026/2027", start: "2026-10-05", eind: "2026-11-13" },
+    { id: 3, naam: "Periode 3 schooljaar 2026/2027", start: "2026-11-16", eind: "2026-12-18" },
+    { id: 4, naam: "Periode 4 schooljaar 2026/2027", start: "2026-12-21", eind: "2027-02-05" },
+    { id: 5, naam: "Periode 5 schooljaar 2026/2027", start: "2027-02-08", eind: "2027-03-26" },
+    { id: 6, naam: "Periode 6 schooljaar 2026/2027", start: "2027-03-29", eind: "2027-05-14" },
+    { id: 7, naam: "Periode 7 schooljaar 2026/2027", start: "2027-05-17", eind: "2027-07-02" },
+    { id: 8, naam: "Periode 8 schooljaar 2026/2027", start: "2027-07-05", eind: "2027-07-16" }
 ];
+
+window.getPeriodeNummer = function(p) {
+    if (!p) return null;
+    const rawId = p.id != null ? String(p.id).trim() : '';
+    if (/^[1-8]$/.test(rawId)) return parseInt(rawId, 10);
+    const naam = p.naam != null ? String(p.naam) : '';
+    const m = naam.match(/periode\s*(\d+)/i);
+    if (m) {
+        const n = parseInt(m[1], 10);
+        if (n >= 1 && n <= 8) return n;
+    }
+    return null;
+};
+
+window.deduplicatePeriodes = function(lijst) {
+    if (!Array.isArray(lijst)) return [];
+    const gezieneNummers = new Set();
+    const gezieneNamen = new Set();
+    const uniek = [];
+
+    // Filter eerst expliciet verwijderde periodes
+    const vPeriodes = (typeof verwijderdePeriodes !== 'undefined' && Array.isArray(verwijderdePeriodes)) ? verwijderdePeriodes : [];
+    const gefilterd = lijst.filter(p => p && !vPeriodes.includes(String(p.id)) && (!p._docId || !vPeriodes.includes(p._docId)));
+
+    for (const p of gefilterd) {
+        const pNum = window.getPeriodeNummer(p);
+        if (pNum !== null) {
+            if (gezieneNummers.has(pNum)) {
+                continue; // Dubbele periode overslaan
+            }
+            gezieneNummers.add(pNum);
+            const refDefault = defaultWonderwijsPeriodes.find(dp => dp.id === pNum);
+            uniek.push({
+                ...p,
+                id: pNum,
+                naam: p.naam && p.naam.trim() ? p.naam.trim() : `Periode ${pNum} schooljaar 2026/2027`,
+                start: p.start || (refDefault ? refDefault.start : ''),
+                eind: p.eind || (refDefault ? refDefault.eind : '')
+            });
+        } else {
+            const schoneNaam = (p.naam || '').trim().toLowerCase();
+            const sleutel = schoneNaam || String(p.id);
+            if (gezieneNamen.has(sleutel)) continue;
+            gezieneNamen.add(sleutel);
+            uniek.push(p);
+        }
+    }
+
+    // Zorg dat de officiële 8 Wonderwijs periodes altijd bestaan tenzij expliciet verwijderd
+    defaultWonderwijsPeriodes.forEach(dp => {
+        if (vPeriodes.includes(String(dp.id))) return;
+        const bestaatAl = uniek.some(p => window.getPeriodeNummer(p) === dp.id);
+        if (!bestaatAl) {
+            uniek.push({ ...dp });
+        }
+    });
+
+    // Sorteer altijd canoniek chronologisch: 1 t/m 8
+    uniek.sort((a, b) => {
+        const numA = window.getPeriodeNummer(a) || 999;
+        const numB = window.getPeriodeNummer(b) || 999;
+        if (numA !== numB) return numA - numB;
+        return (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0);
+    });
+
+    return uniek;
+};
+
 
 window.formatteerDatumNL = function(datumStr) {
     if (!datumStr) return '-';
@@ -641,33 +709,26 @@ window.vindPeriode = function(r) {
 };
 
 let verwijderdePeriodes = safeGetLocal('ww_verwijderde_periodes_v1', []);
-let periodes = safeGetLocal('ww_periodes_v11', defaultWonderwijsPeriodes);
-// Filter direct items die door beheerder definitief zijn verwijderd
-periodes = periodes.filter(p => !verwijderdePeriodes.includes(String(p.id)));
-
-defaultWonderwijsPeriodes.forEach(dp => {
-    if (verwijderdePeriodes.includes(String(dp.id))) return;
-    let existing = periodes.find(p => p.id == dp.id || String(p.id) === String(dp.id) || (p.naam && p.naam.trim().toLowerCase() === dp.naam.trim().toLowerCase()));
-    if (!existing) {
-        periodes.push(dp);
-    } else {
-        if (!existing.id) existing.id = dp.id;
-        if (!existing.naam || existing.naam === 'Naamloze Periode') existing.naam = dp.naam;
-        // Synchroniseer met de officiële data uit het portaal
-        existing.start = dp.start;
-        existing.eind = dp.eind;
-    }
-});
-periodes.sort((a,b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
+let rawLoadedPeriodes = safeGetLocal('ww_periodes_v11', defaultWonderwijsPeriodes);
+let periodes = window.deduplicatePeriodes(rawLoadedPeriodes);
 
 let scholen = safeGetLocal('ww_scholen_v1', defaultWonderwijsScholen);
 defaultWonderwijsScholen.forEach(ds => {
     if (!scholen.some(s => s.naam.toLowerCase() === ds.naam.toLowerCase())) scholen.push(ds);
 });
 
+let verwijderdeReserveringen = safeGetLocal('ww_verwijderde_reserveringen_v1', ['5014']);
+if (!verwijderdeReserveringen.includes('5014')) verwijderdeReserveringen.push('5014');
 let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
-let verwijderdeReserveringen = safeGetLocal('ww_verwijderde_reserveringen_v1', []);
-reserveringen = reserveringen.filter(r => !verwijderdeReserveringen.includes(String(r.id)));
+reserveringen = reserveringen.filter(r => {
+    if (!r) return false;
+    const idStr = String(r.id);
+    if (verwijderdeReserveringen.includes(idStr)) return false;
+    if (r._docId && verwijderdeReserveringen.includes(r._docId)) return false;
+    if (idStr === '5014') return false;
+    if (r.leerkracht === 'Test' && r.aanvragerEmail === 'JHendriks@wonderwijs.nl') return false;
+    return true;
+});
 
 window.cleanKistNaam = function(s) {
     if (!s) return '';
@@ -1646,7 +1707,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 (async () => {
     try {
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
-        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         const { getStorage, ref, uploadString, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js");
 
         const firebaseConfig = {
@@ -1666,21 +1727,100 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.firestoreDoc = doc;
         window.firestoreSetDoc = setDoc;
         window.firestoreGetDoc = getDoc;
+        window.firestoreGetDocs = getDocs;
 
         const checkError = (err) => { 
             console.warn("Firebase snapshot error:", err); 
         };
 
+        // 0. Synchronisatie van definitief verwijderde items (werkt ook in Incognito en synchroniseert tussen alle apparaten)
+        onSnapshot(doc(db, "instellingen", "verwijderde_items"), (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                let gewijzigd = false;
+                if (Array.isArray(data.verwijderdeReserveringen)) {
+                    data.verwijderdeReserveringen.forEach(id => {
+                        const s = String(id);
+                        if (!verwijderdeReserveringen.includes(s)) {
+                            verwijderdeReserveringen.push(s);
+                            gewijzigd = true;
+                        }
+                    });
+                }
+                if (Array.isArray(data.verwijderdePeriodes)) {
+                    data.verwijderdePeriodes.forEach(id => {
+                        const s = String(id);
+                        if (!verwijderdePeriodes.includes(s)) {
+                            verwijderdePeriodes.push(s);
+                            gewijzigd = true;
+                        }
+                    });
+                }
+                if (gewijzigd) {
+                    localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
+                    localStorage.setItem('ww_verwijderde_periodes_v1', JSON.stringify(verwijderdePeriodes));
+                    reserveringen = reserveringen.filter(r => !verwijderdeReserveringen.includes(String(r.id)) && (!r._docId || !verwijderdeReserveringen.includes(r._docId)));
+                    periodes = window.deduplicatePeriodes(periodes);
+                    slaDataOp();
+                    if (typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
+                    if (window.renderReserveringsGrid) window.renderReserveringsGrid();
+                    if (window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+                    if (window.renderMijnReserveringen) window.renderMijnReserveringen();
+                }
+            }
+        }, checkError);
+
         // Tabellen Ophalen
         onSnapshot(collection(db, "periodes"), (snapshot) => { 
             if(!snapshot.empty) { 
-                const cloudPeriodes = snapshot.docs.map(d => d.data());
-                cloudPeriodes.forEach(cp => {
-                    if (verwijderdePeriodes.includes(String(cp.id))) return;
-                    const idx = periodes.findIndex(p => p.id == cp.id);
-                    if (idx > -1) periodes[idx] = cp; else periodes.push(cp);
+                const cloudPeriodes = [];
+                const gezienPNumsInFirestore = new Map();
+
+                snapshot.docs.forEach(d => {
+                    const data = d.data();
+                    const cp = { ...data, _docId: d.id };
+                    const pNum = window.getPeriodeNummer(cp);
+                    const idStr = cp.id != null ? String(cp.id) : '';
+
+                    // 1. Is deze periode gemarkeerd als verwijderd?
+                    if (verwijderdePeriodes.includes(idStr) || verwijderdePeriodes.includes(d.id) || (pNum && verwijderdePeriodes.includes(String(pNum)))) {
+                        deleteDoc(d.ref).catch(e => console.warn("Cloud cleanup verwijderde periode:", e));
+                        return;
+                    }
+
+                    // 2. Ontdubbeling in Firestore: als er al een doc voor deze periode is, verwijder het duplicaat
+                    if (pNum !== null) {
+                        if (gezienPNumsInFirestore.has(pNum)) {
+                            // Duplicaat doc in Firestore! Permanent verwijderen uit database
+                            deleteDoc(d.ref).catch(e => console.warn("Cloud cleanup dubbele periode in Firestore:", e));
+                            return;
+                        }
+                        gezienPNumsInFirestore.set(pNum, d.id);
+                        cp.id = pNum;
+                        if (!cp.naam || cp.naam.trim() === '') {
+                            cp.naam = `Periode ${pNum} schooljaar 2026/2027`;
+                        }
+                    }
+
+                    cloudPeriodes.push(cp);
                 });
-                periodes = periodes.filter(p => !verwijderdePeriodes.includes(String(p.id)));
+
+                // Voeg toe aan periodes array en ontdubbel
+                cloudPeriodes.forEach(cp => {
+                    const idx = periodes.findIndex(p => {
+                        const pNumA = window.getPeriodeNummer(p);
+                        const pNumB = window.getPeriodeNummer(cp);
+                        if (pNumA !== null && pNumB !== null) return pNumA === pNumB;
+                        return p.id == cp.id || String(p.id) === String(cp.id);
+                    });
+                    if (idx > -1) {
+                        periodes[idx] = { ...periodes[idx], ...cp };
+                    } else {
+                        periodes.push(cp);
+                    }
+                });
+
+                periodes = window.deduplicatePeriodes(periodes);
             }
             slaDataOp(); 
             if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
@@ -1747,26 +1887,49 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         }, checkError);
         onSnapshot(collection(db, "reserveringen"), (snapshot) => { 
             if(!snapshot.empty) { 
-                const cloudRes = snapshot.docs.map(d => d.data());
-                // Filter items die door beheerder definitief zijn verwijderd
-                const geldigeCloudRes = cloudRes.filter(cr => {
-                    const idStr = cr.id ? cr.id.toString() : '';
-                    return !verwijderdeReserveringen.includes(idStr);
+                const cloudRes = [];
+                snapshot.docs.forEach(d => {
+                    const cr = { ...d.data(), _docId: d.id };
+                    const idStr = cr.id != null ? cr.id.toString() : '';
+                    
+                    // Filter direct items die verwijderd zijn of test items
+                    const isVerwijderd = verwijderdeReserveringen.includes(idStr) 
+                        || verwijderdeReserveringen.includes(d.id)
+                        || idStr === '5014'
+                        || (cr.leerkracht === 'Test' && cr.aanvragerEmail === 'JHendriks@wonderwijs.nl');
+
+                    if (isVerwijderd) {
+                        // Verwijder het spook-document direct en permanent uit Firestore
+                        deleteDoc(d.ref).catch(e => console.warn("Firestore cleanup spook-reservering:", e));
+                        return;
+                    }
+
+                    cloudRes.push(cr);
                 });
 
                 const cloudMap = new Map();
-                geldigeCloudRes.forEach(cr => cloudMap.set(cr.id.toString(), cr));
+                cloudRes.forEach(cr => {
+                    const key = cr.id ? cr.id.toString() : cr._docId;
+                    cloudMap.set(key, cr);
+                });
 
                 // Behoud alleen lokale reserveringen die nog niet in cloud staan en NIET verwijderd zijn
                 reserveringen.forEach(lr => {
-                    const lrIdStr = lr.id ? lr.id.toString() : '';
-                    if (!verwijderdeReserveringen.includes(lrIdStr) && !cloudMap.has(lrIdStr)) {
+                    if (!lr) return;
+                    const lrIdStr = lr.id != null ? lr.id.toString() : '';
+                    const isVerwijderd = verwijderdeReserveringen.includes(lrIdStr) 
+                        || (lr._docId && verwijderdeReserveringen.includes(lr._docId))
+                        || lrIdStr === '5014'
+                        || (lr.leerkracht === 'Test' && lr.aanvragerEmail === 'JHendriks@wonderwijs.nl');
+
+                    if (!isVerwijderd && !cloudMap.has(lrIdStr)) {
                         cloudMap.set(lrIdStr, lr);
                         if (window.addReserveringToCloud) {
                             window.addReserveringToCloud(lr).catch(e => console.warn("Cloud sync reservering:", e));
                         }
                     }
                 });
+
                 reserveringen = Array.from(cloudMap.values());
                 // Synchroniseer periodes direct met beheersysteem
                 reserveringen.forEach(r => {
@@ -1786,7 +1949,11 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     return (a.kist || '').localeCompare(b.kist || '', 'nl');
                 });
             } else {
-                reserveringen = reserveringen.filter(lr => !verwijderdeReserveringen.includes(lr.id ? lr.id.toString() : ''));
+                reserveringen = reserveringen.filter(lr => {
+                    if (!lr) return false;
+                    const s = lr.id != null ? lr.id.toString() : '';
+                    return !verwijderdeReserveringen.includes(s) && s !== '5014' && lr.leerkracht !== 'Test';
+                });
             }
             slaDataOp(); 
             if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
@@ -1990,15 +2157,66 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             }
         };
         window.deleteLesideeFromCloud = async function(id) { await deleteDoc(doc(db, "lesideeen", id.toString())); };
+        window.syncVerwijderdeItemsToCloud = async function() {
+            if (!db) return;
+            try {
+                await setDoc(doc(db, "instellingen", "verwijderde_items"), {
+                    verwijderdeReserveringen: Array.from(new Set(verwijderdeReserveringen)),
+                    verwijderdePeriodes: Array.from(new Set(verwijderdePeriodes)),
+                    laatstBijgewerkt: new Date().toISOString()
+                }, { merge: true });
+            } catch(e) {
+                console.warn("Fout bij synchroniseren van verwijderde items naar Firestore:", e);
+            }
+        };
         window.savePeriodeToCloud = async function(newData) { await setDoc(doc(db, "periodes", newData.id.toString()), newData); };
-        window.deletePeriodeFromCloud = async function(id) { await deleteDoc(doc(db, "periodes", id.toString())); };
+        window.deletePeriodeFromCloud = async function(id, docId, pNum) {
+            if (!db) return;
+            try {
+                const idStr = id != null ? id.toString() : '';
+                if (idStr) await deleteDoc(doc(db, "periodes", idStr)).catch(() => {});
+                if (docId && docId !== idStr) await deleteDoc(doc(db, "periodes", docId)).catch(() => {});
+                if (pNum && String(pNum) !== idStr) await deleteDoc(doc(db, "periodes", String(pNum))).catch(() => {});
+                
+                const snap = await getDocs(collection(db, "periodes"));
+                snap.forEach(d => {
+                    const data = d.data();
+                    const docPNum = window.getPeriodeNummer(data);
+                    if (data.id == id || String(data.id) === idStr || d.id === idStr || (docId && d.id === docId) || (pNum && docPNum === pNum)) {
+                        deleteDoc(d.ref).catch(() => {});
+                    }
+                });
+            } catch(e) {
+                console.warn("Fout bij deletePeriodeFromCloud:", e);
+            }
+        };
         window.saveSchoolToCloud = async function(newData) { await setDoc(doc(db, "scholen", newData.id.toString()), newData); };
         window.deleteSchoolFromCloud = async function(id) { await deleteDoc(doc(db, "scholen", id.toString())); };
         window.saveBeheerderToCloud = async function(newData) { await setDoc(doc(db, "beheerders", newData.id.toString()), newData); };
         window.deleteBeheerderFromCloud = async function(id) { await deleteDoc(doc(db, "beheerders", id.toString())); };
         window.addReserveringToCloud = async function(newData) { await setDoc(doc(db, "reserveringen", newData.id.toString()), newData); };
         window.updateChecklistInCloud = async function(id, dataObj) { await setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }); };
-        window.deleteReserveringFromCloud = async function(id) { await deleteDoc(doc(db, "reserveringen", id.toString())); };
+        window.deleteReserveringFromCloud = async function(id, docId, targetRes) {
+            if (!db) return;
+            try {
+                const idStr = id != null ? id.toString() : '';
+                if (idStr) await deleteDoc(doc(db, "reserveringen", idStr)).catch(() => {});
+                if (docId && docId !== idStr) await deleteDoc(doc(db, "reserveringen", docId)).catch(() => {});
+                
+                const snap = await getDocs(collection(db, "reserveringen"));
+                snap.forEach(d => {
+                    const data = d.data();
+                    const matchesId = data.id == id || String(data.id) === idStr || d.id === idStr || (docId && d.id === docId);
+                    const isTestDoc = data.id == 5014 || (data.leerkracht === 'Test' && data.aanvragerEmail === 'JHendriks@wonderwijs.nl');
+                    const matchesTarget = targetRes && targetRes.leerkracht && data.leerkracht === targetRes.leerkracht && data.kist === targetRes.kist && data.periodeId == targetRes.periodeId;
+                    if (matchesId || isTestDoc || matchesTarget) {
+                        deleteDoc(d.ref).catch(e => console.warn("Firestore deleteDoc fout:", e));
+                    }
+                });
+            } catch(e) {
+                console.warn("Fout bij deleteReserveringFromCloud:", e);
+            }
+        };
         window.deleteMeldingFromCloud = async function(id) { await deleteDoc(doc(db, "meldingen", id.toString())); };
         window.updateMeldingStatusInCloud = async function(id, status) { await setDoc(doc(db, "meldingen", id.toString()), {status: status}, {merge: true}); };
         window.saveFeedbackToCloud = async function(newData) { await setDoc(doc(db, "feedback", newData.id.toString()), newData); };
@@ -4320,9 +4538,10 @@ window.actieReserveringVerwijderen = async function(id, event) {
     if (event && event.preventDefault) event.preventDefault();
     if (event && event.stopPropagation) event.stopPropagation();
 
-    const targetRes = reserveringen.find(r => r.id == id || String(r.id) === String(id));
+    const targetRes = reserveringen.find(r => r.id == id || String(r.id) === String(id) || (r._docId && r._docId === String(id)));
     const kistNaam = targetRes ? targetRes.kist : 'deze reservering';
     const leerkrachtNaam = targetRes ? (targetRes.leerkracht || '') : '';
+    const docId = targetRes ? targetRes._docId : null;
 
     if (!confirm(`Weet je zeker dat je de reservering van '${kistNaam}' ${leerkrachtNaam ? 'voor ' + leerkrachtNaam : ''} definitief wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt.`)) {
         return;
@@ -4332,11 +4551,14 @@ window.actieReserveringVerwijderen = async function(id, event) {
     const idStr = id.toString();
     if (!verwijderdeReserveringen.includes(idStr)) {
         verwijderdeReserveringen.push(idStr);
-        localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
     }
+    if (docId && !verwijderdeReserveringen.includes(docId)) {
+        verwijderdeReserveringen.push(docId);
+    }
+    localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
 
     // 2. Verwijder direct uit de lokale lijst
-    reserveringen = reserveringen.filter(r => r.id != id && String(r.id) !== idStr);
+    reserveringen = reserveringen.filter(r => r.id != id && String(r.id) !== idStr && (!docId || r._docId !== docId));
     slaDataOp();
 
     // 3. Update alle tabellen en overzichten direct
@@ -4346,10 +4568,15 @@ window.actieReserveringVerwijderen = async function(id, event) {
     if (window.renderStatistiekenTab) window.renderStatistiekenTab();
     if (window.renderReserveringsGrid) window.renderReserveringsGrid();
 
-    // 4. Verwijder uit Cloud Firestore
+    // 4. Synchroniseer naar Cloud instellingen/verwijderde_items
+    if (window.syncVerwijderdeItemsToCloud) {
+        window.syncVerwijderdeItemsToCloud().catch(console.warn);
+    }
+
+    // 5. Verwijder uit Cloud Firestore collectie 'reserveringen'
     if (window.deleteReserveringFromCloud) {
         try {
-            await window.deleteReserveringFromCloud(id);
+            await window.deleteReserveringFromCloud(id, docId, targetRes);
         } catch (e) {
             console.warn("Cloud delete reservering fout:", e);
         }
@@ -4681,16 +4908,34 @@ window.deleteMelding = async function(id) { if(confirm("Weet je zeker dat je dez
 window.deletePeriode = async function(id) {
     if (confirm("Weet je zeker dat je deze periode wilt verwijderen?")) {
         const idStr = id.toString();
+        const pObj = periodes.find(p => p.id == id || String(p.id) === idStr);
+        const pNum = pObj ? window.getPeriodeNummer(pObj) : null;
+        const docId = pObj ? pObj._docId : null;
+
         if (!verwijderdePeriodes.includes(idStr)) {
             verwijderdePeriodes.push(idStr);
         }
-        periodes = periodes.filter(p => p.id != id && String(p.id) !== idStr);
+        if (pNum && !verwijderdePeriodes.includes(String(pNum))) {
+            verwijderdePeriodes.push(String(pNum));
+        }
+        if (docId && !verwijderdePeriodes.includes(docId)) {
+            verwijderdePeriodes.push(docId);
+        }
+        localStorage.setItem('ww_verwijderde_periodes_v1', JSON.stringify(verwijderdePeriodes));
+
+        periodes = periodes.filter(p => p.id != id && String(p.id) !== idStr && (!pNum || window.getPeriodeNummer(p) !== pNum));
         slaDataOp();
+
         if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
         if (window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+
+        if (window.syncVerwijderdeItemsToCloud) {
+            window.syncVerwijderdeItemsToCloud().catch(console.warn);
+        }
+
         if (window.deletePeriodeFromCloud) {
             try {
-                await window.deletePeriodeFromCloud(id);
+                await window.deletePeriodeFromCloud(id, docId, pNum);
             } catch(e) {
                 console.warn("Cloud delete periode fout:", e);
             }
@@ -6383,18 +6628,6 @@ const historischeReserveringenData = [
     "toelichting": ""
   },
   {
-    "id": 5014,
-    "kist": "3d pennen groepsset (5 items)",
-    "leerkracht": "Test",
-    "school": "(ver)Wonderlab",
-    "aanvragerEmail": "JHendriks@wonderwijs.nl",
-    "periode": "Periode 5 schooljaar 2026/2027",
-    "periodeNaam": "Periode 5 schooljaar 2026/2027",
-    "periodeId": 5,
-    "status": "In afwachting",
-    "toelichting": "test"
-  },
-  {
     "id": 5015,
     "kist": "Beaverbot 1",
     "leerkracht": "Myra Janssen",
@@ -7196,12 +7429,15 @@ window.importeerHistorischeReserveringen = async function() {
         }
     });
 
-    // 1. Zorg dat Periodes 1 t/m 8 bestaan
+    // 1. Zorg dat Periodes 1 t/m 8 canoniek en uniek zijn
+    periodes = window.deduplicatePeriodes(periodes);
     if (typeof defaultWonderwijsPeriodes !== 'undefined' && Array.isArray(defaultWonderwijsPeriodes)) {
         defaultWonderwijsPeriodes.forEach(bp => {
             if (verwijderdePeriodes.includes(String(bp.id))) return;
-            if (!periodes.some(p => p.id == bp.id || p.naam === bp.naam)) {
-                periodes.push(bp);
+            const pNum = bp.id;
+            const bestaatAl = periodes.some(p => window.getPeriodeNummer(p) === pNum);
+            if (!bestaatAl) {
+                periodes.push({ ...bp });
                 aangepast = true;
                 if (window.savePeriodeToCloud) {
                     window.savePeriodeToCloud(bp).catch(e => console.warn('Cloud periode sync fout:', e));
@@ -7209,6 +7445,7 @@ window.importeerHistorischeReserveringen = async function() {
             }
         });
     }
+    periodes = window.deduplicatePeriodes(periodes);
 
     // 2. Zorg dat alle scholen bestaan
     if (typeof defaultWonderwijsScholen !== 'undefined' && Array.isArray(defaultWonderwijsScholen)) {
@@ -7230,12 +7467,12 @@ window.importeerHistorischeReserveringen = async function() {
         let nieuwAantal = 0;
         historischeReserveringenData.forEach(hr => {
             const hrIdStr = hr.id.toString();
-            // Als deze reservering door een beheerder is verwijderd: NOOIT meer opnieuw importeren!
-            if (verwijderdeReserveringen.includes(hrIdStr) || verwijderdeReserveringen.includes(Number(hr.id))) {
+            // Als deze reservering door een beheerder is verwijderd of test item is: NOOIT meer opnieuw importeren!
+            if (verwijderdeReserveringen.includes(hrIdStr) || verwijderdeReserveringen.includes(Number(hr.id)) || hrIdStr === '5014' || hr.leerkracht === 'Test') {
                 return;
             }
 
-            const bestaatAl = reserveringen.some(r => r.id == hr.id || String(r.id) === hrIdStr);
+            const bestaatAl = reserveringen.some(r => r.id == hr.id || String(r.id) === hrIdStr || (r._docId && r._docId === hrIdStr));
 
             if (!bestaatAl) {
                 const resObj = {
