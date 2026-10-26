@@ -118,6 +118,7 @@ body::after {
     display: grid;
     grid-template-columns: 270px 1fr;
     min-height: 100vh;
+    min-height: 100dvh;
     width: 100%;
     max-width: 100%;
     margin: 0;
@@ -130,7 +131,6 @@ body::after {
     overflow-x: hidden;
     position: relative;
     z-index: 1;
-    transition: all 0.4s var(--spring-easing);
 }
 
 /* =========================================================
@@ -1522,22 +1522,30 @@ body::after {
 }
 
 .leskist-card {
-    background: var(--glass-card);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    background: #ffffff;
     border: 1.5px solid var(--glass-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: var(--glass-shadow);
-    transition: all 0.35s var(--spring-easing);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
-.leskist-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--glass-shadow-hover);
-    border-color: rgba(255, 255, 255, 1);
+@media (hover: hover) and (pointer: fine) {
+    .leskist-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.09);
+        border-color: rgba(255, 255, 255, 1);
+    }
+
+    .leskist-card:hover .leskist-image-container img {
+        transform: scale(1.04);
+    }
 }
 
 .leskist-image-container {
@@ -1552,11 +1560,7 @@ body::after {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.4s var(--spring-easing);
-}
-
-.leskist-card:hover .leskist-image-container img {
-    transform: scale(1.05);
+    transition: transform 0.3s ease;
 }
 
 .leskist-body {
@@ -2007,15 +2011,15 @@ body::after {
 }
 
 /* =========================================================
-   14. MOBIELE RESPONSIVENESS (<= 768px)
+   14. MOBIELE & TABLET RESPONSIVENESS (<= 1024px)
    ========================================================= */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     body {
-        background-attachment: scroll;
+        background-attachment: scroll !important;
     }
 
     body::before, body::after {
-        display: none; /* Schakel zware blurs uit op mobiele GPU */
+        display: none !important; /* Schakel zware GPU orbs uit op mobiel en iPad */
     }
 
     .dashboard-container {
@@ -2024,10 +2028,14 @@ body::after {
         margin: 0 !important;
         width: 100% !important;
         min-height: 100vh !important;
+        min-height: 100dvh !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
-        background: rgba(255, 255, 255, 0.92) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        transition: none !important;
     }
 
     .sidebar {
@@ -2041,6 +2049,7 @@ body::after {
         align-items: center !important;
         background: rgba(255, 255, 255, 0.95) !important;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+        position: relative !important;
     }
 
     .logo {
@@ -2068,12 +2077,51 @@ body::after {
     }
 
     .main-content {
-        padding: 16px 14px 105px 14px !important;
+        padding: 18px 16px 110px 16px !important;
         max-height: none !important;
         overflow-x: hidden !important;
         width: 100% !important;
         max-width: 100vw !important;
         box-sizing: border-box !important;
+    }
+
+    #docentKistControls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #docentKistControls > div:last-child {
+        width: 100% !important;
+    }
+
+    #docentKistZoekInput {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #docentKistFilters {
+        width: 100% !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 4px !important;
+        scrollbar-width: none;
+    }
+
+    #docentKistFilters::-webkit-scrollbar {
+        display: none;
+    }
+
+    #docentKistFilters .filter-btn {
+        flex-shrink: 0 !important;
+    }
+
+    .leskisten-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+        gap: 16px !important;
     }
 
     .top-bar {
@@ -3379,9 +3427,30 @@ body::after {
     padding: 0 6px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .mobile-bottom-nav {
         display: flex !important;
+    }
+}
+
+/* Touch screen stabilisatie (iPads & Tablets) */
+@media (hover: none) or (pointer: coarse) {
+    body {
+        background-attachment: scroll !important;
+    }
+    body::before, body::after {
+        display: none !important;
+    }
+    .dashboard-container {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    .leskist-card:hover {
+        transform: none !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+    }
+    .leskist-card:hover .leskist-image-container img {
+        transform: none !important;
     }
 }
 

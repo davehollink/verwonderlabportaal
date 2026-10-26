@@ -2647,7 +2647,7 @@ window.renderReserveringsGrid = function() {
     }
 
     container.style.display = "grid";
-    container.style.gridTemplateColumns = "repeat(auto-fill, minmax(300px, 1fr))";
+    container.style.gridTemplateColumns = "repeat(auto-fill, minmax(260px, 1fr))";
     container.style.gap = "20px";
     
     container.innerHTML = gefilterd.map(kist => {
@@ -2695,7 +2695,7 @@ window.renderReserveringsGrid = function() {
         }
 
         return `
-        <div class="leskist-card" ${clickEvent} style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; transition: transform 0.2s ease; ${styling}">
+        <div class="leskist-card" ${clickEvent} style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); ${styling}">
             ${hartjeHtml}
             <div style="height: 160px; overflow: hidden; flex-shrink: 0;">
                 <img src="${imgSource}" alt="${kist.naam}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -2709,7 +2709,7 @@ window.renderReserveringsGrid = function() {
             </div>
         </div>`;
     }).join('');
-    if (typeof window.checkUrlReservationParam === "function") {
+    if (typeof window.checkUrlReservationParam === "function" && !window._hasCheckedUrlParam) {
         window.checkUrlReservationParam();
     }
 };
@@ -2948,9 +2948,11 @@ window.openLesModal = function(id) {
 };
 
 window.checkUrlReservationParam = function() {
+    if (window._hasCheckedUrlParam) return;
     const params = new URLSearchParams(window.location.search);
     const kistParam = params.get('kist');
     if (!kistParam || !leskisten || leskisten.length === 0) return;
+    window._hasCheckedUrlParam = true;
 
     const term = decodeURIComponent(kistParam).toLowerCase().trim();
     const gevonden = leskisten.find(k => 
