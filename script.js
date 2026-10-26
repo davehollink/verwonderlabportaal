@@ -547,8 +547,46 @@ window.getPrimaireDgDoelVoorIdee = function(idee) {
     return "Kerndoel 2: Ontwerpen en maken (23a) 'Combineert verschillende tools en technieken'";
 };
 
-let periodes = safeGetLocal('ww_periodes_v11', [{ id: 1, naam: "Periode 1 schooljaar 2026/2027", start: "2026-08-31", eind: "2026-09-20" }]);
-let scholen = safeGetLocal('ww_scholen_v1', [{ id: 1, naam: "Binnenstebuiten" }, { id: 2, naam: "De Wegwijzer" }]);
+const defaultWonderwijsPeriodes = [
+    { id: 1, naam: "Periode 1 schooljaar 2026/2027", start: "2026-08-31", eind: "2026-09-20" },
+    { id: 2, naam: "Periode 2 schooljaar 2026/2027", start: "2026-09-21", eind: "2026-11-01" },
+    { id: 3, naam: "Periode 3 schooljaar 2026/2027", start: "2026-11-02", eind: "2026-12-18" },
+    { id: 4, naam: "Periode 4 schooljaar 2026/2027", start: "2027-01-04", eind: "2027-02-12" },
+    { id: 5, naam: "Periode 5 schooljaar 2026/2027", start: "2027-02-15", eind: "2027-03-26" },
+    { id: 6, naam: "Periode 6 schooljaar 2026/2027", start: "2027-03-29", eind: "2027-05-07" },
+    { id: 7, naam: "Periode 7 schooljaar 2026/2027", start: "2027-05-10", eind: "2027-06-18" },
+    { id: 8, naam: "Periode 8 schooljaar 2026/2027", start: "2027-06-21", eind: "2027-07-16" }
+];
+
+const defaultWonderwijsScholen = [
+    { id: 1, naam: "Binnenstebuiten" },
+    { id: 2, naam: "De Wegwijzer" },
+    { id: 3, naam: "Tuin 17" },
+    { id: 4, naam: "Sint Jacobusschool" },
+    { id: 5, naam: "Sterrenbos" },
+    { id: 6, naam: "SamSam" },
+    { id: 7, naam: "Esdoorn" },
+    { id: 8, naam: "Startblok" },
+    { id: 9, naam: "Regenboog" },
+    { id: 10, naam: "Elstar" },
+    { id: 11, naam: "Stap voor Stap" },
+    { id: 12, naam: "Holthuus" },
+    { id: 13, naam: "Kameleon" },
+    { id: 14, naam: "Abacus" },
+    { id: 15, naam: "Tichelaar" },
+    { id: 16, naam: "(ver)Wonderlab" }
+];
+
+let periodes = safeGetLocal('ww_periodes_v11', defaultWonderwijsPeriodes);
+defaultWonderwijsPeriodes.forEach(dp => {
+    if (!periodes.some(p => p.id == dp.id || p.naam === dp.naam)) periodes.push(dp);
+});
+
+let scholen = safeGetLocal('ww_scholen_v1', defaultWonderwijsScholen);
+defaultWonderwijsScholen.forEach(ds => {
+    if (!scholen.some(s => s.naam.toLowerCase() === ds.naam.toLowerCase())) scholen.push(ds);
+});
+
 let reserveringen = safeGetLocal('ww_reserveringen_v11', []);
 let beheerdersLijst = safeGetLocal('ww_beheerders_v1', []); 
 let mijnFavorieten = safeGetLocal('ww_favorieten_v1', []); 
@@ -1461,14 +1499,34 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         };
 
         // Tabellen Ophalen
-        onSnapshot(collection(db, "periodes"), (snapshot) => { if(!snapshot.empty) { periodes = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.updateAftelkalender === "function") window.updateAftelkalender(); } }, checkError);
+        onSnapshot(collection(db, "periodes"), (snapshot) => { 
+            if(!snapshot.empty) { 
+                const cloudPeriodes = snapshot.docs.map(d => d.data());
+                cloudPeriodes.forEach(cp => {
+                    const idx = periodes.findIndex(p => p.id == cp.id);
+                    if (idx > -1) periodes[idx] = cp; else periodes.push(cp);
+                });
+            }
+            if (typeof window.importeerHistorischeReserveringen === 'function') {
+                window.importeerHistorischeReserveringen();
+            }
+            slaDataOp(); 
+            if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+            if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); 
+            if(typeof window.updateAftelkalender === "function") window.updateAftelkalender(); 
+        }, checkError);
+
         onSnapshot(collection(db, "scholen"), (snapshot) => { 
             if(!snapshot.empty) { 
-                scholen = snapshot.docs.map(d => d.data()); 
-                slaDataOp(); 
-                if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
-                if(typeof window.laadProfielPagina === "function") window.laadProfielPagina();
-            } 
+                const cloudScholen = snapshot.docs.map(d => d.data());
+                cloudScholen.forEach(cs => {
+                    const idx = scholen.findIndex(s => (s.id && cs.id && s.id == cs.id) || (s.naam && cs.naam && s.naam.toLowerCase() === cs.naam.toLowerCase()));
+                    if (idx > -1) scholen[idx] = cs; else scholen.push(cs);
+                });
+            }
+            slaDataOp(); 
+            if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+            if(typeof window.laadProfielPagina === "function") window.laadProfielPagina();
         }, checkError);
         onSnapshot(collection(db, "beheerders"), (snapshot) => { 
             if(!snapshot.empty) { 
@@ -1515,7 +1573,30 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 if(window.renderLesideeenGrid) window.renderLesideeenGrid(); 
             } 
         }, checkError);
-        onSnapshot(collection(db, "reserveringen"), (snapshot) => { if(!snapshot.empty) { reserveringen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); } }, checkError);
+        onSnapshot(collection(db, "reserveringen"), (snapshot) => { 
+            if(!snapshot.empty) { 
+                const cloudRes = snapshot.docs.map(d => d.data());
+                const cloudMap = new Map();
+                cloudRes.forEach(cr => cloudMap.set(cr.id.toString(), cr));
+                reserveringen.forEach(lr => {
+                    if (!cloudMap.has(lr.id.toString())) {
+                        cloudMap.set(lr.id.toString(), lr);
+                        if (window.addReserveringToCloud) {
+                            window.addReserveringToCloud(lr).catch(e => console.warn("Cloud sync reservering:", e));
+                        }
+                    }
+                });
+                reserveringen = Array.from(cloudMap.values());
+            }
+            if (typeof window.importeerHistorischeReserveringen === 'function') {
+                window.importeerHistorischeReserveringen();
+            }
+            slaDataOp(); 
+            if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
+            if(typeof window.updateKalenderEnLijst === "function") window.updateKalenderEnLijst(); 
+            if(typeof window.renderMijnReserveringen === "function") window.renderMijnReserveringen(); 
+            if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); 
+        }, checkError);
         onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(collection(db, "feedback"), (snapshot) => { if(!snapshot.empty) { feedbackLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
         onSnapshot(doc(db, "instellingen", "feedback_config"), (snap) => {
@@ -2599,7 +2680,7 @@ window.renderBeheerdersTabellen = function() {
     if (reserveringenBody) {
         // Vul dropdown filters dynamisch bij indien nog niet gevuld
         const filterPeriodeSelect = document.getElementById('adminFilterPeriode');
-        if (filterPeriodeSelect && filterPeriodeSelect.options.length <= 1 && periodes.length > 0) {
+        if (filterPeriodeSelect && (filterPeriodeSelect.options.length <= 1 || filterPeriodeSelect.options.length - 1 !== periodes.length) && periodes.length > 0) {
             const huidigeVal = filterPeriodeSelect.value;
             filterPeriodeSelect.innerHTML = '<option value="Alle">Alle Periodes</option>';
             periodes.forEach(p => {
@@ -2609,7 +2690,7 @@ window.renderBeheerdersTabellen = function() {
         }
 
         const filterSchoolSelect = document.getElementById('adminFilterSchool');
-        if (filterSchoolSelect && filterSchoolSelect.options.length <= 1 && scholen.length > 0) {
+        if (filterSchoolSelect && (filterSchoolSelect.options.length <= 1 || filterSchoolSelect.options.length - 1 !== scholen.length) && scholen.length > 0) {
             const huidigeSchoolVal = filterSchoolSelect.value;
             filterSchoolSelect.innerHTML = '<option value="Alle">Alle Locaties / Scholen</option>';
             scholen.forEach(s => {
@@ -2703,12 +2784,17 @@ window.renderBeheerdersTabellen = function() {
                 const schoolBadge = r.school 
                     ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 600;">🏫 ${r.school}</div>` 
                     : '';
+                const opmerkingTekst = r.opmerking || r.toelichting || '';
+                const opmerkingBadge = opmerkingTekst && opmerkingTekst !== '-'
+                    ? `<div style="font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 6px; margin-top: 5px; display: inline-block;">💬 ${opmerkingTekst}</div>` 
+                    : '';
                 
                 let leerkrachtWeergave = `
                     <div>
                         <strong style="color: #0f172a; font-size: 14px;">${docentNaam}</strong>
                         ${docentEmail}
                         ${schoolBadge}
+                        ${opmerkingBadge}
                     </div>
                 `;
                 
@@ -5014,6 +5100,1199 @@ window.testGoedkeuringsMail = function() {
     window.openInOutlook("sanne.vanderwal@wonderwijs.nl", testSubject, testBody);
 };
 
+const historischeReserveringenData = [
+  {
+    "id": 4001,
+    "kist": "mTiny",
+    "leerkracht": "Myra Janssen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "myra.janssen@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4002,
+    "kist": "VR Brillen set 2 (4 items)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4003,
+    "kist": "Greenscreenbox nr. 1",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4004,
+    "kist": "Infento Talent Kit (groepsset)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4005,
+    "kist": "Infento: discovery set (groepsset)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4006,
+    "kist": "Lego Education Spike Essential (6 boxen)",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4007,
+    "kist": "Micro:bit groepsset (20+ items)",
+    "leerkracht": "Kim Beckers",
+    "school": "Tuin 17",
+    "aanvragerEmail": "k.beckers@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4008,
+    "kist": "Photon Robot",
+    "leerkracht": "Timon van Diepen",
+    "school": "Holthuus",
+    "aanvragerEmail": "T.vanDiepen@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4009,
+    "kist": "3d pennen groepsset (5 items)",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4010,
+    "kist": "Greenscreenbox nr. 2",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4011,
+    "kist": "Greenscreenbox nr. 3",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4012,
+    "kist": "Intelino groepsset (4 items)",
+    "leerkracht": "Fraukje Berndsen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "f.berndsen@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4013,
+    "kist": "Osmo pakket A (2 items)",
+    "leerkracht": "Foekje Bras",
+    "school": "Elstar",
+    "aanvragerEmail": "f.bras@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4014,
+    "kist": "Osmo pakket B (2 items)",
+    "leerkracht": "Foekje Bras",
+    "school": "Elstar",
+    "aanvragerEmail": "f.bras@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4015,
+    "kist": "Sphero Indi groepsset (8 items)",
+    "leerkracht": "Judith Stassen-Liefrink",
+    "school": "SamSam",
+    "aanvragerEmail": "j.stassen@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4016,
+    "kist": "Ozobot groepsset (12 items)",
+    "leerkracht": "Linda Bouwmeister - Rikken",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "l.bouwmeister@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": "Groep 8A"
+  },
+  {
+    "id": 4017,
+    "kist": "Beaverbot 1",
+    "leerkracht": "Sanne Bedeaux",
+    "school": "Tichelaar",
+    "aanvragerEmail": "s.bedeaux@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4018,
+    "kist": "Sphero Mini",
+    "leerkracht": "Karin Wilmink-Nab",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "k.nab@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4019,
+    "kist": "Easi scope (6 items) 1",
+    "leerkracht": "Nicole Storteler",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "n.storteler@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4020,
+    "kist": "Virtuali-Tee",
+    "leerkracht": "Nicole Storteler",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "n.storteler@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 4021,
+    "kist": "Lego Education Spike Prime (6 boxen)",
+    "leerkracht": "Else-marije van de Werken",
+    "school": "Startblok",
+    "aanvragerEmail": "e.vandewerken@wonderwijs.nl",
+    "periodeId": 4,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5001,
+    "kist": "VR Brillen set 1 (4 items)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5002,
+    "kist": "Greenscreenbox nr. 1",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5003,
+    "kist": "Infento: discovery set (groepsset)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5004,
+    "kist": "Infento Talent Kit (groepsset)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5005,
+    "kist": "Virtuali-Tee",
+    "leerkracht": "Bram Eerden",
+    "school": "(ver)Wonderlab",
+    "aanvragerEmail": "b.eerden@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": "Ik werk op de regenboog"
+  },
+  {
+    "id": 5006,
+    "kist": "Greenscreenbox nr. 2",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5007,
+    "kist": "Easi scope (6 items) 1",
+    "leerkracht": "Robin Knipping",
+    "school": "Elstar",
+    "aanvragerEmail": "r.knipping@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": "thema 3 groep 7/8"
+  },
+  {
+    "id": 5008,
+    "kist": "Duplo Coding Express",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5009,
+    "kist": "Duplo Coding Express",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5010,
+    "kist": "Kiene Klanken en vormen",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5011,
+    "kist": "Piximakey nr. 1",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5012,
+    "kist": "Piximakey nr. 2",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5013,
+    "kist": "Lego Education Spike Essential (6 boxen)",
+    "leerkracht": "Fraukje Berndsen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "f.berndsen@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5014,
+    "kist": "3d pennen groepsset (5 items)",
+    "leerkracht": "Test",
+    "school": "(ver)Wonderlab",
+    "aanvragerEmail": "JHendriks@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": "test"
+  },
+  {
+    "id": 5015,
+    "kist": "Beaverbot 1",
+    "leerkracht": "Myra Janssen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "myra.janssen@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5016,
+    "kist": "Beaverbot 2",
+    "leerkracht": "Myra Janssen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "myra.janssen@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5017,
+    "kist": "Makey Makey",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "Afgewezen",
+    "toelichting": ""
+  },
+  {
+    "id": 5018,
+    "kist": "Micro:bit groepsset (20+ items)",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5019,
+    "kist": "Lego Education Spike Prime (6 boxen)",
+    "leerkracht": "Linda Bouwmeister - Rikken",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "l.bouwmeister@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": "Groep 8A Linda"
+  },
+  {
+    "id": 5020,
+    "kist": "3D printer nr. 1",
+    "leerkracht": "Rody de Vries",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "r.devries@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5021,
+    "kist": "3d printer nr. 2",
+    "leerkracht": "Rody de Vries",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "r.devries@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5022,
+    "kist": "Ozobot groepsset (12 items)",
+    "leerkracht": "Rody de Vries",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "r.devries@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5023,
+    "kist": "Lego Education Bricq (2 items)",
+    "leerkracht": "Rody de Vries",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "r.devries@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5024,
+    "kist": "VR Brillen set 2 (4 items)",
+    "leerkracht": "Rody de Vries",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "r.devries@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 5025,
+    "kist": "Sphero Indi groepsset (8 items)",
+    "leerkracht": "Rody de Vries",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "r.devries@wonderwijs.nl",
+    "periodeId": 5,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6001,
+    "kist": "3d pennen groepsset (5 items)",
+    "leerkracht": "Myra Janssen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "myra.janssen@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6002,
+    "kist": "Podcaststudio groot",
+    "leerkracht": "Jorn Hendriks",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "jorn.hendriks@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6003,
+    "kist": "VR Brillen set 1 (4 items)",
+    "leerkracht": "Koen Bleeker",
+    "school": "(ver)Wonderlab",
+    "aanvragerEmail": "K.Bleeker@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": "Ik werk op IKC de Regenboog"
+  },
+  {
+    "id": 6004,
+    "kist": "Piximakey nr. 2",
+    "leerkracht": "Danielle Creuwels",
+    "school": "Tuin 17",
+    "aanvragerEmail": "d.creuwels@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6005,
+    "kist": "Infento: discovery set (groepsset)",
+    "leerkracht": "Heidi Lentjes-Van Heugten",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "h.vanheugten@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": "Als het mogelijk is met 1 les begeleiding bij de opstart van het project."
+  },
+  {
+    "id": 6006,
+    "kist": "mTiny",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6007,
+    "kist": "Duplo Coding Express",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6008,
+    "kist": "Kiene Klanken en vormen",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6009,
+    "kist": "Virtuali-Tee",
+    "leerkracht": "Lise Visser",
+    "school": "Elstar",
+    "aanvragerEmail": "l.visser@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6010,
+    "kist": "Easi scope (6 items) 1",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6011,
+    "kist": "Makey Makey",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "Afgewezen",
+    "toelichting": ""
+  },
+  {
+    "id": 6012,
+    "kist": "Micro:bit groepsset (20+ items)",
+    "leerkracht": "Doris Hoogveld",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "d.hoogveld@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6013,
+    "kist": "Sphero Indi groepsset (8 items)",
+    "leerkracht": "Elize van Tongeren",
+    "school": "Startblok",
+    "aanvragerEmail": "e.vantongeren@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6014,
+    "kist": "Lego Education Spike Essential (6 boxen)",
+    "leerkracht": "Jamie Schlief",
+    "school": "Holthuus",
+    "aanvragerEmail": "j.schlief@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6015,
+    "kist": "Beaverbot 1",
+    "leerkracht": "Amanda Beekman",
+    "school": "Startblok",
+    "aanvragerEmail": "a.beekman@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6016,
+    "kist": "Beaverbot 2",
+    "leerkracht": "Amanda Beekman",
+    "school": "Startblok",
+    "aanvragerEmail": "a.beekman@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6017,
+    "kist": "Ozobot groepsset (12 items)",
+    "leerkracht": "Judith Helsen",
+    "school": "Abacus",
+    "aanvragerEmail": "j.helsen@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6018,
+    "kist": "VR Brillen set 2 (4 items)",
+    "leerkracht": "Karin Wilmink-Nab",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "k.nab@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 6019,
+    "kist": "Intelino groepsset (4 items)",
+    "leerkracht": "Nicole Storteler",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "n.storteler@wonderwijs.nl",
+    "periodeId": 6,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7001,
+    "kist": "3D printer nr. 1",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7002,
+    "kist": "3d pennen groepsset (5 items)",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7003,
+    "kist": "Plugo",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7004,
+    "kist": "Greenscreenbox nr. 1",
+    "leerkracht": "Robin Knipping",
+    "school": "Elstar",
+    "aanvragerEmail": "r.knipping@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": "thema 4 groep 7/8"
+  },
+  {
+    "id": 7005,
+    "kist": "Lego Education Spike Essential (6 boxen)",
+    "leerkracht": "Lise Visser",
+    "school": "Elstar",
+    "aanvragerEmail": "l.visser@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7006,
+    "kist": "Podcaststudio klein",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7007,
+    "kist": "Sphero Indi groepsset (8 items)",
+    "leerkracht": "Elize van Tongeren",
+    "school": "Startblok",
+    "aanvragerEmail": "e.vantongeren@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7008,
+    "kist": "Easi scope (6 items) 1",
+    "leerkracht": "Paul Baayens",
+    "school": "Esdoorn",
+    "aanvragerEmail": "p.baayens@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7009,
+    "kist": "Beaverbot 1",
+    "leerkracht": "Maaike Dukers",
+    "school": "Holthuus",
+    "aanvragerEmail": "m.dukers@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7010,
+    "kist": "Beaverbot 2",
+    "leerkracht": "Maaike Dukers",
+    "school": "Holthuus",
+    "aanvragerEmail": "m.dukers@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7011,
+    "kist": "mTiny",
+    "leerkracht": "Nicole Storteler",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "n.storteler@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7012,
+    "kist": "Ozobot groepsset (12 items)",
+    "leerkracht": "Nienke Stam",
+    "school": "Kameleon",
+    "aanvragerEmail": "n.stam@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7013,
+    "kist": "Micro:bit groepsset (20+ items)",
+    "leerkracht": "Henriëtte Vergoossen",
+    "school": "SamSam",
+    "aanvragerEmail": "h.vergoossen@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7014,
+    "kist": "Dash Robot",
+    "leerkracht": "Annemarie Elkhuizen",
+    "school": "Binnenstebuiten",
+    "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 7015,
+    "kist": "Photon Robot",
+    "leerkracht": "Annemarie Elkhuizen",
+    "school": "Binnenstebuiten",
+    "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
+    "periodeId": 7,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8001,
+    "kist": "Kiene Klanken en vormen",
+    "leerkracht": "Cindy Bakker",
+    "school": "Tuin 17",
+    "aanvragerEmail": "c.bakker@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8002,
+    "kist": "Plugo",
+    "leerkracht": "Myra Janssen",
+    "school": "Sint Jacobusschool",
+    "aanvragerEmail": "myra.janssen@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8003,
+    "kist": "3D printer nr. 1",
+    "leerkracht": "Eleonora Hendriks-Knuiman",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "e.hendriks@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8004,
+    "kist": "N/A (Algemeen)",
+    "leerkracht": "Annemarie Elkhuizen",
+    "school": "Binnenstebuiten",
+    "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": "Groep 6 roze, Annemarie, a.elkhuizen@wonderwijs.nl"
+  },
+  {
+    "id": 8005,
+    "kist": "Intelino groepsset (4 items)",
+    "leerkracht": "Annemarie Elkhuizen",
+    "school": "Binnenstebuiten",
+    "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": "Groep 6 roze Annemarie: a.elkhuizen@wonderwijs.nl"
+  },
+  {
+    "id": 8006,
+    "kist": "Sphero Indi groepsset (8 items)",
+    "leerkracht": "Judith Stassen-Liefrink",
+    "school": "SamSam",
+    "aanvragerEmail": "j.stassen@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8007,
+    "kist": "VR Brillen set 2 (4 items)",
+    "leerkracht": "Robbert van der Linde",
+    "school": "Esdoorn",
+    "aanvragerEmail": "r.vanderlinde@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8008,
+    "kist": "3d pennen groepsset (5 items)",
+    "leerkracht": "Alice Zweers",
+    "school": "Startblok",
+    "aanvragerEmail": "a.zweers@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8009,
+    "kist": "Infento Talent Kit (groepsset)",
+    "leerkracht": "Kelly van den Born",
+    "school": "Regenboog",
+    "aanvragerEmail": "k.vandenborn@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8010,
+    "kist": "Podcaststudio klein",
+    "leerkracht": "Sterre Witpeerd",
+    "school": "Elstar",
+    "aanvragerEmail": "s.witpeerd@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8011,
+    "kist": "mTiny",
+    "leerkracht": "Paul Baayens",
+    "school": "Esdoorn",
+    "aanvragerEmail": "p.baayens@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": "Groepen 1/2"
+  },
+  {
+    "id": 8012,
+    "kist": "Ozobot groepsset (12 items)",
+    "leerkracht": "Paul Baayens",
+    "school": "Esdoorn",
+    "aanvragerEmail": "p.baayens@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8013,
+    "kist": "Podcaststudio groot",
+    "leerkracht": "Lisa Reijmers",
+    "school": "Sterrenbos",
+    "aanvragerEmail": "l.reijmers@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8014,
+    "kist": "Piximakey nr. 1",
+    "leerkracht": "Amanda Beekman",
+    "school": "Startblok",
+    "aanvragerEmail": "a.beekman@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8015,
+    "kist": "Piximakey nr. 2",
+    "leerkracht": "Amanda Beekman",
+    "school": "Startblok",
+    "aanvragerEmail": "a.beekman@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8016,
+    "kist": "Beaverbot 1",
+    "leerkracht": "Nicole Storteler",
+    "school": "Stap voor Stap",
+    "aanvragerEmail": "n.storteler@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8017,
+    "kist": "Lego Education Spike Essential (6 boxen)",
+    "leerkracht": "Else-marije van de Werken",
+    "school": "Startblok",
+    "aanvragerEmail": "e.vandewerken@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": "Mocht het eerder kunnen, dan houden we ons aanbevolen."
+  },
+  {
+    "id": 8018,
+    "kist": "4 iPads",
+    "leerkracht": "Amanda Beekman",
+    "school": "Startblok",
+    "aanvragerEmail": "a.beekman@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8019,
+    "kist": "Dash Robot",
+    "leerkracht": "Annemarie Elkhuizen",
+    "school": "Binnenstebuiten",
+    "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  },
+  {
+    "id": 8020,
+    "kist": "Photon Robot",
+    "leerkracht": "Annemarie Elkhuizen",
+    "school": "Binnenstebuiten",
+    "aanvragerEmail": "a.elkhuizen@wonderwijs.nl",
+    "periodeId": 8,
+    "status": "In afwachting",
+    "toelichting": ""
+  }
+];
+
+
+// ==========================================
+// HISTORISCHE RESERVERINGEN OVERNAME & SYNC
+// ==========================================
+window.importeerHistorischeReserveringen = async function() {
+    let aangepast = false;
+
+    // 1. Zorg dat Periodes 1 t/m 8 bestaan
+    if (typeof defaultWonderwijsPeriodes !== 'undefined' && Array.isArray(defaultWonderwijsPeriodes)) {
+        defaultWonderwijsPeriodes.forEach(bp => {
+            if (!periodes.some(p => p.id == bp.id || p.naam === bp.naam)) {
+                periodes.push(bp);
+                aangepast = true;
+                if (window.savePeriodeToCloud) {
+                    window.savePeriodeToCloud(bp).catch(e => console.warn('Cloud periode sync fout:', e));
+                }
+            }
+        });
+    }
+
+    // 2. Zorg dat alle scholen bestaan
+    if (typeof defaultWonderwijsScholen !== 'undefined' && Array.isArray(defaultWonderwijsScholen)) {
+        defaultWonderwijsScholen.forEach(bs => {
+            if (!scholen.some(s => s.naam.toLowerCase() === bs.naam.toLowerCase())) {
+                const nieuwId = scholen.length > 0 ? Math.max(...scholen.map(s => s.id || 0)) + 1 : bs.id;
+                const schoolObj = { id: nieuwId, naam: bs.naam };
+                scholen.push(schoolObj);
+                aangepast = true;
+                if (window.saveSchoolToCloud) {
+                    window.saveSchoolToCloud(schoolObj).catch(e => console.warn('Cloud school sync fout:', e));
+                }
+            }
+        });
+    }
+
+    // 3. Importeer alle 100 historische reserveringen (voorkom dubbelingen)
+    if (typeof historischeReserveringenData !== 'undefined' && Array.isArray(historischeReserveringenData)) {
+        let nieuwAantal = 0;
+        historischeReserveringenData.forEach(hr => {
+            const bestaatAl = reserveringen.some(r => 
+                r.id == hr.id || 
+                (r.kist === hr.kist && r.periodeId == hr.periodeId && (r.aanvragerEmail === hr.aanvragerEmail || r.leerkracht === hr.leerkracht))
+            );
+
+            if (!bestaatAl) {
+                const resObj = {
+                    id: hr.id,
+                    kist: hr.kist,
+                    leerkracht: hr.leerkracht,
+                    school: hr.school,
+                    aanvragerEmail: hr.aanvragerEmail,
+                    periodeId: hr.periodeId,
+                    status: hr.status || 'In afwachting',
+                    toelichting: hr.toelichting || '',
+                    opmerking: hr.toelichting || '',
+                    aangevraagdOp: '2026-10-26'
+                };
+                reserveringen.push(resObj);
+                nieuwAantal++;
+                aangepast = true;
+                if (window.addReserveringToCloud) {
+                    window.addReserveringToCloud(resObj).catch(e => console.warn('Cloud reservering sync fout:', e));
+                }
+            }
+        });
+        if (nieuwAantal > 0) {
+            console.log('Historische reserveringen succesvol toegevoegd: ' + nieuwAantal);
+        }
+    }
+
+    if (aangepast) {
+        slaDataOp();
+        if (typeof renderBeheerdersTabellen === 'function') renderBeheerdersTabellen();
+        if (typeof window.updateKalenderEnLijst === 'function') window.updateKalenderEnLijst();
+        if (typeof window.renderMijnReserveringen === 'function') window.renderMijnReserveringen();
+        if (typeof window.renderStatistiekenTab === 'function') window.renderStatistiekenTab();
+    }
+};
+
+// ==========================================
+// HANDMATIGE RESERVERINGEN VOOR BEHEERDERS
+// ==========================================
+window.openHandmatigeReserveringModal = function() {
+    const kistSelect = document.getElementById('handmatigKist');
+    const schoolSelect = document.getElementById('handmatigSchool');
+    const periodeSelect = document.getElementById('handmatigPeriode');
+    const statusSelect = document.getElementById('handmatigStatus');
+    const leerkrachtInput = document.getElementById('handmatigLeerkracht');
+    const emailInput = document.getElementById('handmatigEmail');
+    const opmerkingInput = document.getElementById('handmatigOpmerking');
+
+    if (leerkrachtInput) leerkrachtInput.value = '';
+    if (emailInput) emailInput.value = '';
+    if (opmerkingInput) opmerkingInput.value = '';
+    if (statusSelect) statusSelect.value = 'Geaccepteerd';
+
+    if (kistSelect) {
+        const materialen = Array.from(new Set([
+            ...leskisten.map(k => k.titel),
+            ...reserveringen.map(r => r.kist),
+            'mTiny', 'VR Brillen set 1 (4 items)', 'VR Brillen set 2 (4 items)', 'Greenscreenbox nr. 1', 'Greenscreenbox nr. 2', 'Greenscreenbox nr. 3',
+            'Infento Talent Kit (groepsset)', 'Infento: discovery set (groepsset)', 'Lego Education Spike Essential (6 boxen)', 'Lego Education Spike Prime (6 boxen)',
+            'Lego Education Bricq (2 items)', 'Micro:bit groepsset (20+ items)', 'Photon Robot', 'Dash Robot', '3d pennen groepsset (5 items)',
+            '3D printer nr. 1', '3d printer nr. 2', 'Intelino groepsset (4 items)', 'Osmo pakket A (2 items)', 'Osmo pakket B (2 items)',
+            'Sphero Indi groepsset (8 items)', 'Sphero Mini', 'Ozobot groepsset (12 items)', 'Beaverbot 1', 'Beaverbot 2', 'Easi scope (6 items) 1',
+            'Virtuali-Tee', 'Duplo Coding Express', 'Kiene Klanken en vormen', 'Piximakey nr. 1', 'Piximakey nr. 2', 'Podcaststudio klein',
+            'Podcaststudio groot', 'Plugo', 'Makey Makey', '4 iPads', 'N/A (Algemeen)'
+        ].filter(Boolean))).sort((a, b) => a.localeCompare(b, 'nl'));
+
+        kistSelect.innerHTML = '<option value="">-- Kies lesmateriaal of leskist --</option>' + 
+            materialen.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+    }
+
+    if (schoolSelect) {
+        schoolSelect.innerHTML = '<option value="">-- Kies school / locatie --</option>' + 
+            scholen.map(s => '<option value="' + s.naam + '">' + s.naam + '</option>').join('');
+    }
+
+    if (periodeSelect) {
+        periodeSelect.innerHTML = '<option value="">-- Kies periode --</option>' + 
+            periodes.map(p => '<option value="' + p.id + '">' + p.naam + ' (' + p.start + ' t/m ' + p.eind + ')</option>').join('');
+    }
+
+    const modal = document.getElementById('modalHandmatigeReservering');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+};
+
+window.slaHandmatigeReserveringOp = async function(event) {
+    if (event && event.preventDefault) event.preventDefault();
+
+    const kist = document.getElementById('handmatigKist')?.value;
+    const leerkracht = document.getElementById('handmatigLeerkracht')?.value.trim();
+    const email = document.getElementById('handmatigEmail')?.value.trim();
+    const school = document.getElementById('handmatigSchool')?.value;
+    const periodeId = document.getElementById('handmatigPeriode')?.value;
+    const status = document.getElementById('handmatigStatus')?.value || 'Geaccepteerd';
+    const opmerking = document.getElementById('handmatigOpmerking')?.value.trim();
+    const btn = document.getElementById('btnOpslaanHandmatigeReservering');
+
+    if (!kist || !leerkracht || !email || !school || !periodeId) {
+        alert('⚠️ Vul alstublieft alle verplichte velden in (Materiaal, Naam, E-mail, School en Periode).');
+        return;
+    }
+
+    const origBtnText = btn ? btn.innerText : '';
+    if (btn) {
+        btn.innerText = '⏳ Bezig met opslaan...';
+        btn.disabled = true;
+    }
+
+    const resObj = {
+        id: Date.now(),
+        kist: kist,
+        leerkracht: leerkracht,
+        aanvragerEmail: email,
+        school: school,
+        periodeId: parseInt(periodeId) || periodeId,
+        status: status,
+        toelichting: opmerking || '',
+        opmerking: opmerking || '',
+        aangevraagdOp: new Date().toISOString().split('T')[0]
+    };
+
+    reserveringen.unshift(resObj);
+    slaDataOp();
+
+    if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+    if (window.updateKalenderEnLijst) window.updateKalenderEnLijst();
+    if (window.renderMijnReserveringen) window.renderMijnReserveringen();
+    if (window.renderStatistiekenTab) window.renderStatistiekenTab();
+
+    if (window.addReserveringToCloud) {
+        try {
+            await window.addReserveringToCloud(resObj);
+        } catch(e) {
+            console.warn('Cloud opslag handmatige reservering waarschuwing:', e);
+        }
+    }
+
+    if (btn) {
+        btn.innerText = origBtnText;
+        btn.disabled = false;
+    }
+
+    window.sluitAlleModals();
+    alert('✅ Reservering voor ' + leerkracht + ' (' + kist + ') is succesvol toegevoegd en direct actief!');
+};
+
 // Start eventuele deep link routering bij het laden
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.checkUrlReservationParam === 'function') {
@@ -5022,4 +6301,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('emailTplOnderwerp') && typeof window.laadEmailTemplatesInAdmin === 'function') {
         window.laadEmailTemplatesInAdmin();
     }
+    if (typeof window.importeerHistorischeReserveringen === 'function') {
+        window.importeerHistorischeReserveringen();
+    }
 });
+
+// Direct initiële import uitvoeren
+if (typeof window.importeerHistorischeReserveringen === 'function') {
+    window.importeerHistorischeReserveringen();
+}
