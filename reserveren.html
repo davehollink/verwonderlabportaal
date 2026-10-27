@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Leskisten & reserveren</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261024g">
+    <link rel="stylesheet" href="style.css?v=20261026i">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         .modal-content {
@@ -111,12 +111,16 @@
                         <div class="form-group" style="margin-bottom: 18px;">
                             <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--slate-800);">Kies een beschikbare periode:</label>
                             <select id="periodeSelect" required style="padding: 12px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--slate-200); font-family: inherit; width: 100%; background: #ffffff;"></select>
+                            <div id="periodeStatusMelding" style="margin-top: 6px; font-size: 12.5px; line-height: 1.4; display: none;"></div>
                         </div>
                         <button type="submit" id="reserveSubmitBtn" class="btn-large-reserve">
                             <span>Reserveer dit materiaal direct</span>
                             <span style="font-size: 18px; margin-left: 4px;">→</span>
                         </button>
                     </form>
+                    <div id="modalAdminMaterialActions" style="margin-top: 18px; padding-top: 15px; border-top: 1.5px dashed var(--slate-200); display: none;">
+                        <button type="button" id="btnAdminDeleteModal" class="btn-table-delete" style="width: 100%; justify-content: center; padding: 11px 18px; font-size: 13.5px; font-weight: 700; border-radius: 10px; background: #fee2e2; color: #dc2626; border: 1.5px solid #fca5a5; cursor: pointer; display: flex; align-items: center; gap: 8px;">🗑️ Dit materiaal verwijderen (Beheerder)</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -165,8 +169,8 @@
     </div>
 </div>
 
-<script src="auth-config.js?v=20261026b"></script>
-<script src="auth.js?v=20261026b"></script>
-<script src="script.js?v=20261026b"></script>
+<script src="auth-config.js?v=20261026e"></script>
+<script src="auth.js?v=20261026e"></script>
+<script src="script.js?v=20261027a"></script>
 </body>
 </html>

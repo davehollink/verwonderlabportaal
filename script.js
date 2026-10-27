@@ -911,7 +911,9 @@ Afzender: verwonderlab@wonderwijs.nl`
 let emailTemplates = safeGetLocal('ww_email_templates_v1', defaultEmailTemplates);
 if (!emailTemplates.goedkeuring) emailTemplates.goedkeuring = defaultEmailTemplates.goedkeuring;
 
+let verwijderdeMaterialen = safeGetLocal('ww_verwijderde_materialen_v1', []);
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
+leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)) && (!k.naam || !verwijderdeMaterialen.includes(k.naam.trim().toLowerCase())));
 const standaardLesideeen = [
 
     {
@@ -1664,6 +1666,7 @@ function slaDataOp() {
         localStorage.setItem('ww_reserveringen_v11', JSON.stringify(reserveringen));
         localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
         localStorage.setItem('ww_verwijderde_periodes_v1', JSON.stringify(verwijderdePeriodes));
+        localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
         
         // Zorg dat grote base64 data nooit de 5MB quota van localStorage overschrijdt
         try {
@@ -1756,11 +1759,22 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         }
                     });
                 }
+                if (Array.isArray(data.verwijderdeMaterialen)) {
+                    data.verwijderdeMaterialen.forEach(id => {
+                        const s = String(id);
+                        if (!verwijderdeMaterialen.includes(s)) {
+                            verwijderdeMaterialen.push(s);
+                            gewijzigd = true;
+                        }
+                    });
+                }
                 if (gewijzigd) {
                     localStorage.setItem('ww_verwijderde_reserveringen_v1', JSON.stringify(verwijderdeReserveringen));
                     localStorage.setItem('ww_verwijderde_periodes_v1', JSON.stringify(verwijderdePeriodes));
+                    localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
                     reserveringen = reserveringen.filter(r => !verwijderdeReserveringen.includes(String(r.id)) && (!r._docId || !verwijderdeReserveringen.includes(r._docId)));
                     periodes = window.deduplicatePeriodes(periodes);
+                    leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)) && (!k.naam || !verwijderdeMaterialen.includes(k.naam.trim().toLowerCase())));
                     slaDataOp();
                     if (typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
                     if (window.renderReserveringsGrid) window.renderReserveringsGrid();
@@ -1854,7 +1868,22 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         }, checkError);
         onSnapshot(collection(db, "leskisten"), (snapshot) => { 
             if(!snapshot.empty) { 
-                const cloudKisten = snapshot.docs.map(d => d.data());
+                const cloudKisten = [];
+                snapshot.docs.forEach(d => {
+                    const ck = { ...d.data(), _docId: d.id };
+                    const idStr = ck.id != null ? String(ck.id) : '';
+                    const cleanNaam = ck.naam ? ck.naam.trim().toLowerCase() : '';
+                    const isVerwijderd = verwijderdeMaterialen.includes(idStr) 
+                        || verwijderdeMaterialen.includes(d.id)
+                        || (cleanNaam && verwijderdeMaterialen.includes(cleanNaam));
+
+                    if (isVerwijderd) {
+                        deleteDoc(d.ref).catch(e => console.warn("Firestore cleanup verwijderde leskist:", e));
+                        return;
+                    }
+                    cloudKisten.push(ck);
+                });
+
                 leskisten = cloudKisten.map(ck => {
                     const local = leskisten.find(lk => lk.id == ck.id);
                     if (local && local.pdfs && local.pdfs.length > 0) {
@@ -1869,7 +1898,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         }
                     }
                     return ck;
-                }).sort((a,b) => a.id - b.id);
+                }).sort((a,b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
                 slaDataOp(); 
                 if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
                 if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
@@ -2157,12 +2186,33 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             }
         };
         window.deleteLesideeFromCloud = async function(id) { await deleteDoc(doc(db, "lesideeen", id.toString())); };
+        window.deleteMateriaalFromCloud = async function(id, docId, targetKist) {
+            if (!db) return;
+            try {
+                const idStr = id != null ? id.toString() : '';
+                if (idStr) await deleteDoc(doc(db, "leskisten", idStr)).catch(() => {});
+                if (docId && docId !== idStr) await deleteDoc(doc(db, "leskisten", docId)).catch(() => {});
+                
+                const snap = await getDocs(collection(db, "leskisten"));
+                snap.forEach(d => {
+                    const data = d.data();
+                    const matchesId = data.id == id || String(data.id) === idStr || d.id === idStr || (docId && d.id === docId);
+                    const matchesNaam = targetKist && targetKist.naam && data.naam && data.naam.trim().toLowerCase() === targetKist.naam.trim().toLowerCase();
+                    if (matchesId || matchesNaam) {
+                        deleteDoc(d.ref).catch(e => console.warn("Firestore deleteDoc leskist fout:", e));
+                    }
+                });
+            } catch(e) {
+                console.warn("Fout bij deleteMateriaalFromCloud:", e);
+            }
+        };
         window.syncVerwijderdeItemsToCloud = async function() {
             if (!db) return;
             try {
                 await setDoc(doc(db, "instellingen", "verwijderde_items"), {
                     verwijderdeReserveringen: Array.from(new Set(verwijderdeReserveringen)),
                     verwijderdePeriodes: Array.from(new Set(verwijderdePeriodes)),
+                    verwijderdeMaterialen: Array.from(new Set(verwijderdeMaterialen)),
                     laatstBijgewerkt: new Date().toISOString()
                 }, { merge: true });
             } catch(e) {
@@ -2387,10 +2437,25 @@ window.updateSidebarUserProfile = function() {
     `;
 };
 
+// Universele controle of de huidige gebruiker een beheerder is
+window.isCurrentAdmin = function() {
+    const huidigeEmail = (localStorage.getItem('ww_huidige_email') || '').toLowerCase().trim();
+    if (huidigeEmail && Array.isArray(beheerdersLijst) && beheerdersLijst.some(b => b.email && b.email.toLowerCase().trim() === huidigeEmail)) {
+        return true;
+    }
+    const beheerdersView = document.getElementById("beheerdersView");
+    if (beheerdersView && beheerdersView.style.display !== "none") {
+        return true;
+    }
+    if (document.getElementById('adminLeskistenBody')) {
+        return true;
+    }
+    return false;
+};
+
 // Universele zichtbaarheidscontrole voor de Admin knop (alleen voor geverifieerde beheerders)
 window.updateAdminButtonVisibility = function() {
-    const huidigeEmail = (localStorage.getItem('ww_huidige_email') || '').toLowerCase().trim();
-    const isBeheerder = beheerdersLijst.some(b => b.email && b.email.toLowerCase().trim() === huidigeEmail);
+    const isBeheerder = window.isCurrentAdmin();
 
     // Alle admin login knoppen op de huidige pagina
     const adminButtons = document.querySelectorAll('#adminLoginBtn, .pill-btn.admin');
@@ -2673,6 +2738,11 @@ window.renderReserveringsGrid = function() {
             statusBadgeHtml = `<div style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 9px; border-radius: 20px; width: fit-content;">✅ Beschikbaar</div>`;
         }
 
+        let adminActionHtml = '';
+        if (typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin()) {
+            adminActionHtml = `<div onclick="window.deleteMateriaal(${kist.id}, event);" title="Materiaal verwijderen (Beheerder)" style="position: absolute; top: 10px; left: 10px; background: rgba(220, 38, 38, 0.95); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; border: 2px solid white; transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">🗑️</div>`;
+        }
+
         let hartjeHtml = `<div onclick="window.toggleFavoriet(${kist.id}, event)" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;">${isFav ? '❤️' : '🤍'}</div>`;
         let actieHtml = isKapot 
             ? `<div style="color: #E74C3C; font-weight: bold; font-size: 13px; margin-top: auto; padding-top: 15px;">⚠️ Tijdelijk in reparatie</div>` 
@@ -2696,6 +2766,7 @@ window.renderReserveringsGrid = function() {
 
         return `
         <div class="leskist-card" ${clickEvent} style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); ${styling}">
+            ${adminActionHtml}
             ${hartjeHtml}
             <div style="height: 160px; overflow: hidden; flex-shrink: 0;">
                 <img src="${imgSource}" alt="${kist.naam}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -3473,6 +3544,11 @@ async function verwerkFormulier(formId, btnElement) {
                 afbeelding: imgData, 
                 pdfs: kistPdfs 
             }; 
+            const kistNaamClean = (newData.naam || '').trim().toLowerCase();
+            verwijderdeMaterialen = verwijderdeMaterialen.filter(vm => vm !== String(kistId) && vm !== kistNaamClean);
+            localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
+            if (window.syncVerwijderdeItemsToCloud) window.syncVerwijderdeItemsToCloud().catch(console.warn);
+
             const idx = leskisten.findIndex(k => k.id == kistId); 
             if(idx > -1) leskisten[idx] = { ...leskisten[idx], ...newData }; else leskisten.push(newData); 
             slaDataOp(); 
@@ -4437,6 +4513,19 @@ window.openLeskistInfo = function(id) {
             }
         };
     }
+
+    const adminActionContainer = document.getElementById('modalAdminMaterialActions');
+    if (adminActionContainer) {
+        if (typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin()) {
+            adminActionContainer.style.display = 'block';
+            const delModalBtn = document.getElementById('btnAdminDeleteModal');
+            if (delModalBtn) {
+                delModalBtn.onclick = (e) => window.deleteMateriaal(kist.id, e);
+            }
+        } else {
+            adminActionContainer.style.display = 'none';
+        }
+    }
     
     const resModal = document.getElementById('infoReserveModal');
     if(resModal) resModal.style.display = 'flex';
@@ -4945,7 +5034,52 @@ window.deletePeriode = async function(id) {
     }
 };
 window.deleteSchool = function(id) { if(confirm("Weet je zeker dat je deze school/locatie wilt verwijderen?")) { scholen = scholen.filter(s => s.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteSchoolFromCloud) window.deleteSchoolFromCloud(id); } }
-window.deleteMateriaal = function(id) { if(confirm("Weet je zeker dat je dit materiaal wilt verwijderen?")) { leskisten = leskisten.filter(k => k.id != id); slaDataOp(); if(document.getElementById('leskistenContainer')) window.renderReserveringsGrid(); if(window.deleteMateriaalFromCloud) window.deleteMateriaalFromCloud(id); } }
+window.deleteMateriaal = async function(id, event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const targetKist = leskisten.find(k => k.id == id || String(k.id) === String(id));
+    const kistNaam = targetKist ? targetKist.naam : `Materiaal #${id}`;
+    if (!confirm(`Weet je zeker dat je "${kistNaam}" definitief wilt verwijderen?\n\nDit materiaal verdwijnt direct uit het overzicht en kan niet meer gereserveerd worden.`)) {
+        return;
+    }
+
+    const idStr = String(id);
+    const docId = targetKist && targetKist._docId ? targetKist._docId : idStr;
+    const cleanNaam = targetKist && targetKist.naam ? targetKist.naam.trim().toLowerCase() : '';
+
+    // 1. Voeg toe aan lokale en cloud tombstones zodat het NOOIT meer terugkomt
+    if (!verwijderdeMaterialen.includes(idStr)) verwijderdeMaterialen.push(idStr);
+    if (docId && !verwijderdeMaterialen.includes(docId)) verwijderdeMaterialen.push(docId);
+    if (cleanNaam && !verwijderdeMaterialen.includes(cleanNaam)) verwijderdeMaterialen.push(cleanNaam);
+    localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
+
+    // 2. Filter direct uit het lokale geheugen
+    leskisten = leskisten.filter(k => k.id != id && String(k.id) !== idStr && (!cleanNaam || !k.naam || k.naam.trim().toLowerCase() !== cleanNaam));
+    slaDataOp();
+
+    // 3. Sluit alle eventuele openstaande modals
+    if (typeof window.sluitAlleModals === 'function') window.sluitAlleModals();
+
+    // 4. Update direct beide weergaves: beheerdersportaal tabel én reserveringspagina grid
+    if (typeof renderBeheerdersTabellen === 'function') renderBeheerdersTabellen();
+    if (window.renderReserveringsGrid) window.renderReserveringsGrid();
+
+    // 5. Synchroniseer de verwijderde items lijst naar Firestore
+    if (window.syncVerwijderdeItemsToCloud) {
+        window.syncVerwijderdeItemsToCloud().catch(console.warn);
+    }
+
+    // 6. Verwijder de documenten permanent uit Cloud Firestore
+    if (window.deleteMateriaalFromCloud) {
+        try {
+            await window.deleteMateriaalFromCloud(id, docId, targetKist);
+        } catch(e) {
+            console.warn("Cloud delete materiaal fout:", e);
+        }
+    }
+};
 window.deleteLesidee = function(id) { if(confirm("Weet je zeker dat je dit lesidee wilt verwijderen?")) { lesideeen = lesideeen.filter(i => i.id != id); slaDataOp(); if(document.getElementById('lesideeenContainer')) window.renderLesideeenGrid(); if(window.deleteLesideeFromCloud) window.deleteLesideeFromCloud(id); } }
 window.voegBeheerderToe = async function() { const emailInput = document.getElementById('nieuweBeheerderEmail'); const email = emailInput ? emailInput.value.trim().toLowerCase() : ""; if(!email || !email.includes('@')) { alert("⚠️ Vul een geldig e-mailadres in."); return; } if(beheerdersLijst.some(b => b.email === email)) { alert("ℹ Dit e-mailadres is al een beheerder."); emailInput.value = ""; return; } const newData = { id: Date.now(), email: email }; beheerdersLijst.push(newData); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.saveBeheerderToCloud) { await window.saveBeheerderToCloud(newData); emailInput.value = ""; alert("✅ E-mailadres succesvol toegevoegd als beheerder!"); } else { alert("❌ Kan niet verbinden met de Cloud."); } }
 window.verwijderBeheerder = async function(id) { if(confirm("Weet je zeker dat je de beheerdersrechten van dit e-mailadres wilt intrekken?")) { beheerdersLijst = beheerdersLijst.filter(b => b.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteBeheerderFromCloud) await window.deleteBeheerderFromCloud(id); } }
@@ -5182,6 +5316,8 @@ window.openMateriaalModal = function(id = null) {
     if(window.updatePdfPreview) window.updatePdfPreview(); 
     const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
     if (submitBtn) { submitBtn.innerText = "Opslaan"; submitBtn.disabled = false; }
+    const delBtn = document.getElementById('btnDeleteKistFromModal');
+    if (delBtn) delBtn.style.display = id ? 'flex' : 'none';
     const m = document.getElementById('editLeskistModal'); 
     if(m) m.style.display = 'flex'; 
 };
