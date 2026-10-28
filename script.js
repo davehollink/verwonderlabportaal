@@ -1535,6 +1535,58 @@ window.toonWillekeurigeTip = function() {
 };
 
 // ==========================================
+// IMAGE COMPRESSIE HULP-FUNCTIE (Canvas Web-optimalisatie)
+// ==========================================
+window.compressImage = function(fileOrDataUrl, maxWidth = 800, maxHeight = 600, quality = 0.78) {
+    return new Promise((resolve) => {
+        if (!fileOrDataUrl) {
+            resolve('');
+            return;
+        }
+        const img = new Image();
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth || height > maxHeight) {
+                if (width / height > maxWidth / maxHeight) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                } else {
+                    width = Math.round((width * maxHeight) / height);
+                    height = maxHeight;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, width);
+            canvas.height = Math.max(1, height);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            try {
+                const compressed = canvas.toDataURL('image/jpeg', quality);
+                resolve(compressed);
+            } catch(e) {
+                resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '');
+            }
+        };
+        img.onerror = () => {
+            resolve(typeof fileOrDataUrl === 'string' ? fileOrDataUrl : '');
+        };
+
+        if (typeof fileOrDataUrl === 'string') {
+            img.src = fileOrDataUrl;
+        } else {
+            const reader = new FileReader();
+            reader.onload = (e) => { img.src = e.target.result; };
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(fileOrDataUrl);
+        }
+    });
+};
+
+// ==========================================
 // ATTACHMENT STORE (IndexedDB + Cloud Chunks)
 // ==========================================
 const AttachmentStore = {
@@ -1886,19 +1938,23 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
                 leskisten = cloudKisten.map(ck => {
                     const local = leskisten.find(lk => lk.id == ck.id);
+                    let mergedAfbeelding = ck.afbeelding;
+                    if ((!mergedAfbeelding || mergedAfbeelding === defaultImg) && (local && local.afbeelding && local.afbeelding !== defaultImg)) {
+                        mergedAfbeelding = local.afbeelding;
+                    }
                     if (local && local.pdfs && local.pdfs.length > 0) {
                         if (!ck.pdfs || ck.pdfs.length === 0) {
-                            return { ...ck, pdfs: local.pdfs };
+                            return { ...ck, afbeelding: mergedAfbeelding, pdfs: local.pdfs };
                         } else {
                             const mergedPdfs = ck.pdfs.map(cp => {
                                 const lp = local.pdfs.find(p => (cp.fileId && p.fileId === cp.fileId) || (cp.naam && p.naam === cp.naam));
                                 return (lp && lp.data) ? { ...cp, data: lp.data } : cp;
                             });
-                            return { ...ck, pdfs: mergedPdfs };
+                            return { ...ck, afbeelding: mergedAfbeelding, pdfs: mergedPdfs };
                         }
                     }
-                    return ck;
-                }).sort((a,b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
+                    return { ...ck, afbeelding: mergedAfbeelding };
+                }).sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
                 slaDataOp(); 
                 if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
                 if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
@@ -2088,15 +2144,43 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         // Opslaan Functies
         window.saveMateriaalToCloud = async function(rawId, newData, imgData, pdfsData) {
             try {
-                if(imgData && imgData.startsWith('data:image')) {
+                let finalAfbeelding = newData.afbeelding || imgData || defaultImg;
+
+                if (finalAfbeelding && finalAfbeelding.startsWith('data:image')) {
+                    // Zorg dat de data URL compact gecomprimeerd is zodat deze ruim binnen Firestore documentlimiet past
+                    if (finalAfbeelding.length > 180 * 1024 && typeof window.compressImage === 'function') {
+                        try {
+                            finalAfbeelding = await window.compressImage(finalAfbeelding, 800, 600, 0.78);
+                        } catch(cErr) {
+                            console.warn("Compressie waarschuwing:", cErr);
+                        }
+                    }
+
+                    // Sla direct op in IndexedDB als offline/lokale cache
+                    if (typeof AttachmentStore !== 'undefined' && AttachmentStore.setFile) {
+                        await AttachmentStore.setFile(`img_${newData.id}`, {
+                            id: `img_${newData.id}`,
+                            data: finalAfbeelding
+                        });
+                    }
+
+                    // Probeer optioneel Firebase Storage, maar val veilig terug op gecomprimeerde data URL
                     try {
-                        const imgRef = ref(storage, `afbeeldingen/${newData.id}`);
-                        await withTimeout(uploadString(imgRef, imgData, 'data_url'), 4000);
-                        newData.afbeelding = await withTimeout(getDownloadURL(imgRef), 4000);
+                        if (typeof ref === 'function' && typeof uploadString === 'function' && typeof getDownloadURL === 'function' && storage) {
+                            const imgRef = ref(storage, `afbeeldingen/${newData.id}`);
+                            await withTimeout(uploadString(imgRef, finalAfbeelding, 'data_url'), 3000);
+                            const downloadUrl = await withTimeout(getDownloadURL(imgRef), 3000);
+                            if (downloadUrl) {
+                                finalAfbeelding = downloadUrl;
+                            }
+                        }
                     } catch(imgErr) {
-                        console.warn("Storage upload afbeelding mislukt/timeout:", imgErr);
+                        // Storage upload faalt (bv. niet geautoriseerd of timeout); gecomprimeerde data URL (30-60KB) is perfect en past direct in Firestore!
                     }
                 }
+
+                newData.afbeelding = finalAfbeelding;
+
                 let finalPdfs = [];
                 if (pdfsData && Array.isArray(pdfsData)) {
                     for(let i = 0; i < pdfsData.length; i++) {
@@ -2128,14 +2212,15 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         });
                     }
                 }
-                const cloudDoc = { ...newData, pdfs: finalPdfs };
+                const cloudDoc = { ...newData, afbeelding: finalAfbeelding, pdfs: finalPdfs };
                 await withTimeout(setDoc(doc(db, "leskisten", newData.id.toString()), cloudDoc), 5000);
                 
                 // Synchroniseer ook direct lokaal geheugen inclusief volledige bestanden
                 const idx = leskisten.findIndex(k => k.id == newData.id);
                 if (idx > -1) {
-                    leskisten[idx] = { ...leskisten[idx], ...newData, pdfs: pdfsData };
+                    leskisten[idx] = { ...leskisten[idx], ...newData, afbeelding: finalAfbeelding, pdfs: pdfsData };
                 }
+                leskisten.sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
                 slaDataOp();
                 if (window.renderReserveringsGrid) window.renderReserveringsGrid();
                 if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
@@ -2711,6 +2796,9 @@ window.renderReserveringsGrid = function() {
         return;
     }
 
+    // Automatisch op alfabetische volgorde (A t/m Z)
+    gefilterd.sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
+
     container.style.display = "grid";
     container.style.gridTemplateColumns = "repeat(auto-fill, minmax(260px, 1fr))";
     container.style.gap = "20px";
@@ -2738,11 +2826,6 @@ window.renderReserveringsGrid = function() {
             statusBadgeHtml = `<div style="margin-bottom: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 9px; border-radius: 20px; width: fit-content;">✅ Beschikbaar</div>`;
         }
 
-        let adminActionHtml = '';
-        if (typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin()) {
-            adminActionHtml = `<div onclick="window.deleteMateriaal(${kist.id}, event);" title="Materiaal verwijderen (Beheerder)" style="position: absolute; top: 10px; left: 10px; background: rgba(220, 38, 38, 0.95); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; border: 2px solid white; transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">🗑️</div>`;
-        }
-
         let hartjeHtml = `<div onclick="window.toggleFavoriet(${kist.id}, event)" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;">${isFav ? '❤️' : '🤍'}</div>`;
         let actieHtml = isKapot 
             ? `<div style="color: #E74C3C; font-weight: bold; font-size: 13px; margin-top: auto; padding-top: 15px;">⚠️ Tijdelijk in reparatie</div>` 
@@ -2766,7 +2849,6 @@ window.renderReserveringsGrid = function() {
 
         return `
         <div class="leskist-card" ${clickEvent} style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); ${styling}">
-            ${adminActionHtml}
             ${hartjeHtml}
             <div style="height: 160px; overflow: hidden; flex-shrink: 0;">
                 <img src="${imgSource}" alt="${kist.naam}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -3370,7 +3452,8 @@ window.renderBeheerdersTabellen = function() {
 
     const leskistenBody = document.getElementById('adminLeskistenBody');
     if (leskistenBody) {
-        leskistenBody.innerHTML = leskisten.map(kist => {
+        const gesorteerdeKisten = [...leskisten].sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
+        leskistenBody.innerHTML = gesorteerdeKisten.map(kist => {
             let statusBadge = kist.beschikbaar === false 
                 ? `<span style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">In reparatie</span>` 
                 : `<span style="background: rgba(140, 198, 63, 0.12); color: var(--ww-green-dark); border: 1px solid rgba(140, 198, 63, 0.3); padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700;">Actief</span>`;
@@ -3528,7 +3611,18 @@ async function verwerkFormulier(formId, btnElement) {
     try { 
         if (formId === 'editLeskistForm') { 
             const rawId = getVal('editKistId'); 
-            const imgData = getVal('editAfbeelding', defaultImg); 
+            let imgData = (getVal('editAfbeelding', '') || '').trim(); 
+            if (!imgData) imgData = defaultImg;
+
+            // Als afbeelding een grote data URL is, comprimeer direct
+            if (imgData.startsWith('data:image') && imgData.length > 180 * 1024 && typeof window.compressImage === 'function') {
+                try {
+                    imgData = await window.compressImage(imgData, 800, 600, 0.78);
+                } catch(cErr) {
+                    console.warn("Optimalisatie afbeelding voor opslaan:", cErr);
+                }
+            }
+
             let kistId = rawId ? parseInt(rawId) : Date.now(); 
             const kistPdfs = (currentPdfs && Array.isArray(currentPdfs)) ? JSON.parse(JSON.stringify(currentPdfs)) : [];
             const newData = { 
@@ -3549,8 +3643,13 @@ async function verwerkFormulier(formId, btnElement) {
             localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
             if (window.syncVerwijderdeItemsToCloud) window.syncVerwijderdeItemsToCloud().catch(console.warn);
 
+            if (typeof AttachmentStore !== 'undefined' && AttachmentStore.setFile && imgData) {
+                AttachmentStore.setFile(`img_${kistId}`, { id: `img_${kistId}`, data: imgData }).catch(() => {});
+            }
+
             const idx = leskisten.findIndex(k => k.id == kistId); 
             if(idx > -1) leskisten[idx] = { ...leskisten[idx], ...newData }; else leskisten.push(newData); 
+            leskisten.sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
             if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
@@ -3558,7 +3657,7 @@ async function verwerkFormulier(formId, btnElement) {
             if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
             alert("✅ Materiaal en bijlagen succesvol opgeslagen!"); 
             if(window.saveMateriaalToCloud) {
-                window.saveMateriaalToCloud(rawId, newData, imgData, kistPdfs).catch(err => console.error("Cloud opslag materiaal fout:", err));
+                await window.saveMateriaalToCloud(rawId, newData, imgData, kistPdfs).catch(err => console.error("Cloud opslag materiaal fout:", err));
             }
         } else if (formId === 'editLesideeForm') { 
             const rawId = getVal('editLesideeId'); 
@@ -4513,19 +4612,6 @@ window.openLeskistInfo = function(id) {
             }
         };
     }
-
-    const adminActionContainer = document.getElementById('modalAdminMaterialActions');
-    if (adminActionContainer) {
-        if (typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin()) {
-            adminActionContainer.style.display = 'block';
-            const delModalBtn = document.getElementById('btnAdminDeleteModal');
-            if (delModalBtn) {
-                delModalBtn.onclick = (e) => window.deleteMateriaal(kist.id, e);
-            }
-        } else {
-            adminActionContainer.style.display = 'none';
-        }
-    }
     
     const resModal = document.getElementById('infoReserveModal');
     if(resModal) resModal.style.display = 'flex';
@@ -5088,19 +5174,55 @@ window.verwijderBeheerder = async function(id) { if(confirm("Weet je zeker dat j
 window.openPeriodeModal = function(id = null) { const form = document.getElementById('periodeForm'); if(form) form.reset(); if(id) { document.getElementById('modalPeriodeTitle').innerText = "Periode Bewerken"; const per = periodes.find(p => p.id == id); if(document.getElementById('editPeriodeId')) document.getElementById('editPeriodeId').value = per.id; if(document.getElementById('periodeNaam')) document.getElementById('periodeNaam').value = per.naam; if(document.getElementById('periodeStart')) document.getElementById('periodeStart').value = per.start; if(document.getElementById('periodeEind')) document.getElementById('periodeEind').value = per.eind; } else { document.getElementById('modalPeriodeTitle').innerText = "Nieuwe Periode Aanmaken"; if(document.getElementById('editPeriodeId')) document.getElementById('editPeriodeId').value = ""; } const m = document.getElementById('periodeModal'); if(m) m.style.display = 'flex'; }
 window.openSchoolModal = function(id = null) { const form = document.getElementById('schoolForm'); if(form) form.reset(); if(id) { document.getElementById('modalSchoolTitle').innerText = "School/Locatie Bewerken"; const sch = scholen.find(s => s.id == id); if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = sch.id; if(document.getElementById('schoolNaam')) document.getElementById('schoolNaam').value = sch.naam; } else { document.getElementById('modalSchoolTitle').innerText = "Nieuwe School/Locatie Aanmaken"; if(document.getElementById('editSchoolId')) document.getElementById('editSchoolId').value = ""; } const m = document.getElementById('schoolModal'); if(m) m.style.display = 'flex'; }
 window.openStoringModal = function() { const form = document.getElementById('storingForm'); if(form) form.reset(); if(document.getElementById('storingFotoPreview')) document.getElementById('storingFotoPreview').innerHTML = ''; if(document.getElementById('storingFotoData')) document.getElementById('storingFotoData').value = ''; const select = document.getElementById('storingKist'); if(select) { select.innerHTML = '<option value="" disabled selected>-- Selecteer een leskist --</option>'; leskisten.forEach(k => select.innerHTML += `<option value="${k.naam}">${k.naam}</option>`); } const m = document.getElementById('storingModal'); if(m) m.style.display = 'flex'; }
-window.handleMateriaalAfbeeldingUpload = function(event) {
+window.updateMateriaalAfbeeldingPreview = function(src) {
+    const preview = document.getElementById('imagePreview');
+    if (!preview) return;
+    const val = (src || '').trim();
+    if (!val) {
+        preview.innerHTML = '';
+        return;
+    }
+    preview.innerHTML = `
+        <div style="position: relative; display: inline-block; width: 100%; max-width: 320px;">
+            <img src="${val}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.08);" onerror="this.onerror=null; this.src='${defaultImg}';">
+            <button type="button" onclick="window.resetMateriaalAfbeelding()" style="position: absolute; top: 6px; right: 6px; background: rgba(220,38,38,0.9); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Verwijder afbeelding">&times;</button>
+        </div>
+    `;
+};
+
+window.resetMateriaalAfbeelding = function() {
+    const input = document.getElementById('editAfbeelding');
+    if (input) input.value = '';
+    const fileInput = document.getElementById('editAfbeeldingFile');
+    if (fileInput) fileInput.value = '';
+    const preview = document.getElementById('imagePreview');
+    if (preview) preview.innerHTML = '';
+};
+
+window.handleMateriaalAfbeeldingUpload = async function(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const hiddenInput = document.getElementById('editAfbeelding');
-        if (hiddenInput) hiddenInput.value = e.target.result;
-        const preview = document.getElementById('imagePreview');
-        if (preview) {
-            preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">`;
-        }
-    };
-    reader.readAsDataURL(file);
+    
+    const preview = document.getElementById('imagePreview');
+    if (preview) {
+        preview.innerHTML = `<div style="font-size: 13px; color: #64748b; padding: 10px 0;">⏳ Afbeelding verwerken en optimaliseren...</div>`;
+    }
+
+    try {
+        const compressedDataUrl = await window.compressImage(file, 800, 600, 0.78);
+        const input = document.getElementById('editAfbeelding');
+        if (input) input.value = compressedDataUrl;
+        window.updateMateriaalAfbeeldingPreview(compressedDataUrl);
+    } catch(err) {
+        console.warn("Fout bij optimaliseren afbeelding:", err);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const input = document.getElementById('editAfbeelding');
+            if (input) input.value = e.target.result;
+            window.updateMateriaalAfbeeldingPreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
 };
 
 window.handlePdfUpload = function(event) {
@@ -5279,9 +5401,10 @@ window.openMateriaalModal = function(id = null) {
         const kist = leskisten.find(k => k.id == id); 
         if (kist) {
             if(document.getElementById('editKistId')) document.getElementById('editKistId').value = kist.id; 
-            if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = kist.afbeelding || defaultImg; 
+            const afbVal = (kist.afbeelding && kist.afbeelding !== defaultImg) ? kist.afbeelding : '';
+            if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = afbVal; 
             let imgSource = kist.afbeelding && kist.afbeelding.startsWith('data:image') ? kist.afbeelding : (kist.afbeelding || defaultImg); 
-            if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = `<img src="${imgSource}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px;">`; 
+            if(window.updateMateriaalAfbeeldingPreview) window.updateMateriaalAfbeeldingPreview(imgSource);
             if(document.getElementById('editNaam')) document.getElementById('editNaam').value = kist.naam || ""; 
             if(document.getElementById('editTag')) document.getElementById('editTag').value = kist.tag || ""; 
             if(document.getElementById('editDoelgroep')) document.getElementById('editDoelgroep').value = kist.doelgroep || ""; 
@@ -5307,7 +5430,7 @@ window.openMateriaalModal = function(id = null) {
     } else { 
         document.getElementById('modalMateriaalTitle').innerText = "Nieuw Materiaal Toevoegen"; 
         if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; 
-        if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = defaultImg; 
+        if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = ""; 
         if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; 
         if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; 
         currentPdfs = []; 
