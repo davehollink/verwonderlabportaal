@@ -911,9 +911,15 @@ Afzender: verwonderlab@wonderwijs.nl`
 let emailTemplates = safeGetLocal('ww_email_templates_v1', defaultEmailTemplates);
 if (!emailTemplates.goedkeuring) emailTemplates.goedkeuring = defaultEmailTemplates.goedkeuring;
 
-let verwijderdeMaterialen = safeGetLocal('ww_verwijderde_materialen_v1', []);
+// Saniteer verwijderde materialen: UITSLUITEND echte IDs bewaren (nooit titels/namen)
+let rawVerwijderdeMaterialen = safeGetLocal('ww_verwijderde_materialen_v1', []);
+let verwijderdeMaterialen = (Array.isArray(rawVerwijderdeMaterialen) ? rawVerwijderdeMaterialen : [])
+    .map(s => String(s).trim())
+    .filter(s => /^\d+$/.test(s) || (/^[a-zA-Z0-9_-]{12,40}$/.test(s) && !s.includes(' ')));
+localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
+
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
-leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)) && (!k.naam || !verwijderdeMaterialen.includes(k.naam.trim().toLowerCase())));
+leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)));
 const standaardLesideeen = [
 
     {
@@ -1813,8 +1819,9 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 }
                 if (Array.isArray(data.verwijderdeMaterialen)) {
                     data.verwijderdeMaterialen.forEach(id => {
-                        const s = String(id);
-                        if (!verwijderdeMaterialen.includes(s)) {
+                        const s = String(id).trim();
+                        const isId = /^\d+$/.test(s) || (/^[a-zA-Z0-9_-]{12,40}$/.test(s) && !s.includes(' '));
+                        if (isId && !verwijderdeMaterialen.includes(s)) {
                             verwijderdeMaterialen.push(s);
                             gewijzigd = true;
                         }
@@ -1826,7 +1833,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
                     reserveringen = reserveringen.filter(r => !verwijderdeReserveringen.includes(String(r.id)) && (!r._docId || !verwijderdeReserveringen.includes(r._docId)));
                     periodes = window.deduplicatePeriodes(periodes);
-                    leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)) && (!k.naam || !verwijderdeMaterialen.includes(k.naam.trim().toLowerCase())));
+                    leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)));
                     slaDataOp();
                     if (typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen();
                     if (window.renderReserveringsGrid) window.renderReserveringsGrid();
@@ -1924,10 +1931,8 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 snapshot.docs.forEach(d => {
                     const ck = { ...d.data(), _docId: d.id };
                     const idStr = ck.id != null ? String(ck.id) : '';
-                    const cleanNaam = ck.naam ? ck.naam.trim().toLowerCase() : '';
-                    const isVerwijderd = verwijderdeMaterialen.includes(idStr) 
-                        || verwijderdeMaterialen.includes(d.id)
-                        || (cleanNaam && verwijderdeMaterialen.includes(cleanNaam));
+                    const isVerwijderd = (idStr && verwijderdeMaterialen.includes(idStr)) 
+                        || (d.id && verwijderdeMaterialen.includes(d.id));
 
                     if (isVerwijderd) {
                         deleteDoc(d.ref).catch(e => console.warn("Firestore cleanup verwijderde leskist:", e));
@@ -1936,25 +1941,66 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     cloudKisten.push(ck);
                 });
 
-                leskisten = cloudKisten.map(ck => {
-                    const local = leskisten.find(lk => lk.id == ck.id);
+                const cloudMap = new Map();
+                cloudKisten.forEach(ck => {
+                    const key = ck.id != null ? String(ck.id) : (ck._docId || '');
+                    if (key) cloudMap.set(key, ck);
+                });
+
+                // Behoud lokale materialen die nog niet in de cloud staan en NIET verwijderd zijn
+                leskisten.forEach(lk => {
+                    if (!lk) return;
+                    const lkIdStr = lk.id != null ? String(lk.id) : '';
+                    const isVerwijderd = (lkIdStr && verwijderdeMaterialen.includes(lkIdStr)) 
+                        || (lk._docId && verwijderdeMaterialen.includes(lk._docId));
+
+                    if (!isVerwijderd && lkIdStr) {
+                        if (!cloudMap.has(lkIdStr)) {
+                            cloudMap.set(lkIdStr, lk);
+                            if (window.saveMateriaalToCloud) {
+                                window.saveMateriaalToCloud(lk.id, lk, lk.afbeelding, lk.pdfs).catch(e => console.warn("Background sync materiaal:", e));
+                            }
+                        }
+                    }
+                });
+
+                leskisten = Array.from(cloudMap.values()).map(ck => {
+                    const local = leskisten.find(lk => lk && (String(lk.id) === String(ck.id) || (ck._docId && lk._docId === ck._docId)));
+                    
+                    // Afbeelding: behoud lokale geüploade foto als cloud nog placeholder heeft
                     let mergedAfbeelding = ck.afbeelding;
                     if ((!mergedAfbeelding || mergedAfbeelding === defaultImg) && (local && local.afbeelding && local.afbeelding !== defaultImg)) {
                         mergedAfbeelding = local.afbeelding;
                     }
-                    if (local && local.pdfs && local.pdfs.length > 0) {
-                        if (!ck.pdfs || ck.pdfs.length === 0) {
-                            return { ...ck, afbeelding: mergedAfbeelding, pdfs: local.pdfs };
-                        } else {
-                            const mergedPdfs = ck.pdfs.map(cp => {
-                                const lp = local.pdfs.find(p => (cp.fileId && p.fileId === cp.fileId) || (cp.naam && p.naam === cp.naam));
-                                return (lp && lp.data) ? { ...cp, data: lp.data } : cp;
-                            });
-                            return { ...ck, afbeelding: mergedAfbeelding, pdfs: mergedPdfs };
+
+                    // PDFs / Leskaarten: behoud metadata én bestandsdata, nooit overschrijven met leeg
+                    const localPdfs = (local && Array.isArray(local.pdfs)) ? local.pdfs : [];
+                    const cloudPdfs = (ck && Array.isArray(ck.pdfs)) ? ck.pdfs : [];
+                    const mergedPdfs = [];
+
+                    cloudPdfs.forEach(cp => {
+                        const lp = localPdfs.find(p => (cp.fileId && p.fileId === cp.fileId) || (cp.naam && p.naam === cp.naam));
+                        mergedPdfs.push({
+                            ...cp,
+                            data: (lp && lp.data) ? lp.data : (cp.data || null)
+                        });
+                    });
+
+                    // Behoud eventueel net toegevoegde lokale leskaarten die nog niet in cloud zitten
+                    localPdfs.forEach(lp => {
+                        const existsInCloud = mergedPdfs.some(mp => (lp.fileId && mp.fileId === lp.fileId) || (lp.naam && mp.naam === lp.naam));
+                        if (!existsInCloud) {
+                            mergedPdfs.push(lp);
                         }
-                    }
-                    return { ...ck, afbeelding: mergedAfbeelding };
+                    });
+
+                    return {
+                        ...ck,
+                        afbeelding: mergedAfbeelding,
+                        pdfs: mergedPdfs
+                    };
                 }).sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
+
                 slaDataOp(); 
                 if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
                 if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
@@ -2188,21 +2234,32 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         const fileId = pdf.fileId || `pdf_${newData.id}_${Date.now()}_${i}`;
                         let chunkCount = pdf.totalChunks || 1;
 
-                        if(pdf.data && typeof pdf.data === 'string' && pdf.data.startsWith('data:')) {
+                        if (pdf.data && typeof pdf.data === 'string' && pdf.data.startsWith('data:')) {
                             // 1. Sla altijd op in lokale IndexedDB voor instant weergave
-                            await AttachmentStore.setFile(fileId, {
-                                fileId: fileId,
-                                naam: pdf.naam,
-                                grootte: pdf.grootte || '',
-                                type: pdf.type || 'application/pdf',
-                                data: pdf.data
-                            });
+                            if (typeof AttachmentStore !== 'undefined' && AttachmentStore.setFile) {
+                                try {
+                                    await AttachmentStore.setFile(fileId, {
+                                        fileId: fileId,
+                                        naam: pdf.naam,
+                                        grootte: pdf.grootte || '',
+                                        type: pdf.type || 'application/pdf',
+                                        data: pdf.data
+                                    });
+                                } catch(idbErr) {
+                                    console.warn("AttachmentStore setFile waarschuwing:", idbErr);
+                                }
+                            }
 
-                            // 2. Sla op in veilige Firestore chunks (ongeacht bestandsgrootte)
-                            chunkCount = await saveFileToCloudChunks(fileId, pdf.data);
+                            // 2. Sla op in Firestore chunks (met try-catch zodat eventuele chunk errors hoofdopslag nooit blokkeren)
+                            try {
+                                const cc = await saveFileToCloudChunks(fileId, pdf.data);
+                                if (cc > 0) chunkCount = cc;
+                            } catch(chunkErr) {
+                                console.warn("saveFileToCloudChunks fout:", chunkErr);
+                            }
                         }
 
-                        // Hoofddocument bevat slanke metadata (nooit meer dan enkele bytes)
+                        // Hoofddocument bevat slanke metadata
                         finalPdfs.push({
                             fileId: fileId,
                             naam: pdf.naam,
@@ -2213,12 +2270,19 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                 }
                 const cloudDoc = { ...newData, afbeelding: finalAfbeelding, pdfs: finalPdfs };
-                await withTimeout(setDoc(doc(db, "leskisten", newData.id.toString()), cloudDoc), 5000);
+                // Sla document betrouwbaar op zonder vroegtijdige timeout abort
+                await setDoc(doc(db, "leskisten", newData.id.toString()), cloudDoc);
+
+                // Haal ID definitief uit tombstones
+                verwijderdeMaterialen = verwijderdeMaterialen.filter(vm => vm !== String(newData.id));
+                localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
                 
                 // Synchroniseer ook direct lokaal geheugen inclusief volledige bestanden
-                const idx = leskisten.findIndex(k => k.id == newData.id);
+                const idx = leskisten.findIndex(k => String(k.id) === String(newData.id));
                 if (idx > -1) {
                     leskisten[idx] = { ...leskisten[idx], ...newData, afbeelding: finalAfbeelding, pdfs: pdfsData };
+                } else {
+                    leskisten.push({ ...newData, afbeelding: finalAfbeelding, pdfs: pdfsData });
                 }
                 leskisten.sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
                 slaDataOp();
@@ -2282,8 +2346,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 snap.forEach(d => {
                     const data = d.data();
                     const matchesId = data.id == id || String(data.id) === idStr || d.id === idStr || (docId && d.id === docId);
-                    const matchesNaam = targetKist && targetKist.naam && data.naam && data.naam.trim().toLowerCase() === targetKist.naam.trim().toLowerCase();
-                    if (matchesId || matchesNaam) {
+                    if (matchesId) {
                         deleteDoc(d.ref).catch(e => console.warn("Firestore deleteDoc leskist fout:", e));
                     }
                 });
@@ -2294,10 +2357,15 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.syncVerwijderdeItemsToCloud = async function() {
             if (!db) return;
             try {
+                // Synchroniseer uitsluitend echte IDs (nooit namen van materialen)
+                const schoneMaterialen = Array.from(new Set(verwijderdeMaterialen))
+                    .map(s => String(s).trim())
+                    .filter(s => /^\d+$/.test(s) || (/^[a-zA-Z0-9_-]{12,40}$/.test(s) && !s.includes(' ')));
+
                 await setDoc(doc(db, "instellingen", "verwijderde_items"), {
                     verwijderdeReserveringen: Array.from(new Set(verwijderdeReserveringen)),
                     verwijderdePeriodes: Array.from(new Set(verwijderdePeriodes)),
-                    verwijderdeMaterialen: Array.from(new Set(verwijderdeMaterialen)),
+                    verwijderdeMaterialen: schoneMaterialen,
                     laatstBijgewerkt: new Date().toISOString()
                 }, { merge: true });
             } catch(e) {
@@ -3624,6 +3692,47 @@ async function verwerkFormulier(formId, btnElement) {
             }
 
             let kistId = rawId ? parseInt(rawId) : Date.now(); 
+
+            // Wacht op eventueel net gekozen bestanden in het input element
+            const pdfFileInput = document.getElementById('editPdfFiles');
+            if (pdfFileInput && pdfFileInput.files && pdfFileInput.files.length > 0) {
+                for (let f = 0; f < pdfFileInput.files.length; f++) {
+                    const file = pdfFileInput.files[f];
+                    const alreadyInCurrent = currentPdfs.some(p => p.naam === file.name);
+                    if (!alreadyInCurrent) {
+                        const fileSizeStr = file.size > 1024 * 1024 
+                            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' 
+                            : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+                        const fileId = 'pdf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                        const dataUrl = await new Promise((resolve) => {
+                            const r = new FileReader();
+                            r.onload = (e) => resolve(e.target.result);
+                            r.onerror = () => resolve(null);
+                            r.readAsDataURL(file);
+                        });
+                        if (dataUrl) {
+                            if (typeof AttachmentStore !== 'undefined' && AttachmentStore.setFile) {
+                                await AttachmentStore.setFile(fileId, {
+                                    fileId: fileId,
+                                    naam: file.name,
+                                    type: file.type || 'application/pdf',
+                                    grootte: fileSizeStr,
+                                    data: dataUrl
+                                });
+                            }
+                            currentPdfs.push({
+                                fileId: fileId,
+                                naam: file.name,
+                                type: file.type || 'application/pdf',
+                                grootte: fileSizeStr,
+                                data: dataUrl
+                            });
+                        }
+                    }
+                }
+                pdfFileInput.value = '';
+            }
+
             const kistPdfs = (currentPdfs && Array.isArray(currentPdfs)) ? JSON.parse(JSON.stringify(currentPdfs)) : [];
             const newData = { 
                 id: kistId, 
@@ -3638,8 +3747,7 @@ async function verwerkFormulier(formId, btnElement) {
                 afbeelding: imgData, 
                 pdfs: kistPdfs 
             }; 
-            const kistNaamClean = (newData.naam || '').trim().toLowerCase();
-            verwijderdeMaterialen = verwijderdeMaterialen.filter(vm => vm !== String(kistId) && vm !== kistNaamClean);
+            verwijderdeMaterialen = verwijderdeMaterialen.filter(vm => vm !== String(kistId));
             localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
             if (window.syncVerwijderdeItemsToCloud) window.syncVerwijderdeItemsToCloud().catch(console.warn);
 
@@ -3647,18 +3755,20 @@ async function verwerkFormulier(formId, btnElement) {
                 AttachmentStore.setFile(`img_${kistId}`, { id: `img_${kistId}`, data: imgData }).catch(() => {});
             }
 
-            const idx = leskisten.findIndex(k => k.id == kistId); 
+            const idx = leskisten.findIndex(k => String(k.id) === String(kistId)); 
             if(idx > -1) leskisten[idx] = { ...leskisten[idx], ...newData }; else leskisten.push(newData); 
             leskisten.sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
             slaDataOp(); 
             if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); 
             if(window.renderReserveringsGrid) window.renderReserveringsGrid(); 
             window.sluitAlleModals(); 
-            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
-            alert("✅ Materiaal en bijlagen succesvol opgeslagen!"); 
+            
+            // Sla eerst op in de cloud voordat de alert dialoog verschijnt
             if(window.saveMateriaalToCloud) {
                 await window.saveMateriaalToCloud(rawId, newData, imgData, kistPdfs).catch(err => console.error("Cloud opslag materiaal fout:", err));
             }
+            if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
+            alert("✅ Materiaal en bijlagen succesvol opgeslagen!");
         } else if (formId === 'editLesideeForm') { 
             const rawId = getVal('editLesideeId'); 
             const ideeId = rawId ? parseInt(rawId) : Date.now(); 
@@ -5133,16 +5243,14 @@ window.deleteMateriaal = async function(id, event) {
 
     const idStr = String(id);
     const docId = targetKist && targetKist._docId ? targetKist._docId : idStr;
-    const cleanNaam = targetKist && targetKist.naam ? targetKist.naam.trim().toLowerCase() : '';
 
-    // 1. Voeg toe aan lokale en cloud tombstones zodat het NOOIT meer terugkomt
+    // 1. Voeg toe aan lokale en cloud tombstones (UITSLUITEND IDs, NOOIT namen)
     if (!verwijderdeMaterialen.includes(idStr)) verwijderdeMaterialen.push(idStr);
     if (docId && !verwijderdeMaterialen.includes(docId)) verwijderdeMaterialen.push(docId);
-    if (cleanNaam && !verwijderdeMaterialen.includes(cleanNaam)) verwijderdeMaterialen.push(cleanNaam);
     localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeMaterialen));
 
     // 2. Filter direct uit het lokale geheugen
-    leskisten = leskisten.filter(k => k.id != id && String(k.id) !== idStr && (!cleanNaam || !k.naam || k.naam.trim().toLowerCase() !== cleanNaam));
+    leskisten = leskisten.filter(k => k && k.id != id && String(k.id) !== idStr && (!docId || k._docId !== docId));
     slaDataOp();
 
     // 3. Sluit alle eventuele openstaande modals
@@ -5421,6 +5529,10 @@ window.openMateriaalModal = function(id = null) {
                     AttachmentStore.getFile(p.fileId).then(d => {
                         if (d) {
                             p.data = d;
+                            if (kist && kist.pdfs) {
+                                const matched = kist.pdfs.find(kp => kp.fileId === p.fileId || kp.naam === p.naam);
+                                if (matched) matched.data = d;
+                            }
                             window.updatePdfPreview();
                         }
                     });
