@@ -2833,6 +2833,7 @@ window.renderMijnReserveringen = function() {
                 <div class="task-info">
                     <strong>${r.kist}</strong>
                     <span>Periode: ${periode ? periode.naam : 'Lopend schooljaar'} • Wonderwijs</span>
+                    ${(r.opmerking || r.toelichting) ? `<span style="font-size: 11.5px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 4px;">💬 <em>"${r.opmerking || r.toelichting}"</em></span>` : ''}
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; font-size: 11.5px; padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
@@ -3388,7 +3389,8 @@ window.renderBeheerdersTabellen = function() {
                 const docentNaam = (r.leerkracht || '').toLowerCase();
                 const docentMail = (r.aanvragerEmail || '').toLowerCase();
                 const schoolNaam = (r.school || '').toLowerCase();
-                matchZoek = kistNaam.includes(zoekTerm) || docentNaam.includes(zoekTerm) || docentMail.includes(zoekTerm) || schoolNaam.includes(zoekTerm);
+                const opmTekst = (r.opmerking || r.toelichting || '').toLowerCase();
+                matchZoek = kistNaam.includes(zoekTerm) || docentNaam.includes(zoekTerm) || docentMail.includes(zoekTerm) || schoolNaam.includes(zoekTerm) || opmTekst.includes(zoekTerm);
             }
             return matchP && matchStatus && matchSchool && matchZoek;
         });
@@ -3474,9 +3476,12 @@ window.renderBeheerdersTabellen = function() {
                 const schoolBadge = r.school 
                     ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 600;">🏫 ${r.school}</div>` 
                     : '';
-                const opmerkingTekst = r.opmerking || r.toelichting || '';
-                const opmerkingBadge = opmerkingTekst && opmerkingTekst !== '-'
-                    ? `<div style="font-size: 11.5px; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 6px; margin-top: 5px; display: inline-block;">💬 ${opmerkingTekst}</div>` 
+                const opmerkingTekst = (r.opmerking || r.toelichting || '').trim();
+                const opmerkingBadge = (opmerkingTekst && opmerkingTekst !== '-')
+                    ? `<div style="margin-top: 6px; background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #78350f; line-height: 1.4; max-width: 320px; word-break: break-word;">
+                        <span style="font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: #92400e;">💬 Opmerking leerkracht:</span>
+                        <div style="margin-top: 2px; color: #451a03; font-style: italic;">"${opmerkingTekst}"</div>
+                    </div>` 
                     : '';
                 
                 let leerkrachtWeergave = `
@@ -3858,6 +3863,7 @@ async function verwerkFormulier(formId, btnElement) {
             const kistId = getVal('geselecteerdeKistId', ''); 
             const gekozenPeriodeId = parseInt(getVal('periodeSelect', '0')); 
             const gekozenSchool = getVal('schoolSelect'); 
+            const opmerking = (getVal('reserveOpmerking', '') || '').trim();
             
             if(!gekozenPeriodeId || !gekozenSchool) { 
                 alert("⚠️ Selecteer alstublieft een school en een beschikbare periode."); 
@@ -3888,7 +3894,10 @@ async function verwerkFormulier(formId, btnElement) {
                 periodeId: gekozenPeriodeId, 
                 periode: gekozenPeriodeNaam,
                 periodeNaam: gekozenPeriodeNaam,
-                status: "In afwachting" 
+                status: "In afwachting",
+                toelichting: opmerking,
+                opmerking: opmerking,
+                aangevraagdOp: new Date().toISOString().split('T')[0]
             }; 
             
             reserveringen.push(nieuweReservering); 
@@ -3902,6 +3911,8 @@ async function verwerkFormulier(formId, btnElement) {
             window.sluitAlleModals(); 
             const formObj = document.getElementById('reserveForm'); 
             if (formObj) formObj.reset(); 
+            const opmInput = document.getElementById('reserveOpmerking');
+            if (opmInput) opmInput.value = '';
             alert('✅ Aanvraag is gelukt en is direct zichtbaar op je dashboard!'); 
        } else if (formId === 'storingForm') { 
         const kistSelect = getVal('storingKist'); 
@@ -4064,7 +4075,8 @@ window.downloadReserveringenPDF = function() {
         if (r.compleet) checklistItems.push('✅ Compleet');
         if (r.schade) checklistItems.push('⚠️ Schade');
         let checklistTekst = checklistItems.length > 0 ? `<div style="font-size: 11px; color: #334155; margin-top: 3px;">${checklistItems.join(' &bull; ')}</div>` : '';
-        let toelichtingTekst = r.toelichting ? `<div style="font-size: 11px; color: #64748b; font-style: italic; margin-top: 2px;">"${r.toelichting}"</div>` : '';
+        let opmPrint = (r.opmerking || r.toelichting || '').trim();
+        let toelichtingTekst = opmPrint ? `<div style="font-size: 11px; color: #78350f; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-style: italic; margin-top: 3px;">💬 "${opmPrint}"</div>` : '';
 
         return `
         <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
@@ -4513,6 +4525,7 @@ window.renderStatsLogboekTabel = function(items) {
             <td style="padding: 10px 12px;">
                 <div style="font-weight: 600; color: #1e293b;">${r.leerkracht || 'Onbekend'}</div>
                 <div style="font-size: 11px; color: #64748b;">${r.aanvragerEmail || ''}</div>
+                ${(r.opmerking || r.toelichting) ? `<div style="font-size: 11px; color: #78350f; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; margin-top: 3px; display: inline-block;">💬 <em>"${r.opmerking || r.toelichting}"</em></div>` : ''}
             </td>
             <td style="padding: 10px 12px; color: #334155;">${r.school || '-'}</td>
             <td style="padding: 10px 12px;">${per ? per.naam : 'Onbekend'}</td>
@@ -4535,7 +4548,8 @@ window.filterStatsLog = function() {
         return (r.kist && r.kist.toLowerCase().includes(term)) ||
                (r.leerkracht && r.leerkracht.toLowerCase().includes(term)) ||
                (r.aanvragerEmail && r.aanvragerEmail.toLowerCase().includes(term)) ||
-               (r.school && r.school.toLowerCase().includes(term));
+               (r.school && r.school.toLowerCase().includes(term)) ||
+               ((r.opmerking || r.toelichting) && (r.opmerking || r.toelichting).toLowerCase().includes(term));
     });
     window.renderStatsLogboekTabel(gefilterd);
 };
@@ -4633,6 +4647,7 @@ window.openLeskistInfo = function(id) {
 
     if(document.getElementById('geselecteerdeKistId')) document.getElementById('geselecteerdeKistId').value = kist.id;
     if(document.getElementById('geselecteerdeKistNaam')) document.getElementById('geselecteerdeKistNaam').value = kist.naam;
+    if(document.getElementById('reserveOpmerking')) document.getElementById('reserveOpmerking').value = '';
     
     const schoolSelect = document.getElementById('schoolSelect');
     if (schoolSelect) {
@@ -4772,6 +4787,8 @@ Let op: er is geen e-mailadres gekoppeld aan deze aanvraag voor ${docentNaam}. E
             .replace(/\{locatie\}/g, schoolNaam)
             .replace(/\{beheerder\}/g, beheerderNaam)
             .replace(/\{portal_link\}/g, portalLink)
+            .replace(/\{opmerking\}/g, r.opmerking || r.toelichting || '')
+            .replace(/\{toelichting\}/g, r.opmerking || r.toelichting || '')
             .replace(/\{datum\}/g, new Date().toLocaleDateString('nl-NL'));
     };
 

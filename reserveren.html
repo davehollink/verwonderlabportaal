@@ -108,10 +108,14 @@
                             <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--slate-800);">Voor welke locatie reserveer je?</label>
                             <select id="schoolSelect" required style="padding: 12px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--slate-200); font-family: inherit; width: 100%; background: #ffffff;"></select>
                         </div>
-                        <div class="form-group" style="margin-bottom: 18px;">
+                        <div class="form-group" style="margin-bottom: 14px;">
                             <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--slate-800);">Kies een beschikbare periode:</label>
                             <select id="periodeSelect" required style="padding: 12px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--slate-200); font-family: inherit; width: 100%; background: #ffffff;"></select>
                             <div id="periodeStatusMelding" style="margin-top: 6px; font-size: 12.5px; line-height: 1.4; display: none;"></div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label for="reserveOpmerking" style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--slate-800);">Opmerking of toelichting (optioneel):</label>
+                            <textarea id="reserveOpmerking" rows="2" placeholder="Bijv. voor welke groep/klas, gewenste ophaalafspraken of speciale vragen..." style="padding: 10px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--slate-200); font-family: inherit; width: 100%; box-sizing: border-box; font-size: 13px; line-height: 1.4; resize: vertical; background: #ffffff;"></textarea>
                         </div>
                         <button type="submit" id="reserveSubmitBtn" class="btn-large-reserve">
                             <span>Reserveer dit materiaal direct</span>
@@ -168,6 +172,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261028c"></script>
+<script src="script.js?v=20261102a"></script>
 </body>
 </html>
