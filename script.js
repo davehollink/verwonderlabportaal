@@ -2057,7 +2057,7 @@ window.toonWillekeurigeTip = function() {
 // ==========================================
 // IMAGE COMPRESSIE HULP-FUNCTIE (Canvas Web-optimalisatie)
 // ==========================================
-window.compressImage = function(fileOrDataUrl, maxWidth = 800, maxHeight = 600, quality = 0.78) {
+window.compressImage = function(fileOrDataUrl, maxWidth = 750, maxHeight = 560, quality = 0.65) {
     return new Promise((resolve) => {
         if (!fileOrDataUrl) {
             resolve('');
@@ -2082,6 +2082,8 @@ window.compressImage = function(fileOrDataUrl, maxWidth = 800, maxHeight = 600, 
             canvas.width = Math.max(1, width);
             canvas.height = Math.max(1, height);
             const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
             ctx.drawImage(img, 0, 0, width, height);
 
             try {
@@ -2720,10 +2722,26 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 elearningCursussen.forEach(lc => {
                     if (!lc) return;
                     const idStr = lc.id != null ? String(lc.id) : '';
-                    if (!verwijderdeElearning.includes(idStr) && idStr && !cloudMap.has(idStr)) {
+                    if (verwijderdeElearning.includes(idStr) || !idStr) return;
+
+                    if (!cloudMap.has(idStr)) {
                         cloudMap.set(idStr, lc);
                         if (window.saveElearningToCloud) {
                             window.saveElearningToCloud(lc).catch(e => console.warn("Background sync elearning:", e));
+                        }
+                    } else {
+                        // Als de lokale versie recenter is bewerkt of meer lessen heeft:
+                        const cloudItem = cloudMap.get(idStr);
+                        const localTime = new Date(lc.laatsteUpdate || 0).getTime();
+                        const cloudTime = new Date(cloudItem.laatsteUpdate || 0).getTime();
+                        const localLesCount = Array.isArray(lc.lessen) ? lc.lessen.length : 0;
+                        const cloudLesCount = Array.isArray(cloudItem.lessen) ? cloudItem.lessen.length : 0;
+
+                        if (localTime > cloudTime || localLesCount > cloudLesCount) {
+                            cloudMap.set(idStr, lc);
+                            if (window.saveElearningToCloud) {
+                                window.saveElearningToCloud(lc).catch(e => console.warn("Background sync local newer elearning:", e));
+                            }
                         }
                     }
                 });
@@ -3057,14 +3075,14 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (!db) return;
             try {
                 let finalThumb = cursusData.thumbnail || 'Verwonderlab.jpg';
-                if (finalThumb.startsWith('data:image') && finalThumb.length > 180 * 1024 && typeof window.compressImage === 'function') {
+                if (finalThumb && finalThumb.startsWith('data:image') && typeof window.compressImage === 'function') {
                     try {
-                        finalThumb = await window.compressImage(finalThumb, 800, 600, 0.78);
+                        finalThumb = await window.compressImage(finalThumb, 500, 375, 0.65);
                     } catch(e) {}
                 }
 
-                // Belangrijk: Firestore documenten hebben een harde limiet van 1MB.
-                // Verwerk alle afbeeldingen in de lessen zodat ze gecomprimeerd zijn en/of in Storage staan!
+                // Belangrijk: Firestore documenten hebben een harde limiet van 1.048.576 bytes (1MB).
+                // Comprimeer alle afbeeldingen in de lessen direct met canvas zodat ze compact (~25KB-35KB) zijn.
                 const lessenKopie = JSON.parse(JSON.stringify(cursusData.lessen || []));
                 for (let l = 0; l < lessenKopie.length; l++) {
                     const les = lessenKopie[l];
@@ -3081,29 +3099,12 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                                         const src = imgEl.getAttribute('src');
                                         if (src && src.startsWith('data:image/')) {
                                             let compSrc = src;
-                                            if (typeof window.compressImage === 'function' && src.length > 80 * 1024) {
+                                            if (typeof window.compressImage === 'function') {
                                                 try {
-                                                    compSrc = await window.compressImage(src, 900, 700, 0.75);
+                                                    compSrc = await window.compressImage(src, 750, 560, 0.60);
                                                 } catch(ce) {}
                                             }
-                                            
-                                            if (storage && typeof ref === 'function' && typeof uploadString === 'function' && typeof getDownloadURL === 'function') {
-                                                try {
-                                                    const imgStorageRef = ref(storage, `elearning_img/${cursusData.id}_${l}_${a}_${m}_${Date.now()}.jpg`);
-                                                    await withTimeout(uploadString(imgStorageRef, compSrc, 'data_url'), 4000);
-                                                    const dlUrl = await withTimeout(getDownloadURL(imgStorageRef), 4000);
-                                                    if (dlUrl) {
-                                                        imgEl.setAttribute('src', dlUrl);
-                                                    } else {
-                                                        imgEl.setAttribute('src', compSrc);
-                                                    }
-                                                } catch(upErr) {
-                                                    console.warn("Storage upload fallback naar gecomprimeerde dataUrl:", upErr);
-                                                    imgEl.setAttribute('src', compSrc);
-                                                }
-                                            } else {
-                                                imgEl.setAttribute('src', compSrc);
-                                            }
+                                            imgEl.setAttribute('src', compSrc);
                                         }
                                     }
                                     act.inhoudHtml = docH.body.innerHTML;
@@ -3115,18 +3116,96 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                 }
 
-                const docData = { 
+                let docData = { 
                     ...cursusData, 
                     thumbnail: finalThumb, 
                     lessen: lessenKopie,
                     laatsteUpdate: new Date().toISOString()
                 };
 
-                await withTimeout(setDoc(doc(db, "elearning", cursusData.id.toString()), docData), 8000);
+                let docBytes = new TextEncoder().encode(JSON.stringify(docData)).length;
+
+                // Als het document nog te zwaar is (> 700KB), voer een tweede compressieronde uit
+                if (docBytes > 700000) {
+                    for (let l = 0; l < lessenKopie.length; l++) {
+                        const les = lessenKopie[l];
+                        if (les && Array.isArray(les.activiteiten)) {
+                            for (let a = 0; a < les.activiteiten.length; a++) {
+                                const act = les.activiteiten[a];
+                                if (act && act.inhoudHtml && act.inhoudHtml.includes('data:image/')) {
+                                    try {
+                                        const parser = new DOMParser();
+                                        const docH = parser.parseFromString(act.inhoudHtml, 'text/html');
+                                        const imgs = docH.querySelectorAll('img');
+                                        for (let m = 0; m < imgs.length; m++) {
+                                            const imgEl = imgs[m];
+                                            const src = imgEl.getAttribute('src');
+                                            if (src && src.startsWith('data:image/')) {
+                                                try {
+                                                    const comp2 = await window.compressImage(src, 600, 450, 0.45);
+                                                    imgEl.setAttribute('src', comp2);
+                                                } catch(e) {}
+                                            }
+                                        }
+                                        act.inhoudHtml = docH.body.innerHTML;
+                                    } catch(e) {}
+                                }
+                            }
+                        }
+                    }
+                    docData.lessen = lessenKopie;
+                    docBytes = new TextEncoder().encode(JSON.stringify(docData)).length;
+                }
+
+                // Ultieme veiligheidsbuffer: als het document zelfs na 2 rondes > 700KB is,
+                // sla afbeeldingen afzonderlijk op in Firestore collectie 'elearning_media'
+                if (docBytes > 700000) {
+                    for (let l = 0; l < lessenKopie.length; l++) {
+                        const les = lessenKopie[l];
+                        if (les && Array.isArray(les.activiteiten)) {
+                            for (let a = 0; a < les.activiteiten.length; a++) {
+                                const act = les.activiteiten[a];
+                                if (act && act.inhoudHtml && act.inhoudHtml.includes('data:image/')) {
+                                    try {
+                                        const parser = new DOMParser();
+                                        const docH = parser.parseFromString(act.inhoudHtml, 'text/html');
+                                        const imgs = docH.querySelectorAll('img');
+                                        for (let m = 0; m < imgs.length; m++) {
+                                            const imgEl = imgs[m];
+                                            const src = imgEl.getAttribute('src');
+                                            if (src && src.startsWith('data:image/')) {
+                                                const mediaId = `elm_${cursusData.id}_${l}_${a}_${m}`;
+                                                try {
+                                                    await withTimeout(setDoc(doc(db, "elearning_media", mediaId), {
+                                                        id: mediaId,
+                                                        cursusId: String(cursusData.id),
+                                                        data: src,
+                                                        aangemaakt: new Date().toISOString()
+                                                    }), 6000);
+                                                    if (typeof AttachmentStore !== 'undefined' && AttachmentStore.setFile) {
+                                                        AttachmentStore.setFile(mediaId, { id: mediaId, data: src });
+                                                    }
+                                                    imgEl.setAttribute('src', `elearning-media:${mediaId}`);
+                                                    imgEl.setAttribute('data-media-id', mediaId);
+                                                } catch(mediaErr) {
+                                                    console.warn("Fout bij opslaan elearning media:", mediaErr);
+                                                }
+                                            }
+                                        }
+                                        act.inhoudHtml = docH.body.innerHTML;
+                                    } catch(e) {}
+                                }
+                            }
+                        }
+                    }
+                    docData.lessen = lessenKopie;
+                }
+
+                await withTimeout(setDoc(doc(db, "elearning", cursusData.id.toString()), docData), 10000);
                 verwijderdeElearning = verwijderdeElearning.filter(v => v !== String(cursusData.id));
                 localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
 
-                // Werk lokale kopie bij
+                // Werk lokale kopie en localStorage bij
                 cursusData.lessen = lessenKopie;
                 const cIdx = (elearningCursussen || []).findIndex(c => String(c.id) === String(cursusData.id));
                 if (cIdx > -1) {
@@ -4996,9 +5075,9 @@ ${beschrijving}
         const rawId = getVal('editElearningId');
         const cId = rawId ? parseInt(rawId) : Date.now();
         let thumb = (getVal('editElearningThumbnail', '') || '').trim();
-        if (thumb.startsWith('data:image') && thumb.length > 180 * 1024 && typeof window.compressImage === 'function') {
+        if (thumb.startsWith('data:image') && typeof window.compressImage === 'function') {
             try {
-                thumb = await window.compressImage(thumb, 800, 600, 0.78);
+                thumb = await window.compressImage(thumb, 500, 375, 0.65);
             } catch(e) {}
         }
         const rawSkills = getVal('editElearningSkills', '');
@@ -9810,9 +9889,27 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
         contentHtml += activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
         bodyEl.innerHTML = contentHtml;
 
-        // Maak alle afbeeldingen in de les klikbaar voor lightbox vergroting
-        bodyEl.querySelectorAll('img').forEach(img => {
+        // Maak alle afbeeldingen in de les klikbaar voor lightbox vergroting en laad eventueel geoffloade media
+        bodyEl.querySelectorAll('img').forEach(async (img) => {
             img.style.cursor = 'zoom-in';
+            const rawSrc = img.getAttribute('src') || '';
+            const mediaId = img.getAttribute('data-media-id') || (rawSrc.startsWith('elearning-media:') ? rawSrc.replace('elearning-media:', '') : null);
+            if (mediaId) {
+                if (typeof AttachmentStore !== 'undefined' && AttachmentStore.getFile) {
+                    const cached = await AttachmentStore.getFile(mediaId);
+                    if (cached) {
+                        img.src = cached;
+                    } else if (window.firestoreDb && window.firestoreGetDoc && window.firestoreDoc) {
+                        try {
+                            const snap = await window.firestoreGetDoc(window.firestoreDoc(window.firestoreDb, "elearning_media", mediaId));
+                            if (snap.exists() && snap.data() && snap.data().data) {
+                                img.src = snap.data().data;
+                                if (AttachmentStore.setFile) AttachmentStore.setFile(mediaId, { id: mediaId, data: snap.data().data });
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
             if (!img.getAttribute('onclick')) {
                 img.addEventListener('click', () => window.openImageLightbox(img.src, img.alt || 'Afbeelding'));
             }
@@ -10521,7 +10618,7 @@ window.adminVoegVisueleAfbeeldingToe = function(lIdx, aIdx) {
                     r.readAsDataURL(file);
                 });
                 if (typeof window.compressImage === 'function') {
-                    dataUrl = await window.compressImage(dataUrl, 1200, 900, 0.82);
+                    dataUrl = await window.compressImage(dataUrl, 750, 560, 0.62);
                 }
                 const caption = prompt("Onderschrift bij deze afbeelding (optioneel):", file.name.replace(/\.[^/.]+$/, "")) || '';
                 const imgHtml = `<div class="canva-guide-img-container"><img src="${dataUrl}" alt="${escapeHtml(caption)}" loading="lazy">${caption ? `<div class="canva-guide-img-caption"><span>🖼️</span> ${escapeHtml(caption)}</div>` : ''}</div><p><br></p>`;
@@ -10850,7 +10947,7 @@ window.handleElearningImageUpload = async function(event) {
             r.readAsDataURL(file);
         });
         if (typeof window.compressImage === 'function') {
-            dataUrl = await window.compressImage(dataUrl, 800, 600, 0.78);
+            dataUrl = await window.compressImage(dataUrl, 500, 375, 0.65);
         }
         if (input) input.value = dataUrl;
         if (preview) {
