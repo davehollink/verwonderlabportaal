@@ -9536,9 +9536,19 @@ window.openCourseView = function(id) {
                 </div>
             `;
         } else {
+            // Zoek de eerste les die nog NIET voltooid is om direct geopend te tonen
+            const firstIncompleteIdx = lessen.findIndex(les => {
+                const acts = Array.isArray(les.activiteiten) ? les.activiteiten : [];
+                return acts.length > 0 && !acts.every(act => elearningProgress && elearningProgress[act.id]);
+            });
+            const defaultOpenIdx = firstIncompleteIdx !== -1 ? firstIncompleteIdx : 0;
+
             lessonsListEl.innerHTML = lessen.map((les, lIdx) => {
-                const isActive = lIdx === 0; // Eerste les standaard open
+                const isActive = lIdx === defaultOpenIdx;
                 const activiteiten = Array.isArray(les.activiteiten) ? les.activiteiten : [];
+
+                const doneCount = activiteiten.filter(act => elearningProgress && elearningProgress[act.id]).length;
+                const isLessonDone = activiteiten.length > 0 && doneCount === activiteiten.length;
 
                 const actHtml = activiteiten.map(act => {
                     const isDone = elearningProgress && elearningProgress[act.id];
@@ -9565,13 +9575,16 @@ window.openCourseView = function(id) {
                 }).join('');
 
                 return `
-                    <div class="canva-lesson-accordion ${isActive ? 'active' : ''}" id="accordion_les_${lIdx}">
+                    <div class="canva-lesson-accordion ${isActive ? 'active' : ''} ${isLessonDone ? 'completed-lesson' : ''}" id="accordion_les_${lIdx}">
                         <div class="canva-lesson-header" onclick="window.toggleCanvaLesson(${lIdx})">
-                            <div class="canva-lesson-icon-box">
-                                <span>${les.icoon || '📚'}</span>
+                            <div class="canva-lesson-icon-box ${isLessonDone ? 'completed' : ''}">
+                                <span>${isLessonDone ? '✓' : (les.icoon || '📚')}</span>
                             </div>
                             <div class="canva-lesson-title-area">
-                                <span class="canva-lesson-tag">Les ${les.nummer || (lIdx + 1)}</span>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                                    <span class="canva-lesson-tag">Les ${les.nummer || (lIdx + 1)}</span>
+                                    ${isLessonDone ? `<span class="canva-lesson-completed-badge">✓ Voltooid</span>` : (doneCount > 0 ? `<span class="canva-lesson-progress-badge">${doneCount}/${activiteiten.length} afgerond</span>` : '')}
+                                </div>
                                 <h3 class="canva-lesson-title">${escapeHtml(les.titel || '')}</h3>
                             </div>
                             <div class="canva-lesson-chevron">▼</div>
@@ -9867,7 +9880,10 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
             `;
         }
 
-        contentHtml += activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
+        let rawContent = activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
+        // Zorg dat geplakte afwijkende lettertypes automatisch gestript worden voor consistent Plus Jakarta Sans lettertype
+        rawContent = rawContent.replace(/font-family\s*:\s*[^;"]+;?/gi, '');
+        contentHtml += rawContent;
         bodyEl.innerHTML = contentHtml;
 
         // Maak alle afbeeldingen in de les klikbaar voor lightbox vergroting en laad eventueel geoffloade media
@@ -9938,23 +9954,28 @@ window._updateActiveOtpHeading = function() {
     const otpListEl = document.getElementById('playerOtpList');
     if (!mainArea || !otpListEl) return;
 
-    const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3'));
+    const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3, #playerActivityBody h3'));
     if (headings.length === 0) return;
 
-    const containerTop = mainArea.getBoundingClientRect().top;
-
-    // Zoek het kopje dat het meest recent voorbij de bovenkant (of binnen de bovenste 160px) is gescrold
     let activeIdx = 0;
-    headings.forEach((h, i) => {
-        const rect = h.getBoundingClientRect();
-        if (rect.top - containerTop <= 160) {
-            activeIdx = i;
-        }
-    });
 
-    // Als de gebruiker helemaal onderaan de pagina is, activeer het laatste kopje
-    if (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 30) {
+    // Als de gebruiker helemaal bovenaan staat (scrollTop <= 60), is altijd kopje 1 actief
+    if (mainArea.scrollTop <= 60) {
+        activeIdx = 0;
+    } else if (mainArea.scrollTop > 200 && mainArea.scrollHeight > mainArea.clientHeight + 100 && (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 40)) {
+        // Alleen als er echt gescrold is én men helemaal onderaan is
         activeIdx = headings.length - 1;
+    } else {
+        const containerRect = mainArea.getBoundingClientRect();
+        const triggerLine = containerRect.top + 160;
+
+        // Loop door alle kopjes en vind het laatste kopje dat voorbij de triggerLine is gekomen
+        headings.forEach((h, i) => {
+            const rect = h.getBoundingClientRect();
+            if (rect.top <= triggerLine) {
+                activeIdx = i;
+            }
+        });
     }
 
     const otpItems = Array.from(otpListEl.querySelectorAll('.canva-otp-item'));
@@ -9962,7 +9983,7 @@ window._updateActiveOtpHeading = function() {
         if (idx === activeIdx) {
             if (!item.classList.contains('active')) {
                 item.classList.add('active');
-                // Zorg dat het menu-item binnen het rechterpaneel indien nodig automatisch meescrolt
+                // Zorg dat het menu-item binnen het rechterpaneel automatisch meescrolt
                 item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             }
         } else {
@@ -9978,16 +9999,18 @@ window._bindOtpScrollSync = function() {
     mainArea.removeEventListener('scroll', window._updateActiveOtpHeading);
     mainArea.addEventListener('scroll', window._updateActiveOtpHeading, { passive: true });
     
-    // Voer direct een eerste update uit
-    setTimeout(window._updateActiveOtpHeading, 50);
+    // Voer direct een update uit
+    setTimeout(window._updateActiveOtpHeading, 60);
 };
 
 window.scrollToOtpStep = function(id, linkEl, targetIdx = null) {
     const target = document.getElementById(id);
     const mainArea = document.getElementById('canvaReaderMainArea');
     if (target && mainArea) {
-        const topPos = target.offsetTop - 24;
-        mainArea.scrollTo({ top: topPos, behavior: 'smooth' });
+        const targetRect = target.getBoundingClientRect();
+        const mainRect = mainArea.getBoundingClientRect();
+        const scrollOffset = mainArea.scrollTop + (targetRect.top - mainRect.top) - 24;
+        mainArea.scrollTo({ top: scrollOffset, behavior: 'smooth' });
     }
     document.querySelectorAll('.canva-otp-item').forEach(it => it.classList.remove('active'));
     if (linkEl) linkEl.classList.add('active');

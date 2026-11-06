@@ -4416,6 +4416,68 @@ body::after {
     box-shadow: 0 6px 20px rgba(139, 92, 246, 0.08);
 }
 
+/* Voltooide les weergave (Geheel groen gemarkeerd in overzicht) */
+.canva-lesson-accordion.completed-lesson {
+    background: #f0fdf4;
+    border-color: #86efac;
+    box-shadow: 0 3px 12px rgba(34, 197, 94, 0.08);
+}
+
+.canva-lesson-accordion.completed-lesson:hover {
+    border-color: #4ade80;
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.12);
+}
+
+.canva-lesson-accordion.completed-lesson.active {
+    border-color: #22c55e;
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.15);
+}
+
+.canva-lesson-accordion.completed-lesson .canva-lesson-header {
+    background: #f0fdf4;
+}
+
+.canva-lesson-accordion.completed-lesson .canva-lesson-icon-box {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+    font-weight: 800;
+}
+
+.canva-lesson-accordion.completed-lesson .canva-lesson-tag {
+    color: #15803d;
+}
+
+.canva-lesson-accordion.completed-lesson .canva-lesson-chevron {
+    color: #16a34a;
+}
+
+.canva-lesson-completed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid #86efac;
+    letter-spacing: 0.2px;
+}
+
+.canva-lesson-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1px solid #cbd5e1;
+}
+
 .canva-lesson-header {
     display: flex;
     align-items: center;
@@ -5370,34 +5432,63 @@ body::after {
     gap: 4px;
 }
 
-/* Rijke lesinhoud en afbeeldingen in de gids */
+/* Rijke lesinhoud en afbeeldingen in de gids (Automatisch in Plus Jakarta Sans) */
+.canva-reader-overlay,
+.canva-reader-overlay *,
+.canva-reader-article,
+.canva-reader-article *,
+.canva-guide-body,
+.canva-guide-body *,
+#playerActivityBody,
+#playerActivityBody *,
+.visual-lesson-editor,
+.visual-lesson-editor * {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
 .canva-guide-body {
-    font-size: 15px;
+    font-size: 15.5px;
     color: #334155;
-    line-height: 1.7;
+    line-height: 1.75;
+    letter-spacing: -0.1px;
 }
 
 .canva-guide-body h3 {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 800;
     color: #0f172a;
-    letter-spacing: -0.3px;
-    margin: 36px 0 12px 0;
+    letter-spacing: -0.4px;
+    margin: 38px 0 14px 0;
     scroll-margin-top: 24px;
+    line-height: 1.35;
+}
+
+.canva-guide-body h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.2px;
+    margin: 26px 0 10px 0;
 }
 
 .canva-guide-body p {
     margin: 0 0 16px 0;
+    color: #334155;
+    font-size: 15.5px;
+    line-height: 1.75;
 }
 
 .canva-guide-body ul, 
 .canva-guide-body ol {
     margin: 0 0 18px 0;
     padding-left: 22px;
+    color: #334155;
 }
 
 .canva-guide-body li {
-    margin-bottom: 6px;
+    margin-bottom: 7px;
+    line-height: 1.7;
+    font-size: 15.5px;
 }
 
 /* Afbeeldingskader binnen de les */
