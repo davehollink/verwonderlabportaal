@@ -4562,6 +4562,7 @@ body::after {
     font-size: 15px;
     flex-shrink: 0;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .canva-activity-card:hover .canva-activity-action-btn {
@@ -4573,6 +4574,12 @@ body::after {
 .canva-activity-card.completed .canva-activity-action-btn {
     background: #dcfce7;
     color: #16a34a;
+}
+
+.canva-activity-card.completed .canva-activity-action-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    transform: scale(1.12);
 }
 
 /* Rechterkolom: Certificaat, Statistieken & Key Skills */
@@ -5001,6 +5008,11 @@ body::after {
 .btn-finish-lesson.completed {
     background: #dcfce7;
     color: #15803d;
+}
+
+.btn-finish-lesson.completed:hover {
+    background: #fee2e2;
+    color: #dc2626;
 }
 
 /* 3-Koloms lezer container */
@@ -5503,6 +5515,8 @@ body::after {
     padding: 28px 20px;
     overflow-y: auto;
     background: #ffffff;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .canva-otp-card {

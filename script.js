@@ -2779,6 +2779,9 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (typeof window.renderAdminMedewerkersVoortgang === "function") {
                 window.renderAdminMedewerkersVoortgang();
             }
+            if (typeof window.updateLiveCourseHubCounter === "function") {
+                window.updateLiveCourseHubCounter();
+            }
         }, checkError);
 
         // Voortgang realtime ophalen en direct toepassen op de vinkjes
@@ -9506,7 +9509,7 @@ window.vertaalTypeLabel = function(type) {
                                     ${isDone ? `<strong style="color: #16a34a; margin-left: 6px;">✓ Afgerond</strong>` : ''}
                                 </span>
                             </div>
-                            <div class="canva-activity-action-btn">
+                            <div class="canva-activity-action-btn ${isDone ? 'completed' : ''}" onclick="window.toggleActivityStatusFromHub(${cursus.id}, '${les.id}', '${act.id}', event)" title="${isDone ? 'Klik om afronding van dit onderdeel ongedaan te maken' : 'Markeer als afgerond'}">
                                 <span>${isDone ? '✓' : iconSym}</span>
                             </div>
                         </div>
@@ -9542,11 +9545,13 @@ window.vertaalTypeLabel = function(type) {
     if (sidebarEl) {
         let totalActs = 0;
         let completedActs = 0;
+        const allActIds = [];
         if (cursus.lessen && Array.isArray(cursus.lessen)) {
             cursus.lessen.forEach(l => {
                 if (l.activiteiten && Array.isArray(l.activiteiten)) {
                     l.activiteiten.forEach(a => {
                         totalActs++;
+                        allActIds.push(a.id);
                         if (elearningProgress && elearningProgress[a.id]) completedActs++;
                     });
                 }
@@ -9555,6 +9560,26 @@ window.vertaalTypeLabel = function(type) {
         const isCertEarned = totalActs > 0 && completedActs >= totalActs;
         const perc = totalActs > 0 ? Math.round((completedActs / totalActs) * 100) : 0;
         const lessenCount = Array.isArray(cursus.lessen) ? cursus.lessen.length : 0;
+
+        // BEREKEN LIVE AANTAL LEERKRACHTEN DIE DEZE SPECIFIEKE CURSUS HEBBEN BEHAALD
+        const voltooideCollegaEmails = new Set();
+        const liveMedewerkers = Array.isArray(window.alleMedewerkersVoortgang) ? window.alleMedewerkersVoortgang : [];
+        liveMedewerkers.forEach(mw => {
+            if (!mw || !mw.voortgang || typeof mw.voortgang !== 'object') return;
+            const mwEmail = (mw.email || mw._id || '').trim().toLowerCase();
+            if (!mwEmail) return;
+            if (allActIds.length > 0 && allActIds.every(id => mw.voortgang[id] === true)) {
+                voltooideCollegaEmails.add(mwEmail);
+            }
+        });
+        if (isCertEarned) {
+            const curEmail = (localStorage.getItem('ww_huidige_email') || '').trim().toLowerCase();
+            if (curEmail) voltooideCollegaEmails.add(curEmail);
+        }
+        const liveCount = voltooideCollegaEmails.size;
+        let liveTekst = 'Nog geen leerkrachten afgerond';
+        if (liveCount === 1) liveTekst = '<strong>1</strong> leerkracht afgerond';
+        else if (liveCount > 1) liveTekst = `<strong>${liveCount}</strong> leerkrachten afgerond`;
 
         const skillsArr = Array.isArray(cursus.keySkills) && cursus.keySkills.length > 0
             ? cursus.keySkills
@@ -9571,9 +9596,9 @@ window.vertaalTypeLabel = function(type) {
                 <button type="button" class="btn-canva-cert ${isCertEarned ? 'earned' : ''}" onclick="window.openCertificaatModal(${cursus.id})">
                     <span>${isCertEarned ? '🎓 Certificaat Bekijken & Printen' : 'Certificaat behalen'}</span>
                 </button>
-                <div class="canva-learner-counter">
+                <div class="canva-learner-counter" id="courseHubLiveCompletedCount">
                     <span>👥</span>
-                    <span><strong>${cursus.deelnemersCount || 164}</strong> leerkrachten afgerond</span>
+                    <span id="courseHubLiveCompletedText">${liveTekst}</span>
                 </div>
             </div>
 
@@ -9805,11 +9830,11 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
         if (headings.length > 0) {
             if (otpSidebar) otpSidebar.style.display = 'block';
             otpListEl.innerHTML = headings.map((h, idx) => {
-                const stepId = h.id || `canva_step_${idx + 1}`;
+                const stepId = `canva_step_${idx + 1}`;
                 h.id = stepId;
                 const cleanText = h.innerText.replace(/^\d+[\.\)]\s*/, '');
                 return `
-                    <a class="canva-otp-item ${idx === 0 ? 'active' : ''}" onclick="window.scrollToOtpStep('${stepId}', this)">
+                    <a class="canva-otp-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}" onclick="window.scrollToOtpStep('${stepId}', this, ${idx})">
                         <span class="canva-otp-num">${idx + 1}</span>
                         <span>${escapeHtml(cleanText)}</span>
                     </a>
@@ -9830,42 +9855,56 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
     modal.style.display = 'flex';
 };
 
+window._updateActiveOtpHeading = function() {
+    const mainArea = document.getElementById('canvaReaderMainArea');
+    const otpListEl = document.getElementById('playerOtpList');
+    if (!mainArea || !otpListEl) return;
+
+    const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3'));
+    if (headings.length === 0) return;
+
+    const containerTop = mainArea.getBoundingClientRect().top;
+
+    // Zoek het kopje dat het meest recent voorbij de bovenkant (of binnen de bovenste 160px) is gescrold
+    let activeIdx = 0;
+    headings.forEach((h, i) => {
+        const rect = h.getBoundingClientRect();
+        if (rect.top - containerTop <= 160) {
+            activeIdx = i;
+        }
+    });
+
+    // Als de gebruiker helemaal onderaan de pagina is, activeer het laatste kopje
+    if (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 30) {
+        activeIdx = headings.length - 1;
+    }
+
+    const otpItems = Array.from(otpListEl.querySelectorAll('.canva-otp-item'));
+    otpItems.forEach((item, idx) => {
+        if (idx === activeIdx) {
+            if (!item.classList.contains('active')) {
+                item.classList.add('active');
+                // Zorg dat het menu-item binnen het rechterpaneel indien nodig automatisch meescrolt
+                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        } else {
+            item.classList.remove('active');
+        }
+    });
+};
+
 window._bindOtpScrollSync = function() {
     const mainArea = document.getElementById('canvaReaderMainArea');
     if (!mainArea) return;
 
-    if (window._canvaScrollSyncBound) return;
-    window._canvaScrollSyncBound = true;
-
-    mainArea.addEventListener('scroll', () => {
-        const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3'));
-        if (headings.length === 0) return;
-
-        let activeHeading = headings[0];
-        const containerTop = mainArea.getBoundingClientRect().top;
-
-        for (let h of headings) {
-            const rect = h.getBoundingClientRect();
-            if (rect.top - containerTop <= 100) {
-                activeHeading = h;
-            } else {
-                break;
-            }
-        }
-
-        const otpItems = document.querySelectorAll('.canva-otp-item');
-        otpItems.forEach(item => {
-            const clickAttr = item.getAttribute('onclick') || '';
-            if (clickAttr.includes(activeHeading.id)) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-    }, { passive: true });
+    mainArea.removeEventListener('scroll', window._updateActiveOtpHeading);
+    mainArea.addEventListener('scroll', window._updateActiveOtpHeading, { passive: true });
+    
+    // Voer direct een eerste update uit
+    setTimeout(window._updateActiveOtpHeading, 50);
 };
 
-window.scrollToOtpStep = function(id, linkEl) {
+window.scrollToOtpStep = function(id, linkEl, targetIdx = null) {
     const target = document.getElementById(id);
     const mainArea = document.getElementById('canvaReaderMainArea');
     if (target && mainArea) {
@@ -9935,48 +9974,193 @@ window.toggleCompleteCurrentActivity = async function() {
     const actTitle = (window._activePlayerInfo.act && window._activePlayerInfo.act.titel) ? window._activePlayerInfo.act.titel : '';
     
     if (!elearningProgress) elearningProgress = {};
-    elearningProgress[actId] = true;
-    
-    // 1. Direct lokaal waterdicht opslaan voor deze specifieke ingelogde werknemer
-    slaGebruikerElearningProgressOp(elearningProgress);
+    const currentlyDone = !!elearningProgress[actId];
 
-    // 2. Update Finish knop in topbalk
     const finishBtn = document.getElementById('btnFinishLesson');
     const finishBtnText = document.getElementById('btnFinishLessonText');
-    if (finishBtn) {
-        finishBtn.classList.add('completed');
-        if (finishBtnText) finishBtnText.innerHTML = '✓ Les afgerond';
-    }
-
-    // 3. Update linker zijbalk
     const sbCard = document.querySelector(`.canva-reader-act-card.active`);
-    if (sbCard) {
-        sbCard.classList.add('completed');
-        const num = sbCard.querySelector('.canva-reader-act-num');
-        if (num) num.innerText = '✓';
+
+    if (currentlyDone) {
+        // AFRONDING ONGEDIKT MAKEN (UITZETTEN)
+        delete elearningProgress[actId];
+        slaGebruikerElearningProgressOp(elearningProgress);
+
+        if (finishBtn) {
+            finishBtn.classList.remove('completed');
+            if (finishBtnText) finishBtnText.innerHTML = 'Les afronden';
+            finishBtn.title = 'Markeer deze les als afgerond';
+        }
+
+        if (sbCard) {
+            sbCard.classList.remove('completed');
+            const numEl = sbCard.querySelector('.canva-reader-act-num');
+            if (numEl) {
+                const parent = sbCard.parentNode;
+                const idx = parent ? (Array.from(parent.children).indexOf(sbCard) + 1) : 1;
+                numEl.innerText = idx;
+            }
+        }
+
+        if (window._huidigeCursus && typeof window.openCourseView === 'function') {
+            window.openCourseView(window._huidigeCursus.id);
+        }
+        if (typeof window.renderElearningGrid === 'function') {
+            window.renderElearningGrid();
+        }
+
+        const email = localStorage.getItem('ww_huidige_email');
+        if (typeof window.saveUserElearningProgressToCloud === 'function') {
+            try {
+                await window.saveUserElearningProgressToCloud(email, elearningProgress, cursusId, lesId, actId, actTitle);
+            } catch(e) {
+                console.warn("Fout bij synchroniseren voortgang:", e);
+            }
+        }
+
+        window.toonToastFeedback('↩️ Afronding van deze les is ongedaan gemaakt.');
+    } else {
+        // LES AFRONDEN (AANZETTEN)
+        elearningProgress[actId] = true;
+        slaGebruikerElearningProgressOp(elearningProgress);
+
+        if (finishBtn) {
+            finishBtn.classList.add('completed');
+            if (finishBtnText) finishBtnText.innerHTML = '✓ Afgerond';
+            finishBtn.title = 'Klik om afronding van deze les ongedaan te maken';
+        }
+
+        if (sbCard) {
+            sbCard.classList.add('completed');
+            const numEl = sbCard.querySelector('.canva-reader-act-num');
+            if (numEl) numEl.innerText = '✓';
+        }
+
+        if (window._huidigeCursus && typeof window.openCourseView === 'function') {
+            window.openCourseView(window._huidigeCursus.id);
+        }
+        if (typeof window.renderElearningGrid === 'function') {
+            window.renderElearningGrid();
+        }
+
+        // Toon feestelijke pop-up
+        window.openLesAfgerondModal();
+
+        const email = localStorage.getItem('ww_huidige_email');
+        if (typeof window.saveUserElearningProgressToCloud === 'function') {
+            try {
+                await window.saveUserElearningProgressToCloud(email, elearningProgress, cursusId, lesId, actId, actTitle);
+            } catch(e) {
+                console.warn("Fout bij opslaan e-learning voortgang in cloud:", e);
+            }
+        }
+    }
+};
+
+window.toggleActivityStatusFromHub = async function(cursusId, lesId, actId, evt) {
+    if (evt) evt.stopPropagation();
+    if (!elearningProgress) elearningProgress = {};
+
+    const wasDone = !!elearningProgress[actId];
+    if (wasDone) {
+        delete elearningProgress[actId];
+        window.toonToastFeedback('↩️ Lesonderdeel weer gemarkeerd als nog niet afgerond.');
+    } else {
+        elearningProgress[actId] = true;
+        window.toonToastFeedback('✅ Lesonderdeel gemarkeerd als afgerond!');
     }
 
-    // 4. Werk de achterliggende cursuspagina direct bij
-    if (window._huidigeCursus && typeof window.openCourseView === 'function') {
-        window.openCourseView(window._huidigeCursus.id);
+    slaGebruikerElearningProgressOp(elearningProgress);
+    if (typeof window.openCourseView === 'function') {
+        window.openCourseView(cursusId);
     }
     if (typeof window.renderElearningGrid === 'function') {
         window.renderElearningGrid();
     }
 
-    // 5. Toon de feestelijke pop-up conform screenshot 2
-    window.openLesAfgerondModal();
-
-    // 6. Direct synchroniseren met Firestore Cloud gekoppeld aan het Microsoft account van de werknemer
     const email = localStorage.getItem('ww_huidige_email');
     if (typeof window.saveUserElearningProgressToCloud === 'function') {
         try {
-            await window.saveUserElearningProgressToCloud(email, elearningProgress, cursusId, lesId, actId, actTitle);
-            console.log("E-learning voortgang opgeslagen in cloud voor werknemer:", email);
-        } catch(e) {
-            console.warn("Fout bij opslaan e-learning voortgang in cloud:", e);
-        }
+            await window.saveUserElearningProgressToCloud(email, elearningProgress, cursusId, lesId, actId);
+        } catch(e) {}
     }
+};
+
+window.updateLiveCourseHubCounter = function() {
+    const counterText = document.getElementById('courseHubLiveCompletedText');
+    if (!counterText || !window._huidigeCursus) return;
+    const cursus = window._huidigeCursus;
+    const allActIds = [];
+    if (cursus.lessen && Array.isArray(cursus.lessen)) {
+        cursus.lessen.forEach(l => {
+            if (l.activiteiten && Array.isArray(l.activiteiten)) {
+                l.activiteiten.forEach(a => allActIds.push(a.id));
+            }
+        });
+    }
+    const voltooideCollegaEmails = new Set();
+    const liveMedewerkers = Array.isArray(window.alleMedewerkersVoortgang) ? window.alleMedewerkersVoortgang : [];
+    liveMedewerkers.forEach(mw => {
+        if (!mw || !mw.voortgang || typeof mw.voortgang !== 'object') return;
+        const mwEmail = (mw.email || mw._id || '').trim().toLowerCase();
+        if (!mwEmail) return;
+        if (allActIds.length > 0 && allActIds.every(id => mw.voortgang[id] === true)) {
+            voltooideCollegaEmails.add(mwEmail);
+        }
+    });
+
+    let totalActs = allActIds.length;
+    let completedActs = 0;
+    allActIds.forEach(id => {
+        if (elearningProgress && elearningProgress[id]) completedActs++;
+    });
+    const isCertEarned = totalActs > 0 && completedActs >= totalActs;
+    if (isCertEarned) {
+        const curEmail = (localStorage.getItem('ww_huidige_email') || '').trim().toLowerCase();
+        if (curEmail) voltooideCollegaEmails.add(curEmail);
+    }
+
+    const liveCount = voltooideCollegaEmails.size;
+    let liveTekst = 'Nog geen leerkrachten afgerond';
+    if (liveCount === 1) liveTekst = '<strong>1</strong> leerkracht afgerond';
+    else if (liveCount > 1) liveTekst = `<strong>${liveCount}</strong> leerkrachten afgerond`;
+    counterText.innerHTML = liveTekst;
+};
+
+window.toonToastFeedback = function(message) {
+    let toast = document.getElementById('wwFeedbackToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'wwFeedbackToast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            font-size: 13.5px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            z-index: 999999;
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = message;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 2800);
 };
 
 window.renderAdminMedewerkersVoortgang = function() {
