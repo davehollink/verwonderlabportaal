@@ -994,16 +994,17 @@ let elearningProgress = laadGebruikerElearningProgress();
 const defaultElearningCursussen = [
     {
         id: 101,
-        titel: "Canva voor Onderwijs: De Basiscursus",
+        titel: "Canva voor Onderwijs: Essentiële zaken voor leerkrachten",
         categorie: "Creatieve Tools",
-        niveau: "Beginner",
-        duur: "1 u 4 m",
-        auteur: "Wonderwijs ICT & Didactiek",
-        thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+        niveau: "Leerkrachten PO • Beginner",
+        duur: "64 minuten",
+        auteur: "Verwonderlab",
+        thumbnail: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/600px-Canva_icon_2021.svg.png",
         videoUrl: "https://www.youtube.com/watch?v=kY3B11w_x9g",
         omschrijving: "Leer de essentiële Canva-tools kennen om boeiende lesmaterialen, lesplannen en activiteiten te creëren. Gebruik AI-gestuurde tools om tijd te besparen, de voortgang bij te houden en zinvolle feedback te geven.",
         keySkills: ["Leerlingenondersteuning", "Samenwerken in de klas", "Didactiek & lesontwerp", "Canva voor Onderwijs", "Klasbeheer", "Digitale werkbladen"],
         certificaatTitel: "Certified Legend • Canva Basiscursus Onderwijs",
+        zichtbaar: true,
         lessen: [
             {
                 id: "les_1",
@@ -1424,8 +1425,17 @@ if (!elearningCursussen || elearningCursussen.length === 0) {
     elearningCursussen = defaultElearningCursussen.filter(c => !verwijderdeElearning.includes(String(c.id)));
 }
 
-// Zorg ervoor dat cursussen zonder lessen minimaal gevuld worden (alleen als ze leeg zijn!)
+// Zorg dat oude gecachte titels direct worden genormaliseerd naar de actuele naam zodat er geen 'plop' ontstaat
 elearningCursussen.forEach(c => {
+    if (c && (String(c.id) === '101' || c.titel === "Canva voor Onderwijs: De Basiscursus")) {
+        c.titel = "Canva voor Onderwijs: Essentiële zaken voor leerkrachten";
+        c.duur = "64 minuten";
+        c.auteur = "Verwonderlab";
+        c.niveau = "Leerkrachten PO • Beginner";
+    }
+    if (c && c.zichtbaar === undefined) {
+        c.zichtbaar = true;
+    }
     if (c && (!c.lessen || !Array.isArray(c.lessen) || c.lessen.length === 0)) {
         const defaultMatch = defaultElearningCursussen.find(d => String(d.id) === String(c.id));
         if (defaultMatch && Array.isArray(defaultMatch.lessen)) {
@@ -1433,6 +1443,9 @@ elearningCursussen.forEach(c => {
         }
     }
 });
+try {
+    localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
+} catch(e) {}
 const standaardLesideeen = [
 
     {
@@ -2761,6 +2774,11 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     slaDataOp();
                     if (typeof window.renderBeheerdersTabellen === "function") window.renderBeheerdersTabellen();
                     if (typeof window.renderElearningGrid === "function") window.renderElearningGrid();
+                    const hubView = document.getElementById('elearningCourseHubView');
+                    const isReaderOpen = document.getElementById('canvaReaderModal') && document.getElementById('canvaReaderModal').style.display === 'flex';
+                    if (!isReaderOpen && hubView && hubView.style.display !== 'none' && window._huidigeCursus && typeof window.openCourseView === "function") {
+                        window.openCourseView(window._huidigeCursus.id);
+                    }
                 }
             }
         }, checkError);
@@ -3617,107 +3635,20 @@ window.saveUserElearningProgressToCloud = async function(email, progress, cursus
 };
 
 window.pasMenuZichtbaarheidToe = function() {
-    const isBeheerder = typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin();
-
-    // 1. Pas toe op de sidebar menu-items
-    document.querySelectorAll('.sidebar .menu .menu-item').forEach(link => {
-        if (link.classList.contains('logout')) return;
-        const href = (link.getAttribute('href') || '').split('?')[0].split('/').pop();
-        if (!href) return;
-        const cfg = menuConfig[href];
-        if (!cfg) return;
-
-        const oldBadge = link.querySelector('.badge-menu-hidden');
-        if (oldBadge) oldBadge.remove();
-
-        if (cfg.zichtbaar === false) {
-            if (isBeheerder) {
-                link.style.display = 'flex';
-                link.style.opacity = '0.7';
-                const badge = document.createElement('span');
-                badge.className = 'badge-menu-hidden';
-                badge.innerText = 'verborgen';
-                badge.title = 'Deze pagina is momenteel onzichtbaar voor medewerkers';
-                link.appendChild(badge);
-            } else {
-                link.style.display = 'none';
-            }
-        } else {
-            link.style.removeProperty('display');
-            link.style.removeProperty('opacity');
-        }
-    });
-
-    // 2. Pas ook toe op mobiele navigatie
-    document.querySelectorAll('.bottom-nav-item').forEach(link => {
-        const href = (link.getAttribute('href') || '').split('?')[0].split('/').pop();
-        if (!href) return;
-        const cfg = menuConfig[href];
-        if (!cfg) return;
-
-        if (cfg.zichtbaar === false && !isBeheerder) {
-            link.style.display = 'none';
-        } else {
-            link.style.removeProperty('display');
-        }
+    // Menu-zichtbaarheid functie is conform verzoek uitgeschakeld: alle menu-items zijn altijd zichtbaar
+    document.querySelectorAll('.badge-menu-hidden').forEach(b => b.remove());
+    document.querySelectorAll('.sidebar .menu .menu-item, .bottom-nav-item').forEach(el => {
+        el.style.removeProperty('display');
+        el.style.removeProperty('opacity');
     });
 };
 
 window.toggleMenuZichtbaarheid = async function(pageId) {
-    if (!menuConfig[pageId] || menuConfig[pageId].vergrendeld) return;
-    menuConfig[pageId].zichtbaar = !menuConfig[pageId].zichtbaar;
-    localStorage.setItem('ww_menu_config_v1', JSON.stringify(menuConfig));
-    if (typeof window.pasMenuZichtbaarheidToe === 'function') {
-        window.pasMenuZichtbaarheidToe();
-    }
-    if (typeof window.renderMenuBeheerTab === 'function') {
-        window.renderMenuBeheerTab();
-    }
-    if (window.saveMenuConfigToCloud) {
-        await window.saveMenuConfigToCloud(menuConfig);
-    }
+    // Uitgeschakeld conform gebruikersverzoek
 };
 
 window.renderMenuBeheerTab = function() {
-    const grid = document.getElementById('adminMenuConfigGrid');
-    if (!grid) return;
-
-    grid.innerHTML = Object.values(menuConfig).map(item => {
-        const isZichtbaar = item.zichtbaar !== false;
-        const statusBadge = isZichtbaar 
-            ? `<span class="menu-visibility-badge visible">🟢 Zichtbaar voor medewerkers</span>`
-            : `<span class="menu-visibility-badge hidden">🔴 Verborgen voor medewerkers</span>`;
-            
-        let actionBtn = '';
-        if (item.vergrendeld) {
-            actionBtn = `<button type="button" class="btn-toggle-menu" disabled style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed; border-color:#e2e8f0;">🔒 Altijd zichtbaar (Startpagina)</button>`;
-        } else if (isZichtbaar) {
-            actionBtn = `<button type="button" class="btn-toggle-menu btn-hide" onclick="window.toggleMenuZichtbaarheid('${item.id}')">🚫 Maak onzichtbaar voor medewerkers</button>`;
-        } else {
-            actionBtn = `<button type="button" class="btn-toggle-menu btn-show" onclick="window.toggleMenuZichtbaarheid('${item.id}')">👁️ Maak weer zichtbaar voor medewerkers</button>`;
-        }
-
-        return `
-            <div class="menu-config-card">
-                <div>
-                    <div class="menu-config-header">
-                        <div class="menu-config-title">
-                            <span class="menu-config-icon">${item.icoon || '📄'}</span>
-                            <div>
-                                <div>${escapeHtml(item.naam)}</div>
-                                <span style="font-size: 11px; color: #64748b; font-weight: 500;">Bestand: ${escapeHtml(item.id)}</span>
-                            </div>
-                        </div>
-                        ${statusBadge}
-                    </div>
-                    <p class="menu-config-desc" style="margin-top: 10px;">${escapeHtml(item.beschrijving || '')}</p>
-                </div>
-                <div>
-                    ${actionBtn}
-                </div>
-            </div>
-        `;
-    }).join('');
+    // Uitgeschakeld conform gebruikersverzoek
 };
 
 window.initMobileNavigation = function() {
@@ -4615,13 +4546,17 @@ window.renderBeheerdersTabellen = function() {
         } else {
             elearningBody.innerHTML = elearningCursussen.map(cursus => {
                 let thumbSrc = cursus.thumbnail && cursus.thumbnail.startsWith('data:image') ? cursus.thumbnail : (cursus.thumbnail || 'Verwonderlab.jpg');
+                const isZichtbaar = cursus.zichtbaar !== false;
                 return `<tr>
                     <td style="padding: 10px 16px;">
                         <img src="${thumbSrc}" style="width: 55px; height: 38px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
                     </td>
                     <td style="padding: 10px 16px;">
-                        <strong>${escapeHtml(cursus.titel || 'Naamloos')}</strong>
-                        ${cursus.auteur ? `<br><span style="font-size:11.5px; color:#64748b;">${escapeHtml(cursus.auteur)}</span>` : ''}
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong>${escapeHtml(cursus.titel || 'Naamloos')}</strong>
+                            ${!isZichtbaar ? `<span class="badge-draft-pill">👁️‍🗨️ Concept (Verborgen)</span>` : ''}
+                        </div>
+                        ${cursus.auteur ? `<span style="font-size:11.5px; color:#64748b;">${escapeHtml(cursus.auteur)}</span>` : ''}
                     </td>
                     <td style="padding: 10px 16px;">
                         <span style="font-size: 11.5px; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-weight: 600;">${escapeHtml(cursus.categorie || 'Algemeen')}</span>
@@ -4629,6 +4564,9 @@ window.renderBeheerdersTabellen = function() {
                     <td style="padding: 10px 16px; font-size: 12.5px; color: #334155;">${escapeHtml(cursus.niveau || 'Alle niveaus')}</td>
                     <td style="padding: 10px 16px; font-size: 12.5px; color: #334155;">⏱️ ${escapeHtml(cursus.duur || '-')}</td>
                     <td style="text-align: right; padding: 10px 16px; white-space: nowrap;">
+                        <button type="button" class="btn-table-visibility ${isZichtbaar ? 'visible' : 'hidden'}" onclick="window.toggleElearningZichtbaarheid(${cursus.id}, event)" title="${isZichtbaar ? 'Nu zichtbaar voor leerkrachten (klik om te verbergen)' : 'Nu verborgen voor leerkrachten (klik om zichtbaar te maken)'}">
+                            ${isZichtbaar ? '👁️ Zichtbaar' : '👁️‍🗨️ Verborgen'}
+                        </button>
                         <button class="btn-table-edit" onclick="window.openElearningModal(${cursus.id})">✏️ Bewerken</button>
                         <button class="btn-table-delete" onclick="window.deleteElearning(${cursus.id})">🗑️ Verwijderen</button>
                     </td>
@@ -4637,6 +4575,29 @@ window.renderBeheerdersTabellen = function() {
         }
     }
 }
+
+window.toggleElearningZichtbaarheid = async function(id, evt) {
+    if (evt) evt.stopPropagation();
+    const cursus = (elearningCursussen || []).find(c => String(c.id) === String(id));
+    if (!cursus) return;
+
+    cursus.zichtbaar = cursus.zichtbaar === false ? true : false;
+    cursus.laatsteUpdate = new Date().toISOString();
+
+    slaDataOp();
+    if (typeof window.renderBeheerdersTabellen === "function") window.renderBeheerdersTabellen();
+    if (typeof window.renderElearningGrid === "function") window.renderElearningGrid();
+
+    if (typeof window.toonToastFeedback === 'function') {
+        window.toonToastFeedback(cursus.zichtbaar ? '👁️ Cursus is nu zichtbaar voor leerkrachten!' : '👁️‍🗨️ Cursus is nu verborgen voor leerkrachten (concept)');
+    } else {
+        alert(cursus.zichtbaar ? '👁️ De cursus is nu zichtbaar voor leerkrachten!' : '👁️‍🗨️ De cursus is nu verborgen voor leerkrachten (conceptmodus).');
+    }
+
+    if (typeof window.saveElearningToCloud === 'function') {
+        await window.saveElearningToCloud(cursus).catch(e => console.warn("Cloud update zichtbaarheid mislukt:", e));
+    }
+};
 
 window.updateKalenderEnLijst = function() {
     const calendarGrid = document.getElementById('calendarGrid');
@@ -5093,8 +5054,10 @@ ${beschrijving}
         
         const idx = (elearningCursussen || []).findIndex(c => String(c.id) === String(cId));
         if (idx > -1) {
+            cursusData.zichtbaar = elearningCursussen[idx].zichtbaar !== undefined ? elearningCursussen[idx].zichtbaar : true;
             elearningCursussen[idx] = { ...elearningCursussen[idx], ...cursusData };
         } else {
+            cursusData.zichtbaar = true;
             elearningCursussen.push(cursusData);
         }
         slaDataOp();
@@ -9404,7 +9367,13 @@ window.renderElearningGrid = function() {
     const grid = document.getElementById('elearningGrid');
     if (!grid) return;
     
+    const isBeheerder = typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin();
     let list = [...(elearningCursussen || [])];
+    
+    // Voor reguliere gebruikers (leerkrachten) worden verborgen cursussen (concept) niet getoond
+    if (!isBeheerder) {
+        list = list.filter(c => c.zichtbaar !== false);
+    }
     
     if (window._actieveElearningCategorie && window._actieveElearningCategorie !== 'Alle') {
         list = list.filter(c => c.categorie === window._actieveElearningCategorie);
@@ -9458,6 +9427,7 @@ window.renderElearningGrid = function() {
                     <div class="elearning-card-badges">
                         <span class="elearning-cat-badge">${escapeHtml(c.categorie || 'E-Learning')}</span>
                         <span class="elearning-dur-badge">⏱️ ${escapeHtml(c.duur || 'Zelfstudie')}</span>
+                        ${c.zichtbaar === false ? `<span class="badge-draft-pill" style="font-size: 10.5px; padding: 2px 7px;">👁️‍🗨️ Concept</span>` : ''}
                     </div>
                 </div>
                 <div class="elearning-card-body">
@@ -9512,6 +9482,12 @@ window.openCourseView = function(id) {
     const cursus = (elearningCursussen || []).find(c => c.id == id);
     if (!cursus) return;
     
+    const isBeheerder = typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin();
+    if (!isBeheerder && cursus.zichtbaar === false) {
+        alert("Deze cursus is momenteel in voorbereiding en nog niet gepubliceerd voor leerkrachten.");
+        return;
+    }
+    
     window._huidigeCursus = cursus;
     
     const overviewView = document.getElementById('elearningOverviewView');
@@ -9535,6 +9511,11 @@ window.openCourseView = function(id) {
             <span style="background: rgba(140, 198, 63, 0.15); color: #3f6212; border: 1px solid rgba(140, 198, 63, 0.3); font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 9999px;">
                 🎯 ${escapeHtml(cursus.niveau || 'Beginner')}
             </span>
+            ${cursus.zichtbaar === false ? `
+                <span class="badge-draft-pill" style="font-size: 11.5px; padding: 4px 11px;">
+                    👁️‍🗨️ Verborgen voor leerkrachten (Concept)
+                </span>
+            ` : ''}
         `;
     }
 

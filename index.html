@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261106R">
+    <link rel="stylesheet" href="style.css?v=20261106S">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
@@ -160,7 +160,6 @@
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-leskisten', this)">Materialen beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-lesideeen', this)">Lesideeën beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-elearning', this)">🎓 E-Learning beheer</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('tab-menubeheer', this)">👁️ Menu-beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-gebruikers', this)">Gebruikersbeheer</button>
             </div>
             
@@ -511,24 +510,6 @@
                                 <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Laden van medewerkersvoortgang...</td></tr>
                             </tbody>
                         </table>
-                    </div>
-                </section>
-            </div>
-
-            <!-- TAB: MENU ZICHTBAARHEID BEHEER VOOR MEDEWERKERS -->
-            <div id="tab-menubeheer" class="admin-tab-content" style="display: none;">
-                <section class="admin-section">
-                    <div class="section-header-flex">
-                        <div>
-                            <h2 style="margin: 0 0 5px 0;">👁️ Menu-beheer &amp; Zichtbaarheid voor Medewerkers</h2>
-                            <p style="margin: 0; font-size: 13.5px; color: #64748b; max-width: 720px; line-height: 1.5;">
-                                Bepaal hier welke pagina's zichtbaar zijn in het linkermenu voor medewerkers en leerkrachten. Zet je een pagina op 'Onzichtbaar', dan verdwijnt deze direct uit het menu van reguliere collega's. Als beheerder behoud je altijd toegang tot alle pagina's.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div id="adminMenuConfigGrid" class="menu-config-grid">
-                        <!-- Dynamisch gevuld via script.js -->
                     </div>
                 </section>
             </div>
@@ -1689,6 +1670,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261106R"></script>
+<script src="script.js?v=20261106S"></script>
 </body>
 </html>
