@@ -9743,6 +9743,26 @@ window.toggleCanvaLesson = function(lIdx) {
     }
 };
 
+// ==============================================================
+// SANITIZER VOOR CONSISTENTE LESLETTERTYPEN (PLUS JAKARTA SANS)
+// ==============================================================
+window.saniteerLesHtml = function(html) {
+    if (!html) return '';
+    let res = String(html);
+    // Verwijder inline font-family ongeacht quotes of !important
+    res = res.replace(/font-family\s*:\s*[^;'"]+;?/gi, '');
+    res = res.replace(/font-family\s*:\s*['"][^'"]+['"];?/gi, '');
+    res = res.replace(/font\s*:\s*[^;'"]+;?/gi, '');
+    // Verwijder afwijkende inline font-sizes van geplakte Word/Canva teksten
+    res = res.replace(/font-size\s*:\s*[^;'"]+;?/gi, '');
+    // Verwijder verouderde HTML font tags
+    res = res.replace(/<font\b[^>]*>/gi, '');
+    res = res.replace(/<\/font>/gi, '');
+    // Ruim lege style attributen op
+    res = res.replace(/style\s*=\s*["']\s*;?\s*["']/gi, '');
+    return res;
+};
+
 // ==========================================
 // IN-PORTAL CANVA IMMERSIVE LESSPELER & GIDS
 // ==========================================
@@ -9894,9 +9914,8 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
         }
 
         let rawContent = activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
-        // Zorg dat geplakte afwijkende lettertypes automatisch gestript worden voor consistent Plus Jakarta Sans lettertype
-        rawContent = rawContent.replace(/font-family\s*:\s*[^;"]+;?/gi, '');
-        contentHtml += rawContent;
+        // Grondige lettertype & opmaak sanitatie zodat alle lessen in uniform Plus Jakarta Sans staan
+        contentHtml += window.saniteerLesHtml(rawContent);
         bodyEl.innerHTML = contentHtml;
 
         // Maak alle afbeeldingen in de les klikbaar voor lightbox vergroting en laad eventueel geoffloade media
@@ -9973,7 +9992,7 @@ window._updateActiveOtpHeading = function() {
     const otpListEl = document.getElementById('playerOtpList');
     if (!mainArea || !otpListEl) return;
 
-    const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3, #playerActivityBody h3'));
+    const headings = Array.from(document.querySelectorAll('#playerActivityBody h3'));
     if (headings.length === 0) return;
 
     const containerRect = mainArea.getBoundingClientRect();
@@ -9981,17 +10000,16 @@ window._updateActiveOtpHeading = function() {
 
     let activeIdx = 0;
 
-    // Als de gebruiker helemaal bovenaan staat (scrollTop < 35), is altijd kopje 1 actief
-    if (mainArea.scrollTop < 35) {
+    // Als de gebruiker helemaal bovenaan staat (scrollTop < 40)
+    if (mainArea.scrollTop < 40) {
         activeIdx = 0;
-    } else if (mainArea.scrollHeight > mainArea.clientHeight + 60 && (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 40)) {
-        // Alleen als er echt gescrold is én men helemaal onderaan is
+    } else if (mainArea.scrollHeight > mainArea.clientHeight + 40 && (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 50)) {
+        // Helemaal onderaan de les
         activeIdx = headings.length - 1;
     } else {
-        // Comfortabele leeslijn op 42% van het scherm
-        const readingLine = containerRect.top + Math.max(120, containerRect.height * 0.42);
+        // Zodra een kopje de bovenste 55% van het leesvenster bereikt, markeren als actieve stap
+        const readingLine = containerRect.top + Math.max(120, containerRect.height * 0.55);
 
-        // Loop door de koppen en vind het huidige zichtbare onderwerp
         for (let i = 0; i < headings.length; i++) {
             const rect = headings[i].getBoundingClientRect();
             if (rect.top <= readingLine) {
@@ -10005,29 +10023,24 @@ window._updateActiveOtpHeading = function() {
     const otpItems = Array.from(otpListEl.querySelectorAll('.canva-otp-item'));
     otpItems.forEach((item, idx) => {
         if (idx === activeIdx) {
-            if (!item.classList.contains('active')) {
-                item.classList.add('active');
-                
-                // Houd het item zichtbaar in de rechterbalk zonder storende layout thrashing
-                const sidebarRight = document.querySelector('.canva-reader-sidebar-right');
-                if (sidebarRight) {
-                    const itemTop = item.offsetTop;
-                    const itemHeight = item.offsetHeight;
-                    const sidebarScroll = sidebarRight.scrollTop;
-                    const sidebarHeight = sidebarRight.clientHeight;
-                    
-                    if (itemTop < sidebarScroll + 20 || (itemTop + itemHeight) > (sidebarScroll + sidebarHeight - 40)) {
-                        sidebarRight.scrollTo({
-                            top: Math.max(0, itemTop - 60),
-                            behavior: 'smooth'
-                        });
-                    }
-                }
-            }
+            item.classList.add('active');
         } else {
             item.classList.remove('active');
         }
     });
+
+    // Zorg dat het actieve item automatisch in het zicht meescrolt in het rechtermenu
+    const activeItem = otpItems[activeIdx];
+    const sidebarRight = document.querySelector('.canva-reader-sidebar-right');
+    if (sidebarRight && activeItem) {
+        const itemRect = activeItem.getBoundingClientRect();
+        const sidebarRect = sidebarRight.getBoundingClientRect();
+        if (itemRect.top < sidebarRect.top + 10) {
+            sidebarRight.scrollTop -= (sidebarRect.top + 20 - itemRect.top);
+        } else if (itemRect.bottom > sidebarRect.bottom - 20) {
+            sidebarRight.scrollTop += (itemRect.bottom - (sidebarRect.bottom - 20));
+        }
+    }
 };
 
 let _otpScrollRaf = null;
@@ -10048,7 +10061,11 @@ window._bindOtpScrollSync = function() {
     mainArea.removeEventListener('scroll', _onMainAreaScroll);
     mainArea.addEventListener('scroll', _onMainAreaScroll, { passive: true });
     
-    // Voer direct een update uit
+    // Voeg ook document-level capture listener toe voor maximale compatibiliteit
+    document.removeEventListener('scroll', _onMainAreaScroll, true);
+    document.addEventListener('scroll', _onMainAreaScroll, { passive: true, capture: true });
+
+    // Direct een initiële berekening uitvoeren
     requestAnimationFrame(() => {
         if (typeof window._updateActiveOtpHeading === 'function') {
             window._updateActiveOtpHeading();
@@ -10065,8 +10082,14 @@ window.scrollToOtpStep = function(id, linkEl, targetIdx = null) {
         const scrollOffset = mainArea.scrollTop + (targetRect.top - mainRect.top) - 30;
         mainArea.scrollTo({ top: Math.max(0, scrollOffset), behavior: 'smooth' });
     }
-    document.querySelectorAll('.canva-otp-item').forEach(it => it.classList.remove('active'));
-    if (linkEl) linkEl.classList.add('active');
+    const otpItems = document.querySelectorAll('.canva-otp-item');
+    otpItems.forEach((it, idx) => {
+        if ((targetIdx !== null && idx === targetIdx) || (linkEl && it === linkEl)) {
+            it.classList.add('active');
+        } else {
+            it.classList.remove('active');
+        }
+    });
 };
 
 window.toggleLearnCard = function() {
@@ -10585,8 +10608,8 @@ window.renderAdminLessonBuilder = function() {
                         </button>
                     </div>
 
-                    <!-- HET VISUELE TEKSTVELD WAARIN ALLES METEEN ZICHTBAAR IS ALS IN WORD / CANVA -->
-                    <div id="visualEditor_${lIdx}_${aIdx}" class="visual-lesson-editor" contenteditable="true" oninput="window.syncVisualEditor(${lIdx}, ${aIdx})" onblur="window.syncVisualEditor(${lIdx}, ${aIdx})">${act.inhoudHtml || '<p>Typ hier je lesinstructie voor de leerkracht...</p>'}</div>
+                    <!-- HET VISUELE TEKSTVELD WAARIN ALLES METEEN ZICHTBAAR IS ALS IN WORD / CANVA (AUTOMATISCH SCHOON PLUS JAKARTA SANS) -->
+                    <div id="visualEditor_${lIdx}_${aIdx}" class="visual-lesson-editor" contenteditable="true" onpaste="window.handleVisualEditorPaste(event, ${lIdx}, ${aIdx})" oninput="window.syncVisualEditor(${lIdx}, ${aIdx})" onblur="window.syncVisualEditor(${lIdx}, ${aIdx})">${act.inhoudHtml || '<p>Typ hier je lesinstructie voor de leerkracht...</p>'}</div>
 
                     <!-- Optionele broncode textarea -->
                     <textarea id="adminActInhoud_${lIdx}_${aIdx}" rows="6" oninput="window.syncFromRawTextarea(${lIdx}, ${aIdx})" style="display: none; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 0 0 8px 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-family: monospace; line-height: 1.5;">${escapeHtml(act.inhoudHtml || '')}</textarea>
@@ -10711,13 +10734,25 @@ window.adminVoegVisueleAfbeeldingToe = function(lIdx, aIdx) {
     }
 };
 
+window.handleVisualEditorPaste = function(event, lIdx, aIdx) {
+    event.preventDefault();
+    const clipboardData = event.clipboardData || window.clipboardData;
+    let pastedData = clipboardData.getData('text/html') || clipboardData.getData('text/plain') || '';
+    if (pastedData) {
+        pastedData = window.saniteerLesHtml(pastedData);
+        document.execCommand('insertHTML', false, pastedData);
+        window.syncVisualEditor(lIdx, aIdx);
+    }
+};
+
 window.syncVisualEditor = function(lIdx, aIdx) {
     const editor = document.getElementById(`visualEditor_${lIdx}_${aIdx}`);
     const act = window.adminHuidigeLessen?.[lIdx]?.activiteiten?.[aIdx];
     if (editor && act) {
-        act.inhoudHtml = editor.innerHTML;
+        const cleanHtml = window.saniteerLesHtml(editor.innerHTML);
+        act.inhoudHtml = cleanHtml;
         const rawTa = document.getElementById(`adminActInhoud_${lIdx}_${aIdx}`);
-        if (rawTa) rawTa.value = editor.innerHTML;
+        if (rawTa) rawTa.value = cleanHtml;
         window.slaConceptBackupOp();
     }
 };
@@ -10727,8 +10762,9 @@ window.syncFromRawTextarea = function(lIdx, aIdx) {
     const editor = document.getElementById(`visualEditor_${lIdx}_${aIdx}`);
     const act = window.adminHuidigeLessen?.[lIdx]?.activiteiten?.[aIdx];
     if (rawTa && act) {
-        act.inhoudHtml = rawTa.value;
-        if (editor) editor.innerHTML = rawTa.value;
+        const cleanHtml = window.saniteerLesHtml(rawTa.value);
+        act.inhoudHtml = cleanHtml;
+        if (editor) editor.innerHTML = cleanHtml;
         window.slaConceptBackupOp();
     }
 };
@@ -10783,11 +10819,11 @@ window.syncAllLessonsFromDOM = function() {
                 const editor = document.getElementById(`visualEditor_${lIdx}_${aIdx}`);
                 const rawTa = document.getElementById(`adminActInhoud_${lIdx}_${aIdx}`);
                 if (editor && editor.style.display !== 'none') {
-                    act.inhoudHtml = editor.innerHTML;
-                    if (rawTa) rawTa.value = editor.innerHTML;
+                    act.inhoudHtml = window.saniteerLesHtml(editor.innerHTML);
+                    if (rawTa) rawTa.value = act.inhoudHtml;
                 } else if (rawTa) {
-                    act.inhoudHtml = rawTa.value;
-                    if (editor) editor.innerHTML = rawTa.value;
+                    act.inhoudHtml = window.saniteerLesHtml(rawTa.value);
+                    if (editor) editor.innerHTML = act.inhoudHtml;
                 }
             });
         }
