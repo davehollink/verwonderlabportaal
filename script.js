@@ -9485,6 +9485,16 @@ window.renderElearningGrid = function() {
 // ==========================================
 // CANVA DESIGN SCHOOL LESSON HUB WEERGAVE
 // ==========================================
+window.vertaalTypeLabel = function(type) {
+    if (!type) return 'Gids';
+    const t = String(type).toLowerCase().trim();
+    if (t === 'guide' || t === 'gids') return 'Gids';
+    if (t === 'video') return 'Video';
+    if (t === 'cheatsheet' || t === 'spiekbrief') return 'Spiekbrief';
+    if (t === 'opdracht' || t === 'assignment') return 'Opdracht';
+    return type;
+};
+
 window.openCourseView = function(id) {
     const cursus = (elearningCursussen || []).find(c => c.id == id);
     if (!cursus) return;
