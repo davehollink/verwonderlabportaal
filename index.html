@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261106b">
+    <link rel="stylesheet" href="style.css?v=20261106f">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
@@ -480,6 +480,36 @@
                                 </tr>
                             </thead>
                             <tbody id="adminElearningBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="admin-section" style="margin-top: 32px;">
+                    <div class="section-header-flex">
+                        <div>
+                            <h2 style="margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px;">
+                                <span>👥</span> Voortgang per Medewerker (Microsoft 365)
+                            </h2>
+                            <p style="margin: 0; font-size: 13px; color: #64748b;">
+                                Live overzicht van alle leerkrachten die ingelogd zijn met hun Microsoft account, welke cursussen zij volgen, hun voltooide lessen en certificaatstatus.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Leerkracht &amp; Locatie</th>
+                                    <th>Microsoft E-mail</th>
+                                    <th>Laatst Actief</th>
+                                    <th>Huidig Onderdeel</th>
+                                    <th>Voortgang</th>
+                                    <th style="text-align: right;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminMedewerkersVoortgangBody">
+                                <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Laden van medewerkersvoortgang...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -1152,8 +1182,8 @@
                     <textarea id="editElearningOmschrijving" rows="3" placeholder="Wat leert de leerkracht in deze e-learning module?" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
                 </div>
                 <div class="form-group" style="margin-bottom: 14px;">
-                    <label style="font-weight: 700; font-size: 13px;">Key Skills / Vaardigheden (komma-gescheiden):</label>
-                    <input type="text" id="editElearningSkills" placeholder="Bijv. Student learning, Collaboration, Canva Education, Klasbeheer" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    <label style="font-weight: 700; font-size: 13px;">Kernvaardigheden (komma-gescheiden):</label>
+                    <input type="text" id="editElearningSkills" placeholder="Bijv. Canva Education, Klasbeheer, Didactiek, Lesontwerp" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
                     <p style="font-size: 11px; color: #64748b; margin-top: 5px;">Deze labels verschijnen als badges in de rechterkolom van de e-learning pagina.</p>
                 </div>
                 <div class="form-group">
@@ -1167,7 +1197,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">📚 4. Lessen &amp; Activiteiten (Zelf invullen)</h3>
-                        <p style="font-size: 11.5px; color: #64748b; margin: 3px 0 0 0;">Bouw hier je eigen lessenreeks met video's, gidsen, cheatsheets en opdrachten (zoals in Canva Design School).</p>
+                        <p style="font-size: 11.5px; color: #64748b; margin: 3px 0 0 0;">Bouw hier je eigen lessenreeks met video's, gidsen, spiekbrieven en opdrachten (zoals in Canva Design School).</p>
                     </div>
                     <button type="button" class="btn-green-action" onclick="window.adminVoegLesToe()" style="padding: 7px 14px; font-size: 12px; border-radius: 8px;">
                         <span>➕</span> Les toevoegen
@@ -1659,6 +1689,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261106b"></script>
+<script src="script.js?v=20261106f"></script>
 </body>
 </html>
