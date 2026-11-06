@@ -1300,117 +1300,18 @@ const defaultElearningCursussen = [
     },
     {
         id: 102,
-        titel: "Starten met Robotica: Bee-Bot & Dash in de Klas",
-        categorie: "Programmeren & Robotica",
-        niveau: "Beginner",
-        duur: "1 u 0 m",
-        auteur: "Verwonderlab Team",
-        thumbnail: "img/les_dansende_robot.jpg",
-        videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
-        omschrijving: "Stapsgewijze gids voor het succesvol inzetten van vloerrobots. Combineer programmeren spelenderwijs met taal, spelling en rekenen op de themamat.",
-        keySkills: ["Algoritmisch denken", "Bee-Bot", "Dash & Dot", "Sequenties", "Samenwerken"],
-        certificaatTitel: "Wonderwijs Robotica Expert • Onder- & Middenbouw",
-        lessen: [
-            {
-                id: "les_rb_1",
-                nummer: 1,
-                icoon: "🤖",
-                titel: "Introductie Vloerrobots in het Basisonderwijs",
-                beschrijving: "Waarom robotica in groep 1 t/m 5? De didactische kracht van tastbare technologie.",
-                activiteiten: [
-                    {
-                        id: "act_102_1_1",
-                        titel: "De Kracht van Tastbaar Programmeren",
-                        type: "video",
-                        typeLabel: "Video",
-                        duur: "5 min",
-                        videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
-                        inhoudHtml: "<h3>Tastbaar programmeren zonder schermen</h3><p>Kinderen leren het beste door te doen. Met de Bee-Bot programmeren jonge kinderen met fysieke knoppen op de rug van de robot, waardoor het concept van volgorde (algoritme) tastbaar wordt.</p>"
-                    }
-                ]
-            },
-            {
-                id: "les_rb_2",
-                nummer: 2,
-                icoon: "🗺️",
-                titel: "Matten & Didactische Koppeling met Rekenen en Taal",
-                beschrijving: "Laat de robot niet zomaar rondrijden, maar koppel het direct aan je weekdoelen.",
-                activiteiten: [
-                    {
-                        id: "act_102_2_1",
-                        titel: "Spelling & Getalbegrip op de Mat",
-                        type: "guide",
-                        typeLabel: "Gids",
-                        duur: "10 min",
-                        inhoudHtml: "<h3>Woorden spellen en sommen oplossen</h3><p>Leg letters of cijfers in de transparante vakken van de mat. De leerling plant de route naar de juiste letter of het juiste antwoord.</p>"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: 103,
-        titel: "AI in het Basisonderwijs: Kansen, Ethiek & Prompten",
-        categorie: "AI in de Klas",
-        niveau: "Beginner",
-        duur: "50 min",
-        auteur: "Wonderwijs Innovatie",
-        thumbnail: "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+        titel: "Canva voor onderwijs: Hoe begin je met creëren met Canva?",
+        categorie: "Creatieve Tools",
+        niveau: "Leerkrachten PO • Beginner",
+        duur: "10 min",
+        auteur: "Verwonderlab",
+        thumbnail: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/600px-Canva_icon_2021.svg.png",
         videoUrl: "",
-        omschrijving: "Praktische kennismaking met generatieve AI voor het basisonderwijs. Bespaar kostbare tijd bij lesvoorbereiding en leerlingen leren omgaan met AI.",
-        keySkills: ["Prompt engineering", "Didactische AI", "Ethiek & Privacy", "Differentiatie"],
-        certificaatTitel: "AI Didactiek Brevet • Wonderwijs",
-        lessen: [
-            {
-                id: "les_ai_1",
-                nummer: 1,
-                icoon: "🧠",
-                titel: "Wat is AI en hoe werkt het?",
-                beschrijving: "Een nuchtere en praktische blik op generatieve AI voor het onderwijs.",
-                activiteiten: [
-                    {
-                        id: "act_103_1_1",
-                        titel: "Basisprincipes van Taalmodellen",
-                        type: "guide",
-                        typeLabel: "Gids",
-                        duur: "8 min",
-                        inhoudHtml: "<h3>Hoe AI taal genereert</h3><p>AI denkt niet zoals een mens, maar berekent het meest waarschijnlijke volgende woord op basis van patronen.</p>"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: 104,
-        titel: "Digitale Geletterdheid & De Wonderwijs Leerlijnen",
-        categorie: "Digitale Geletterdheid",
-        niveau: "Alle niveaus",
-        duur: "40 min",
-        auteur: "Wonderwijs Expertgroep DG",
-        thumbnail: "Verwonderlab.jpg",
-        videoUrl: "",
-        omschrijving: "Krijg een helder overzicht van de vier DG-domeinen, de doorlopende leerlijn van groep 1 t/m 8 en de praktische koppeling met de Wonderwijs handreiking.",
-        keySkills: ["Kerndoelen 21-24", "Doorlopende leerlijn", "Mediawijsheid", "Computational Thinking"],
-        certificaatTitel: "Wonderwijs DG Certificaat • Expert",
-        lessen: [
-            {
-                id: "les_dg_1",
-                nummer: 1,
-                icoon: "🧭",
-                titel: "De Vier Domeinen van Digitale Geletterdheid",
-                beschrijving: "Praktische uitleg van ICT-basisvaardigheden, Mediawijsheid, Informatievaardigheden en Computational Thinking.",
-                activiteiten: [
-                    {
-                        id: "act_104_1_1",
-                        titel: "Domeinen in de Dagelijkse Klaspraktijk",
-                        type: "guide",
-                        typeLabel: "Gids",
-                        duur: "10 min",
-                        inhoudHtml: "<h3>De 4 domeinen zonder extra werkdruk</h3><p>Je hoeft geen apart vak 'digitale geletterdheid' te geven: integreer het in bestaande reken-, taal-, wereldoriëntatie- en creatieve lessen.</p>"
-                    }
-                ]
-            }
-        ]
+        omschrijving: "Ontdek stap voor stap hoe je begint met creëren in Canva voor Onderwijs.",
+        keySkills: ["Canva voor Onderwijs", "Creëren", "Lesmateriaal"],
+        certificaatTitel: "Canva Creëren • Basiscertificaat",
+        zichtbaar: true,
+        lessen: []
     }
 ];
 
@@ -1425,13 +1326,14 @@ if (!elearningCursussen || elearningCursussen.length === 0) {
     elearningCursussen = defaultElearningCursussen.filter(c => !verwijderdeElearning.includes(String(c.id)));
 }
 
-// Zorg dat oude gecachte titels direct worden genormaliseerd naar de actuele naam zodat er geen 'plop' ontstaat
+// Zorg dat oude gecachte titels en thumbnails direct worden genormaliseerd naar de actuele naam zodat er geen 'plop' ontstaat
 elearningCursussen.forEach(c => {
     if (c && (String(c.id) === '101' || c.titel === "Canva voor Onderwijs: De Basiscursus")) {
         c.titel = "Canva voor Onderwijs: Essentiële zaken voor leerkrachten";
         c.duur = "64 minuten";
         c.auteur = "Verwonderlab";
         c.niveau = "Leerkrachten PO • Beginner";
+        c.thumbnail = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/600px-Canva_icon_2021.svg.png";
     }
     if (c && c.zichtbaar === undefined) {
         c.zichtbaar = true;
@@ -1443,6 +1345,13 @@ elearningCursussen.forEach(c => {
         }
     }
 });
+
+// Zorg dat Course 102 ook direct in de initiële weergave zit
+if (!elearningCursussen.some(c => String(c.id) === '102')) {
+    const c102 = defaultElearningCursussen.find(d => String(d.id) === '102');
+    if (c102) elearningCursussen.push(JSON.parse(JSON.stringify(c102)));
+}
+
 try {
     localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
 } catch(e) {}
@@ -2276,7 +2185,46 @@ function slaDataOp() {
         }
 
         localStorage.setItem('ww_lesideeen_v16', JSON.stringify(lesideeen));
-        localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
+        
+        try {
+            // Sla een geoptimaliseerde versie op in localStorage (zonder megabytes aan base64 inhoud) zodat het direct en altijd succesvol opslaat
+            const compactElearning = (elearningCursussen || []).map(c => {
+                if (!c) return c;
+                return {
+                    id: c.id,
+                    titel: c.titel,
+                    categorie: c.categorie,
+                    niveau: c.niveau,
+                    duur: c.duur,
+                    auteur: c.auteur,
+                    thumbnail: (c.thumbnail && c.thumbnail.length > 50000) ? 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/600px-Canva_icon_2021.svg.png' : c.thumbnail,
+                    videoUrl: c.videoUrl,
+                    omschrijving: c.omschrijving,
+                    keySkills: c.keySkills,
+                    certificaatTitel: c.certificaatTitel,
+                    zichtbaar: c.zichtbaar !== false,
+                    laatsteUpdate: c.laatsteUpdate,
+                    lessen: Array.isArray(c.lessen) ? c.lessen.map(l => ({
+                        id: l.id,
+                        nummer: l.nummer,
+                        icoon: l.icoon,
+                        titel: l.titel,
+                        beschrijving: l.beschrijving,
+                        activiteiten: Array.isArray(l.activiteiten) ? l.activiteiten.map(a => ({
+                            id: a.id,
+                            titel: a.titel,
+                            type: a.type,
+                            typeLabel: a.typeLabel,
+                            duur: a.duur
+                        })) : []
+                    })) : []
+                };
+            });
+            localStorage.setItem('ww_elearning_v1', JSON.stringify(compactElearning));
+        } catch(storageErr) {
+            console.warn("Quota warning ww_elearning_v1:", storageErr);
+        }
+
         localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
         localStorage.setItem('ww_elearning_progress_v1', JSON.stringify(elearningProgress));
         localStorage.setItem('ww_menu_config_v1', JSON.stringify(menuConfig));
