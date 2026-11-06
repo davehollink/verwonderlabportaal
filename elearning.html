@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - E-Learning & Professionalisering</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261106b">
+    <link rel="stylesheet" href="style.css?v=20261106c">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -115,39 +115,120 @@
     </main>
 </div>
 
-<!-- MODAL: IN-PORTAL LESACTIVITEIT SPELER & GIDS (Video / Stappenplan / Cheatsheet / Opdracht) -->
-<div id="elearningPlayerModal" class="activity-player-modal" style="display: none;">
-    <div class="activity-player-dialog">
-        <div class="activity-player-header">
-            <div class="activity-player-title-box">
-                <span id="playerActivityIcon" style="font-size: 22px;"></span>
-                <div>
-                    <span id="playerLessonSubtitle" style="font-size: 11.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"></span>
-                    <h3 id="playerActivityTitle" style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3;"></h3>
+<!-- CANVA DESIGN SCHOOL IMMERSIVE LESSON READER (Volledig scherm zoals screenshots) -->
+<div id="elearningPlayerModal" class="canva-reader-overlay" style="display: none;">
+    <!-- Topbar: Logo, close knop, gradient banner met les afronden knop -->
+    <header class="canva-reader-header">
+        <div class="canva-reader-brand">
+            <div class="canva-reader-logo">
+                <span>✨</span>
+                <span>Verwonderlab Academy</span>
+            </div>
+            <button type="button" class="canva-reader-close-btn" onclick="window.sluitActivityPlayer()" title="Sluiten (terug naar overzicht)" aria-label="Sluiten">✕</button>
+        </div>
+        <div class="canva-reader-topbar-banner">
+            <div class="canva-reader-banner-left">
+                <button type="button" class="canva-reader-toggle-menu" onclick="window.toggleCanvaReaderMobileMenu()" title="Menu in/uitklappen">☰</button>
+                <span id="playerTopBannerTitle" class="canva-reader-banner-title">Canva voor Onderwijs</span>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button type="button" id="btnFinishLesson" class="btn-finish-lesson" onclick="window.toggleCompleteCurrentActivity()">
+                    <span id="btnFinishLessonText">Finish lesson</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 3-Koloms lezer container -->
+    <div class="canva-reader-container">
+        <!-- LINKER KOLOM: Les indicator, navigatie door activiteiten & "Continue later" -->
+        <aside class="canva-reader-sidebar-left" id="canvaReaderSidebarLeft">
+            <div>
+                <span id="playerSidebarLessonNum" class="canva-sidebar-lesson-label">Lesson 2 of 7</span>
+                <h3 id="playerSidebarLessonTitle" class="canva-sidebar-lesson-title">Navigating your Canva Education homepage</h3>
+                
+                <div class="canva-reader-act-list" id="playerSidebarActList">
+                    <!-- Dynamisch gevuld via script.js -->
                 </div>
             </div>
-            <button type="button" class="close-btn" onclick="window.sluitActivityPlayer()" style="font-size: 24px; cursor: pointer; border: none; background: transparent; color: #64748b;">&times;</button>
-        </div>
 
-        <div class="activity-player-body" id="playerActivityBody">
-            <!-- Dynamische lesinhoud (video, stappenplan met tekst en tips, cheatsheet, etc.) -->
-        </div>
-
-        <div class="activity-player-footer">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button type="button" id="btnToggleCompleteActivity" class="btn-large-reserve" onclick="window.toggleCompleteCurrentActivity()" style="width: auto; padding: 10px 20px; font-size: 13.5px;">
-                    <span id="btnCompleteText">✓ Markeer als afgerond</span>
+            <div>
+                <button type="button" class="btn-continue-later" onclick="window.sluitActivityPlayer()">
+                    <span>←</span> Continue later
                 </button>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <button type="button" id="btnPlayerPrev" class="pill-btn secondary" onclick="window.playerNavigeer(-1)" style="font-size: 12.5px;">
-                    Vorige
-                </button>
-                <button type="button" id="btnPlayerNext" class="pill-btn primary" onclick="window.playerNavigeer(1)" style="font-size: 12.5px;">
-                    Volgende onderdeel →
-                </button>
+        </aside>
+
+        <!-- MIDDELSTE KOLOM: Artikel / Gids lezer met "What you'll learn", tekst, secties & AFBEELDINGEN -->
+        <main class="canva-reader-main" id="canvaReaderMainArea">
+            <article class="canva-reader-article">
+                <span id="playerGuidePill" class="canva-guide-pill">Guide</span>
+                <h1 id="playerMainTitle" class="canva-guide-title">Navigating your Canva Education homepage</h1>
+                
+                <div class="canva-guide-meta">
+                    <span id="playerMetaDuration">⏱️ 4 m</span>
+                    <span id="playerMetaLevel">📊 Beginner</span>
+                </div>
+
+                <p id="playerSubtitle" class="canva-guide-intro"></p>
+
+                <!-- "What you'll learn" card met animatie/toggle -->
+                <div id="playerLearnCard" class="canva-learn-card">
+                    <div class="canva-learn-header">
+                        <h3 class="canva-learn-title">What you'll learn</h3>
+                        <span class="canva-learn-icon">🎓✨</span>
+                    </div>
+                    <ul id="playerLearnList" class="canva-learn-list">
+                        <!-- Dynamisch gevuld -->
+                    </ul>
+                    <button type="button" id="playerLearnToggleBtn" class="canva-learn-toggle" onclick="window.toggleLearnCard()">
+                        See less ⌃
+                    </button>
+                </div>
+
+                <!-- Dynamische lesinhoud (video, stappen met afbeeldingen, tips) -->
+                <div id="playerActivityBody" class="canva-guide-body">
+                    <!-- Volledig gestructureerd gerenderd door script.js -->
+                </div>
+
+                <!-- Footer acties onder de les -->
+                <div style="margin-top: 48px; padding-top: 24px; border-top: 1.5px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <button type="button" class="btn-continue-later" onclick="window.sluitActivityPlayer()" style="width: auto;">
+                        <span>←</span> Terug naar overzicht
+                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btnPlayerPrev" class="pill-btn secondary" onclick="window.playerNavigeer(-1)">
+                            ← Vorig onderdeel
+                        </button>
+                        <button type="button" id="btnPlayerNext" class="pill-btn primary" onclick="window.playerNavigeer(1)" style="background: #7c3aed; color: white;">
+                            Volgend onderdeel →
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </main>
+
+        <!-- RECHTER KOLOM: "On this page" inhoudsopgave met actieve scroll-tracking -->
+        <aside class="canva-reader-sidebar-right">
+            <div class="canva-otp-card">
+                <div class="canva-otp-header">
+                    <span>📑</span>
+                    <span>On this page</span>
+                </div>
+                <div class="canva-otp-list" id="playerOtpList">
+                    <!-- Dynamisch gegenereerd op basis van de h3 kopjes in de les -->
+                </div>
             </div>
-        </div>
+        </aside>
+    </div>
+</div>
+
+<!-- LIGHTBOX MODAL VOOR AFBEELDINGEN IN LESSEN -->
+<div id="imageLightboxModal" class="lightbox-overlay" onclick="window.closeImageLightbox(event)" style="display: none;">
+    <div class="lightbox-dialog" onclick="event.stopPropagation()">
+        <button type="button" class="lightbox-close" onclick="window.closeImageLightbox()" aria-label="Sluiten">&times;</button>
+        <img id="lightboxImage" src="" alt="Afbeelding weergave" class="lightbox-img">
+        <div id="lightboxCaption" class="lightbox-caption"></div>
     </div>
 </div>
 
@@ -178,6 +259,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261106b"></script>
+<script src="script.js?v=20261106c"></script>
 </body>
 </html>

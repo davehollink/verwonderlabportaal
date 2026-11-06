@@ -4866,4 +4866,608 @@ body::after {
     margin-top: 8px;
 }
 
+/* ==============================================================
+   CANVA DESIGN SCHOOL IMMERSIVE LESSON READER (3-KOLOMS LAYOUT)
+   ============================================================== */
+.canva-reader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* Bovenbalk van de Canva lezer */
+.canva-reader-header {
+    height: 60px;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.canva-reader-brand {
+    width: 280px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-right: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.canva-reader-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 17px;
+    color: #7c3aed;
+    letter-spacing: -0.4px;
+}
+
+.canva-reader-close-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.canva-reader-close-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+    transform: rotate(90deg);
+}
+
+.canva-reader-topbar-banner {
+    flex: 1;
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    color: #ffffff;
+}
+
+.canva-reader-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.canva-reader-toggle-menu {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.canva-reader-toggle-menu:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.canva-reader-banner-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-finish-lesson {
+    background: #ffffff;
+    color: #0f172a;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 9999px;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-finish-lesson:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    background: #f8fafc;
+}
+
+.btn-finish-lesson.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* 3-Koloms lezer container */
+.canva-reader-container {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr 280px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+@media (max-width: 1200px) {
+    .canva-reader-brand {
+        width: 240px;
+    }
+    .canva-reader-container {
+        grid-template-columns: 240px 1fr 240px;
+    }
+}
+
+@media (max-width: 992px) {
+    .canva-reader-brand {
+        width: auto;
+        border-right: none;
+    }
+    .canva-reader-container {
+        grid-template-columns: 1fr;
+    }
+    .canva-reader-sidebar-left,
+    .canva-reader-sidebar-right {
+        display: none !important;
+    }
+    .canva-reader-sidebar-left.mobile-open {
+        display: flex !important;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 10000;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    }
+}
+
+/* Linker kolom: Lesoverzicht & onderdelen */
+.canva-reader-sidebar-left {
+    border-right: 1px solid #e2e8f0;
+    padding: 24px 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #ffffff;
+    gap: 20px;
+}
+
+.canva-sidebar-lesson-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.canva-sidebar-lesson-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.35;
+    margin: 0 0 16px 0;
+}
+
+.canva-reader-act-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.canva-reader-act-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.canva-reader-act-card:hover {
+    background: #f1f5f9;
+}
+
+.canva-reader-act-card.active {
+    background: #f3e8ff;
+    border-color: #c084fc;
+}
+
+.canva-reader-act-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.canva-reader-act-card.active .canva-reader-act-num {
+    background: #7c3aed;
+    color: #ffffff;
+}
+
+.canva-reader-act-card.completed .canva-reader-act-num {
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.canva-reader-act-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.canva-reader-act-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    margin-bottom: 2px;
+}
+
+.canva-reader-act-card.active .canva-reader-act-name {
+    color: #581c87;
+}
+
+.canva-reader-act-type {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.btn-continue-later {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    font-weight: 700;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn-continue-later:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+/* Middelste kolom: Lees- en instructiegebied */
+.canva-reader-main {
+    overflow-y: auto;
+    padding: 40px 48px 80px 48px;
+    scroll-behavior: smooth;
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .canva-reader-main {
+        padding: 24px 18px 60px 18px;
+    }
+}
+
+.canva-reader-article {
+    width: 100%;
+    max-width: 760px;
+}
+
+.canva-guide-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    background: #f3e8ff;
+    color: #7c3aed;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    margin-bottom: 12px;
+    text-transform: capitalize;
+}
+
+.canva-guide-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    margin: 0 0 12px 0;
+}
+
+.canva-guide-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 18px;
+}
+
+.canva-guide-intro {
+    font-size: 16px;
+    color: #334155;
+    line-height: 1.6;
+    margin: 0 0 26px 0;
+}
+
+/* "What you'll learn" card */
+.canva-learn-card {
+    border: 1.5px solid #c084fc;
+    border-radius: 18px;
+    padding: 22px 26px;
+    background: #ffffff;
+    margin-bottom: 30px;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(192, 132, 252, 0.08);
+}
+
+.canva-learn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+.canva-learn-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.canva-learn-icon {
+    font-size: 26px;
+}
+
+.canva-learn-list {
+    margin: 0 0 14px 0;
+    padding-left: 20px;
+    color: #334155;
+    font-size: 14.5px;
+    line-height: 1.65;
+}
+
+.canva-learn-list li {
+    margin-bottom: 5px;
+}
+
+.canva-learn-toggle {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #7c3aed;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Rijke lesinhoud en afbeeldingen in de gids */
+.canva-guide-body {
+    font-size: 15px;
+    color: #334155;
+    line-height: 1.7;
+}
+
+.canva-guide-body h3 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+    margin: 36px 0 12px 0;
+    scroll-margin-top: 24px;
+}
+
+.canva-guide-body p {
+    margin: 0 0 16px 0;
+}
+
+.canva-guide-body ul, 
+.canva-guide-body ol {
+    margin: 0 0 18px 0;
+    padding-left: 22px;
+}
+
+.canva-guide-body li {
+    margin-bottom: 6px;
+}
+
+/* Afbeeldingskader binnen de les */
+.canva-guide-img-container {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #ffffff;
+    margin: 22px 0;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+}
+
+.canva-guide-img-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.canva-guide-img-container img {
+    width: 100%;
+    display: block;
+    height: auto;
+    cursor: zoom-in;
+    object-fit: contain;
+}
+
+.canva-guide-img-caption {
+    padding: 10px 16px;
+    font-size: 12.5px;
+    color: #64748b;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Rechterkolom: "On this page" inhoudsopgave */
+.canva-reader-sidebar-right {
+    border-left: 1px solid #e2e8f0;
+    padding: 28px 20px;
+    overflow-y: auto;
+    background: #ffffff;
+}
+
+.canva-otp-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 18px 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    position: sticky;
+    top: 20px;
+}
+
+.canva-otp-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 14px;
+    padding-left: 6px;
+}
+
+.canva-otp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.canva-otp-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #475569;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1.35;
+}
+
+.canva-otp-item:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.canva-otp-item.active {
+    background: #f3e8ff;
+    color: #6b21a8;
+    font-weight: 700;
+}
+
+.canva-otp-num {
+    font-weight: 800;
+    color: #94a3b8;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+.canva-otp-item.active .canva-otp-num {
+    color: #7c3aed;
+}
+
+/* Toolbar voor beheerders in lesson builder om direct afbeeldingen en koppen in te voegen */
+.admin-activity-toolbar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+    padding: 6px 8px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.admin-tool-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+
+.admin-tool-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.admin-tool-btn.btn-tool-img {
+    background: #f3e8ff;
+    border-color: #c084fc;
+    color: #6b21a8;
+}
+
+.admin-tool-btn.btn-tool-img:hover {
+    background: #e9d5ff;
+}
+
+
 

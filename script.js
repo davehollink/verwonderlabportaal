@@ -1002,38 +1002,83 @@ const defaultElearningCursussen = [
                 nummer: 2,
                 icoon: "🪐",
                 titel: "Navigating your Canva Education homepage",
-                beschrijving: "Get comfortable with the Canva interface, find templates quickly and organize your school work in clean collaborative folders.",
+                beschrijving: "Get familiar with the main areas of Canva Education and know where to find your classes, projects, resources and creation tools.",
                 activiteiten: [
                     {
                         id: "act_101_2_1",
-                        titel: "De Canva Startpagina Verkennen",
+                        titel: "Navigating your Canva Education homepage",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "4 m",
+                        niveau: "Beginner",
+                        ondertitel: "Get familiar with the main areas of Canva Education and know where to find your classes, projects, resources and creation tools.",
+                        leerdoelen: [
+                            "Navigating the homepage",
+                            "Finding classes, projects and resources",
+                            "Starting a new design"
+                        ],
+                        inhoudHtml: `
+                            <p>Welcome to your Canva Education homepage, the starting point for finding teaching resources, managing your classes, creating lessons and activities, and accessing student work.</p>
+                            <p>Use this guide to understand the main areas of Canva Education and confidently begin planning, creating and teaching from one place.</p>
+
+                            <h3>Log in to Canva Education</h3>
+                            <p>Log in using the account connected to your school or Canva Education team. This ensures you can access your classes, teaching content, and Education-specific features.</p>
+                            <div class="canva-guide-img-container">
+                                <img src="img/canva/canva_login.png" alt="Log in to Canva Education" onclick="window.openImageLightbox(this.src, 'Log in to Canva Education')" loading="lazy">
+                                <div class="canva-guide-img-caption"><span>🔑</span> Inloggen met je Wonderwijs Microsoft-schoolaccount</div>
+                            </div>
+
+                            <h3>Start from the homepage</h3>
+                            <p>The homepage gives you a few easy ways to start creating.</p>
+                            <p>Choose from popular design types to open a blank design, or select <strong>Create</strong> to explore more options and enter custom dimensions.</p>
+                            <p>You can also use the search bar to look for a design, template, teaching topic, or resource.</p>
+                            <p>Return to <strong>Home</strong> whenever you want to start something new or access another area of Canva.</p>
+                            <div class="canva-guide-img-container">
+                                <img src="img/canva/canva_homepage.png" alt="Start from the homepage" onclick="window.openImageLightbox(this.src, 'Start from the homepage')" loading="lazy">
+                                <div class="canva-guide-img-caption"><span>🏠</span> Startpagina: 'What will you teach today?' zoekbalk en ontwerpcategorieën</div>
+                            </div>
+
+                            <h3>Access your classes</h3>
+                            <p>Quickly switch between your different classes or student groups from the top navigation. Keep student assignments and team projects neatly separated per classroom.</p>
+
+                            <h3>Find your work in Projects</h3>
+                            <p><strong>Projects</strong> is where you can find and organize the content you have created or uploaded to Canva.</p>
+                            <p>Use Projects to access:</p>
+                            <ul>
+                                <li>Your recent designs</li>
+                                <li>Designs shared with you</li>
+                                <li>Uploaded images, videos, and files</li>
+                                <li>Class and team content</li>
+                                <li>Folders you have created</li>
+                                <li>Designs available for offline editing</li>
+                            </ul>
+                            <p>Search and filters can help you quickly narrow down what you are looking for.</p>
+                            <div class="canva-guide-img-container">
+                                <img src="img/canva/canva_projects.png" alt="Find your work in Projects" onclick="window.openImageLightbox(this.src, 'Find your work in Projects')" loading="lazy">
+                                <div class="canva-guide-img-caption"><span>📁</span> Projecten: mappen, gedeelde documenten en recente ontwerpen</div>
+                            </div>
+
+                            <h3>Find teaching and learning resources</h3>
+                            <p>Search through thousands of education templates created specifically for teachers and students. Filter by subject, grade level, or curriculum topic.</p>
+
+                            <h3>Find more teaching and learning resources</h3>
+                            <p>Explore community-shared lesson packs, interactive whiteboards, and multimedia kits developed by fellow educators.</p>
+
+                            <h3>Manage your account and get help</h3>
+                            <p>Access school settings, collaborate with colleagues, and discover helpful video guides whenever you need inspiration.</p>
+                        `
+                    },
+                    {
+                        id: "act_101_2_2",
+                        titel: "Canva Startpagina Videorondleiding",
                         type: "video",
                         typeLabel: "Video",
                         duur: "6 min",
                         videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
                         inhoudHtml: `
-                            <h3>Vind moeiteloos je weg op de startpagina</h3>
-                            <p>De Canva onderwijsomgeving is ontworpen om binnen 3 klikken te vinden wat je zoekt. Bekijk de video hierboven om de linker navigatiebalk, sjabloonfilters en recente ontwerpen onder de knie te krijgen.</p>
-                        `
-                    },
-                    {
-                        id: "act_101_2_2",
-                        titel: "Mappenstructuur & Zoektips voor Leerkrachten",
-                        type: "guide",
-                        typeLabel: "Guide",
-                        duur: "5 min",
-                        inhoudHtml: `
-                            <h3>Slim organiseren met schoolmappen</h3>
-                            <p>Niets is zo frustrerend als een fantastisch werkblad kwijtraken vlak voor de les begint. Met een strakke mappenstructuur werk je georganiseerd en deel je eenvoudig met duo-collega's.</p>
-                            <h4>Stappenplan mappen aanmaken:</h4>
-                            <ol>
-                                <li>Klik in het linkermenu op <strong>Projecten</strong>.</li>
-                                <li>Klik rechtsboven op <strong>Nieuw toevoegen</strong> en kies <strong>Map</strong>.</li>
-                                <li>Geef de map een duidelijke naam, bijv: <em>Groep 5 - Rekenen Blok 3</em> of <em>Thema Herfst 2026</em>.</li>
-                                <li>Kies bij 'Delen' voor je parallelcollega of bouwteam, zodat iedereen direct toegang heeft tot de nieuwste versies.</li>
-                            </ol>
+                            <p>Bekijk in deze video een heldere demonstratie van alle knoppen en functies op de Canva Education startpagina.</p>
                             <div class="lesson-callout">
-                                <strong>📌 Handige tip:</strong> Kleurcodeer je mappen met emoji's (zoals 🔢 voor rekenen, 📖 voor taal en 🎨 voor creatief). Dit maakt het visueel direct herkenbaar!
+                                <strong>💡 Wonderwijs Aanrader:</strong> Maak direct een mapje aan voor je eigen jaargroep of bouw!
                             </div>
                         `
                     }
@@ -1338,6 +1383,16 @@ elearningCursussen = (Array.isArray(elearningCursussen) ? elearningCursussen : d
     .filter(c => c && !verwijderdeElearning.includes(String(c.id)));
 if (!elearningCursussen || elearningCursussen.length === 0) {
     elearningCursussen = defaultElearningCursussen.filter(c => !verwijderdeElearning.includes(String(c.id)));
+}
+
+// Zorg ervoor dat cursus 101 altijd de nieuwste lessen met afbeeldingen bevat
+const c101 = elearningCursussen.find(c => c && String(c.id) === '101');
+if (c101 && defaultElearningCursussen[0]) {
+    const hasImages = c101.lessen && JSON.stringify(c101.lessen).includes('canva_homepage.png');
+    if (!hasImages) {
+        c101.lessen = JSON.parse(JSON.stringify(defaultElearningCursussen[0].lessen));
+        localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
+    }
 }
 const standaardLesideeen = [
 
@@ -9271,7 +9326,7 @@ window.toggleCanvaLesson = function(lIdx) {
 };
 
 // ==========================================
-// IN-PORTAL LESSPELER & GIDS VIEWER
+// IN-PORTAL CANVA IMMERSIVE LESSPELER & GIDS
 // ==========================================
 window.openCanvaActivity = function(cursusId, lesId, actId) {
     const cursus = (elearningCursussen || []).find(c => c.id == cursusId);
@@ -9301,17 +9356,87 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
     };
 
     const modal = document.getElementById('elearningPlayerModal');
-    const iconEl = document.getElementById('playerActivityIcon');
-    const subtitleEl = document.getElementById('playerLessonSubtitle');
-    const titleEl = document.getElementById('playerActivityTitle');
+    if (!modal) return;
+
+    // 1. Topbar
+    const bannerTitle = document.getElementById('playerTopBannerTitle');
+    if (bannerTitle) bannerTitle.innerText = `${cursus.titel || 'Canva'} • ${activeLes.titel || ''}`;
+
+    const finishBtn = document.getElementById('btnFinishLesson');
+    const finishBtnText = document.getElementById('btnFinishLessonText');
+    const isDone = elearningProgress && elearningProgress[actId];
+    if (finishBtn) {
+        if (isDone) {
+            finishBtn.classList.add('completed');
+            if (finishBtnText) finishBtnText.innerHTML = '✓ Lesson finished';
+        } else {
+            finishBtn.classList.remove('completed');
+            if (finishBtnText) finishBtnText.innerHTML = 'Finish lesson';
+        }
+    }
+
+    // 2. Linker kolom
+    const sbLessonNum = document.getElementById('playerSidebarLessonNum');
+    const sbLessonTitle = document.getElementById('playerSidebarLessonTitle');
+    const sbActList = document.getElementById('playerSidebarActList');
+
+    const totalLessen = cursus.lessen.length;
+    const lesNum = activeLes.nummer || 1;
+    if (sbLessonNum) sbLessonNum.innerText = `Lesson ${lesNum} of ${totalLessen}`;
+    if (sbLessonTitle) sbLessonTitle.innerText = activeLes.titel || '';
+
+    if (sbActList && Array.isArray(activeLes.activiteiten)) {
+        sbActList.innerHTML = activeLes.activiteiten.map((a, aIdx) => {
+            const isCurrent = a.id === actId;
+            const aDone = elearningProgress && elearningProgress[a.id];
+            return `
+                <div class="canva-reader-act-card ${isCurrent ? 'active' : ''} ${aDone ? 'completed' : ''}" onclick="window.openCanvaActivity(${cursusId}, '${activeLes.id}', '${a.id}')">
+                    <span class="canva-reader-act-num">${aDone ? '✓' : (aIdx + 1)}</span>
+                    <div class="canva-reader-act-info">
+                        <div class="canva-reader-act-name">${escapeHtml(a.titel || 'Onderdeel')}</div>
+                        <div class="canva-reader-act-type">${escapeHtml(a.typeLabel || a.type || 'Guide')}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 3. Middelste kolom (Artikel)
+    const pillEl = document.getElementById('playerGuidePill');
+    const mainTitleEl = document.getElementById('playerMainTitle');
+    const metaDurEl = document.getElementById('playerMetaDuration');
+    const metaLvlEl = document.getElementById('playerMetaLevel');
+    const subtitleEl = document.getElementById('playerSubtitle');
+    const learnCardEl = document.getElementById('playerLearnCard');
+    const learnListEl = document.getElementById('playerLearnList');
     const bodyEl = document.getElementById('playerActivityBody');
-    const btnText = document.getElementById('btnCompleteText');
 
-    if (iconEl) iconEl.innerText = activeLes.icoon || '📖';
-    if (subtitleEl) subtitleEl.innerText = `${activeLes.titel || 'Les'} • ${activeAct.typeLabel || activeAct.type || 'Onderdeel'}`;
-    if (titleEl) titleEl.innerText = activeAct.titel || '';
+    if (pillEl) pillEl.innerText = activeAct.typeLabel || activeAct.type || 'Guide';
+    if (mainTitleEl) mainTitleEl.innerText = activeAct.titel || '';
+    if (metaDurEl) metaDurEl.innerText = `⏱️ ${activeAct.duur || '4 m'}`;
+    if (metaLvlEl) metaLvlEl.innerText = `📊 ${activeAct.niveau || cursus.niveau || 'Beginner'}`;
+    
+    const introText = activeAct.ondertitel || activeLes.beschrijving || '';
+    if (subtitleEl) {
+        subtitleEl.innerText = introText;
+        subtitleEl.style.display = introText ? 'block' : 'none';
+    }
 
-    // Render actieve inhoud
+    // "What you'll learn"
+    let learnGoals = activeAct.leerdoelen || activeAct.whatYoullLearn || [];
+    if (typeof learnGoals === 'string') {
+        learnGoals = learnGoals.split('\n').map(s => s.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
+    }
+    if (learnCardEl && learnListEl) {
+        if (Array.isArray(learnGoals) && learnGoals.length > 0) {
+            learnCardEl.style.display = 'block';
+            learnListEl.innerHTML = learnGoals.map(g => `<li>${escapeHtml(g)}</li>`).join('');
+        } else {
+            learnCardEl.style.display = 'none';
+        }
+    }
+
+    // Render body
     if (bodyEl) {
         let contentHtml = '';
         if (activeAct.type === 'video' && activeAct.videoUrl) {
@@ -9329,21 +9454,131 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
 
         contentHtml += activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
         bodyEl.innerHTML = contentHtml;
+
+        // Maak alle afbeeldingen in de les klikbaar voor lightbox vergroting
+        bodyEl.querySelectorAll('img').forEach(img => {
+            img.style.cursor = 'zoom-in';
+            if (!img.getAttribute('onclick')) {
+                img.addEventListener('click', () => window.openImageLightbox(img.src, img.alt || 'Afbeelding'));
+            }
+        });
     }
 
-    // Knopstatus bijwerken
-    const isDone = elearningProgress && elearningProgress[actId];
-    if (btnText) {
-        btnText.innerText = isDone ? '✓ Afgerond (klik om opnieuw te doen)' : '✓ Markeer als afgerond';
+    // 4. Rechter kolom: "On this page" inhoudsopgave genereren
+    const otpListEl = document.getElementById('playerOtpList');
+    const otpSidebar = document.querySelector('.canva-reader-sidebar-right');
+    if (otpListEl && bodyEl) {
+        const headings = Array.from(bodyEl.querySelectorAll('h3'));
+        if (headings.length > 0) {
+            if (otpSidebar) otpSidebar.style.display = 'block';
+            otpListEl.innerHTML = headings.map((h, idx) => {
+                const stepId = h.id || `canva_step_${idx + 1}`;
+                h.id = stepId;
+                const cleanText = h.innerText.replace(/^\d+[\.\)]\s*/, '');
+                return `
+                    <a class="canva-otp-item ${idx === 0 ? 'active' : ''}" onclick="window.scrollToOtpStep('${stepId}', this)">
+                        <span class="canva-otp-num">${idx + 1}</span>
+                        <span>${escapeHtml(cleanText)}</span>
+                    </a>
+                `;
+            }).join('');
+        } else {
+            if (otpSidebar) otpSidebar.style.display = 'none';
+        }
     }
 
+    // Reset scroll naar boven
+    const mainArea = document.getElementById('canvaReaderMainArea');
+    if (mainArea) mainArea.scrollTop = 0;
+
+    // Koppel scroll listener voor "On this page" actieve highlight
+    window._bindOtpScrollSync();
+
+    modal.style.display = 'flex';
+};
+
+window._bindOtpScrollSync = function() {
+    const mainArea = document.getElementById('canvaReaderMainArea');
+    if (!mainArea) return;
+
+    if (window._canvaScrollSyncBound) return;
+    window._canvaScrollSyncBound = true;
+
+    mainArea.addEventListener('scroll', () => {
+        const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3'));
+        if (headings.length === 0) return;
+
+        let activeHeading = headings[0];
+        const containerTop = mainArea.getBoundingClientRect().top;
+
+        for (let h of headings) {
+            const rect = h.getBoundingClientRect();
+            if (rect.top - containerTop <= 100) {
+                activeHeading = h;
+            } else {
+                break;
+            }
+        }
+
+        const otpItems = document.querySelectorAll('.canva-otp-item');
+        otpItems.forEach(item => {
+            const clickAttr = item.getAttribute('onclick') || '';
+            if (clickAttr.includes(activeHeading.id)) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }, { passive: true });
+};
+
+window.scrollToOtpStep = function(id, linkEl) {
+    const target = document.getElementById(id);
+    const mainArea = document.getElementById('canvaReaderMainArea');
+    if (target && mainArea) {
+        const topPos = target.offsetTop - 24;
+        mainArea.scrollTo({ top: topPos, behavior: 'smooth' });
+    }
+    document.querySelectorAll('.canva-otp-item').forEach(it => it.classList.remove('active'));
+    if (linkEl) linkEl.classList.add('active');
+};
+
+window.toggleLearnCard = function() {
+    const list = document.getElementById('playerLearnList');
+    const btn = document.getElementById('playerLearnToggleBtn');
+    if (!list || !btn) return;
+    if (list.style.display === 'none') {
+        list.style.display = 'block';
+        btn.innerHTML = 'See less ⌃';
+    } else {
+        list.style.display = 'none';
+        btn.innerHTML = 'See more ⌄';
+    }
+};
+
+window.openImageLightbox = function(src, caption = '') {
+    const modal = document.getElementById('imageLightboxModal');
+    const img = document.getElementById('lightboxImage');
+    const cap = document.getElementById('lightboxCaption');
+    if (img) img.src = src;
+    if (cap) cap.innerText = caption || '';
     if (modal) modal.style.display = 'flex';
+};
+
+window.closeImageLightbox = function(event) {
+    if (event && event.target && event.target.tagName === 'IMG') return;
+    const modal = document.getElementById('imageLightboxModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.toggleCanvaReaderMobileMenu = function() {
+    const sb = document.getElementById('canvaReaderSidebarLeft');
+    if (sb) sb.classList.toggle('mobile-open');
 };
 
 window.sluitActivityPlayer = function() {
     const modal = document.getElementById('elearningPlayerModal');
     if (modal) {
-        // Stop video playback door iframe leeg te maken
         const ifr = modal.querySelector('iframe');
         if (ifr) ifr.src = '';
         modal.style.display = 'none';
@@ -9359,12 +9594,28 @@ window.toggleCompleteCurrentActivity = function() {
     localStorage.setItem('ww_elearning_progress_v1', JSON.stringify(elearningProgress));
 
     const isDone = elearningProgress[actId];
-    const btnText = document.getElementById('btnCompleteText');
-    if (btnText) {
-        btnText.innerText = isDone ? '✓ Afgerond (klik om opnieuw te doen)' : '✓ Markeer als afgerond';
+    const finishBtn = document.getElementById('btnFinishLesson');
+    const finishBtnText = document.getElementById('btnFinishLessonText');
+    if (finishBtn) {
+        if (isDone) {
+            finishBtn.classList.add('completed');
+            if (finishBtnText) finishBtnText.innerHTML = '✓ Lesson finished';
+        } else {
+            finishBtn.classList.remove('completed');
+            if (finishBtnText) finishBtnText.innerHTML = 'Finish lesson';
+        }
     }
 
-    // Werk de actieve cursuspagina direct bij
+    // Update linker zijbalk
+    const sbCard = document.querySelector(`.canva-reader-act-card.active`);
+    if (sbCard) {
+        if (isDone) sbCard.classList.add('completed');
+        else sbCard.classList.remove('completed');
+        const num = sbCard.querySelector('.canva-reader-act-num');
+        if (num && isDone) num.innerText = '✓';
+    }
+
+    // Werk de achterliggende cursuspagina direct bij
     if (window._huidigeCursus) {
         window.openCourseView(window._huidigeCursus.id);
     }
@@ -9374,7 +9625,6 @@ window.playerNavigeer = function(delta) {
     if (!window._activePlayerInfo || !window._huidigeCursus) return;
     const cursus = window._huidigeCursus;
     
-    // Maak een platte lijst van alle activiteiten in deze cursus
     const allActivities = [];
     if (cursus.lessen && Array.isArray(cursus.lessen)) {
         cursus.lessen.forEach(l => {
@@ -9430,7 +9680,7 @@ window.renderAdminLessonBuilder = function() {
 
     if (!window.adminHuidigeLessen || window.adminHuidigeLessen.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: #64748b; font-size: 13px;">
+            <div style="text-align: center; padding: 24px; color: #64748b; font-size: 13px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px;">
                 Nog geen lessen toegevoegd. Klik op <strong>'➕ Les toevoegen'</strong> om te beginnen.
             </div>
         `;
@@ -9440,32 +9690,61 @@ window.renderAdminLessonBuilder = function() {
     container.innerHTML = window.adminHuidigeLessen.map((les, lIdx) => {
         const actList = Array.isArray(les.activiteiten) ? les.activiteiten : [];
 
-        const actHtml = actList.map((act, aIdx) => `
+        const actHtml = actList.map((act, aIdx) => {
+            const rawGoals = Array.isArray(act.leerdoelen) ? act.leerdoelen.join(', ') : (act.leerdoelen || '');
+            return `
             <div class="admin-activity-item">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <strong style="font-size: 12.5px; color: #0f172a;">Onderdeel ${aIdx + 1}</strong>
-                    <button type="button" onclick="window.adminVerwijderActiviteit(${lIdx}, ${aIdx})" style="color: #dc2626; border: none; background: transparent; cursor: pointer; font-size: 11.5px; font-weight: 700;">✕ Verwijder</button>
+                    <strong style="font-size: 12.5px; color: #0f172a;">Onderdeel ${aIdx + 1} (${act.typeLabel || act.type || 'Guide'})</strong>
+                    <button type="button" onclick="window.adminVerwijderActiviteit(${lIdx}, ${aIdx})" style="color: #dc2626; border: none; background: transparent; cursor: pointer; font-size: 11.5px; font-weight: 700;">✕ Verwijder onderdeel</button>
                 </div>
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" value="${escapeHtml(act.titel || '')}" placeholder="Titel van onderdeel" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'titel', this.value)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
-                    <select onchange="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'type', this.value)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white;">
-                        <option value="video" ${act.type === 'video' ? 'selected' : ''}>Video (▶)</option>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" value="${escapeHtml(act.titel || '')}" placeholder="Titel van onderdeel" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'titel', this.value)" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700;">
+                    <select onchange="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'type', this.value)" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white; font-weight: 600;">
                         <option value="guide" ${act.type === 'guide' ? 'selected' : ''}>Guide / Gids (📋)</option>
+                        <option value="video" ${act.type === 'video' ? 'selected' : ''}>Video (▶)</option>
                         <option value="cheatsheet" ${act.type === 'cheatsheet' ? 'selected' : ''}>Cheatsheet (📖)</option>
                         <option value="opdracht" ${act.type === 'opdracht' ? 'selected' : ''}>Opdracht (✏️)</option>
                     </select>
+                    <input type="text" value="${escapeHtml(act.duur || '4 m')}" placeholder="Duur (bijv. 4 m)" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'duur', this.value)" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
                 </div>
+
+                <div style="margin-bottom: 8px;">
+                    <input type="text" value="${escapeHtml(act.ondertitel || '')}" placeholder="Korte inleidende ondertitel van dit onderdeel..." oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'ondertitel', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; margin-bottom: 6px;">
+                    <input type="text" value="${escapeHtml(rawGoals)}" placeholder="Wat je leert / Leerdoelen (komma-gescheiden, bijv: Navigating homepage, Starting a design)" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'leerdoelen', this.value.split(',').map(s=>s.trim()).filter(Boolean))" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                </div>
+
                 ${act.type === 'video' ? `
-                    <input type="text" value="${escapeHtml(act.videoUrl || '')}" placeholder="YouTube Video URL (bijv. https://www.youtube.com/watch?v=...)" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'videoUrl', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; margin-bottom: 6px;">
+                    <div style="margin-bottom: 8px;">
+                        <input type="text" value="${escapeHtml(act.videoUrl || '')}" placeholder="YouTube Video URL (bijv. https://www.youtube.com/watch?v=...)" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'videoUrl', this.value)" style="width: 100%; box-sizing: border-box; padding: 7px 10px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+                    </div>
                 ` : ''}
-                <textarea rows="3" placeholder="Lesinhoud, uitleg, tips of stappenplan (HTML of platte tekst)..." oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'inhoudHtml', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">${escapeHtml(act.inhoudHtml || '')}</textarea>
+
+                <!-- Toolbar om direct afbeeldingen, koppen en tips in te voegen -->
+                <div class="admin-activity-toolbar">
+                    <button type="button" class="admin-tool-btn btn-tool-img" onclick="window.adminPromptAfbeelding(${lIdx}, ${aIdx})" title="Afbeelding toevoegen aan deze les">
+                        <span>🖼️</span> Afbeelding toevoegen / uploaden
+                    </button>
+                    <button type="button" class="admin-tool-btn" onclick="window.adminVoegKopToe(${lIdx}, ${aIdx})" title="Kopje toevoegen (verschijnt in 'On this page')">
+                        <span>➕</span> Kop toevoegen
+                    </button>
+                    <button type="button" class="admin-tool-btn" onclick="window.adminVoegTipToe(${lIdx}, ${aIdx})" title="Opvallende tip-box toevoegen">
+                        <span>💡</span> Tip-box
+                    </button>
+                    <button type="button" class="admin-tool-btn" onclick="window.adminVoegLijstToe(${lIdx}, ${aIdx})" title="Opsomming toevoegen">
+                        <span>•</span> Opsomming
+                    </button>
+                </div>
+
+                <textarea id="adminActInhoud_${lIdx}_${aIdx}" rows="6" placeholder="Lesinhoud, instructietekst, stappen en afbeeldingen..." oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'inhoudHtml', this.value)" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; font-family: inherit; line-height: 1.5;">${escapeHtml(act.inhoudHtml || '')}</textarea>
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         return `
             <div class="admin-lesson-item">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span style="font-size: 13px; font-weight: 800; color: #0f172a;">Les ${lIdx + 1}</span>
+                    <span style="font-size: 13.5px; font-weight: 800; color: #0f172a;">Les ${lIdx + 1}</span>
                     <button type="button" onclick="window.adminVerwijderLes(${lIdx})" style="color: #dc2626; border: none; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700;">🗑️ Les verwijderen</button>
                 </div>
                 <div style="display: grid; grid-template-columns: 50px 1fr; gap: 8px; margin-bottom: 8px;">
@@ -9474,16 +9753,100 @@ window.renderAdminLessonBuilder = function() {
                 </div>
                 <textarea rows="2" placeholder="Korte inleidende beschrijving van deze les..." oninput="window.adminUpdateLes(${lIdx}, 'beschrijving', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; margin-bottom: 10px;">${escapeHtml(les.beschrijving || '')}</textarea>
 
-                <div style="background: #f1f5f9; padding: 10px; border-radius: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-size: 11.5px; font-weight: 700; color: #475569;">Onderdelen / Activiteiten in deze les:</span>
-                        <button type="button" onclick="window.adminVoegActiviteitToe(${lIdx})" style="padding: 4px 8px; font-size: 11px; background: #0f172a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 700;">➕ Onderdeel toevoegen</button>
+                <div style="background: #f1f5f9; padding: 12px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #334155;">Onderdelen / Activiteiten in deze les:</span>
+                        <button type="button" onclick="window.adminVoegActiviteitToe(${lIdx})" style="padding: 5px 10px; font-size: 11.5px; background: #0f172a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 700;">➕ Onderdeel toevoegen</button>
                     </div>
-                    ${actHtml || '<div style="font-size: 11px; color: #888; text-align: center; padding: 6px;">Nog geen onderdelen. Klik op <strong>+ Onderdeel toevoegen</strong>.</div>'}
+                    ${actHtml || '<div style="font-size: 11.5px; color: #888; text-align: center; padding: 10px; background: white; border-radius: 8px; border: 1px dashed #cbd5e1;">Nog geen onderdelen. Klik op <strong>+ Onderdeel toevoegen</strong>.</div>'}
                 </div>
             </div>
         `;
     }).join('');
+};
+
+window.adminInsertSnippet = function(lIdx, aIdx, snippet) {
+    const act = window.adminHuidigeLessen?.[lIdx]?.activiteiten?.[aIdx];
+    if (!act) return;
+    const tx = document.getElementById(`adminActInhoud_${lIdx}_${aIdx}`);
+    if (tx) {
+        const start = tx.selectionStart || tx.value.length;
+        const end = tx.selectionEnd || tx.value.length;
+        const val = tx.value;
+        tx.value = val.substring(0, start) + snippet + val.substring(end);
+        act.inhoudHtml = tx.value;
+        tx.focus();
+    } else {
+        act.inhoudHtml = (act.inhoudHtml || '') + snippet;
+        window.renderAdminLessonBuilder();
+    }
+};
+
+window.adminPromptAfbeelding = function(lIdx, aIdx) {
+    const act = window.adminHuidigeLessen?.[lIdx]?.activiteiten?.[aIdx];
+    if (!act) return;
+
+    // Vraag keuze tussen computer upload of bestandspad/weblink
+    const keuze = confirm("🖼️ Afbeelding toevoegen aan deze les:\n\n• Klik op 'OK' om een afbeelding vanaf je computer (of tablet/telefoon) te uploaden.\n• Klik op 'Annuleren' om een link of bestandspad (zoals img/canva/canva_homepage.png) in te vullen.");
+
+    if (keuze) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) {
+                fileInput.remove();
+                return;
+            }
+            try {
+                let dataUrl = await new Promise((resolve) => {
+                    const r = new FileReader();
+                    r.onload = ev => resolve(ev.target.result);
+                    r.readAsDataURL(file);
+                });
+                if (typeof window.compressImage === 'function') {
+                    dataUrl = await window.compressImage(dataUrl, 1000, 750, 0.82);
+                }
+                const caption = prompt("Onderschrift bij deze afbeelding (optioneel):", file.name.replace(/\.[^/.]+$/, "")) || '';
+                const imgHtml = `\n<div class="canva-guide-img-container">\n    <img src="${dataUrl}" alt="${escapeHtml(caption)}" loading="lazy">\n    ${caption ? `<div class="canva-guide-img-caption"><span>🖼️</span> ${escapeHtml(caption)}</div>` : ''}\n</div>\n`;
+                window.adminInsertSnippet(lIdx, aIdx, imgHtml);
+            } catch(err) {
+                alert("Fout bij verwerken van afbeelding: " + err.message);
+            } finally {
+                fileInput.remove();
+            }
+        };
+        fileInput.click();
+    } else {
+        const url = prompt("Voer de afbeeldingslink of het bestandspad in (bijv. img/canva/canva_homepage.png):", "img/canva/");
+        if (!url || !url.trim()) return;
+        const caption = prompt("Onderschrift bij deze afbeelding (optioneel):", "") || '';
+        const imgHtml = `\n<div class="canva-guide-img-container">\n    <img src="${url.trim()}" alt="${escapeHtml(caption)}" loading="lazy">\n    ${caption ? `<div class="canva-guide-img-caption"><span>🖼️</span> ${escapeHtml(caption)}</div>` : ''}\n</div>\n`;
+        window.adminInsertSnippet(lIdx, aIdx, imgHtml);
+    }
+};
+
+window.adminVoegKopToe = function(lIdx, aIdx) {
+    const titel = prompt("Voer de titel van de stap of het kopje in:", "Nieuwe stap");
+    if (!titel) return;
+    const snippet = `\n<h3>${titel}</h3>\n<p>Schrijf hier de instructie of toelichting bij deze stap...</p>\n`;
+    window.adminInsertSnippet(lIdx, aIdx, snippet);
+};
+
+window.adminVoegTipToe = function(lIdx, aIdx) {
+    const tip = prompt("Voer de didactische tip in voor leerkrachten:", "Wonderwijs Tip: ...");
+    if (!tip) return;
+    const snippet = `\n<div class="lesson-callout"><strong>💡 Wonderwijs Tip:</strong> ${tip}</div>\n`;
+    window.adminInsertSnippet(lIdx, aIdx, snippet);
+};
+
+window.adminVoegLijstToe = function(lIdx, aIdx) {
+    const snippet = `\n<ul>\n    <li>Eerste punt van de opsomming</li>\n    <li>Tweede punt van de opsomming</li>\n</ul>\n`;
+    window.adminInsertSnippet(lIdx, aIdx, snippet);
 };
 
 window.adminVoegLesToe = function() {
