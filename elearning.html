@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - E-Learning & Professionalisering</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261106a">
+    <link rel="stylesheet" href="style.css?v=20261106b">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -41,26 +41,27 @@
                     <span>Wonderwijs E-Learning Academy • 2026</span>
                 </div>
                 <h1 style="margin-bottom: 4px;">E-Learning & Professionalisering</h1>
-                <p class="top-bar-subtitle">Zelfstandige microlearnings, videotrainingen en cursussen voor het team</p>
+                <p class="top-bar-subtitle">Eigen cursussen, videotrainingen, stappenplannen en certificaten</p>
             </div>
             <div class="top-actions" style="display: flex; gap: 10px; align-items: center;">
                 <button id="adminLoginBtn" class="pill-btn admin" onclick="checkAdminPassword()" style="display: none;"><span>⚙️</span> Admin</button>
             </div>
         </header>
 
-        <div style="padding: 24px 0;">
+        <!-- WEERGAVE 1: CURSUS OVERZICHT (CATALOGUS) -->
+        <div id="elearningOverviewView" style="padding: 24px 0;">
             <!-- Hero banner -->
             <div class="elearning-hero">
                 <div class="elearning-hero-text">
                     <h2>Ontwikkel je digitale vaardigheden ✨</h2>
-                    <p>Praktijkgerichte e-learning modules, ontworpen voor het basisonderwijs. Leer in je eigen tempo werken met Canva, ontdek hoe je leskisten maximaal benut, of verken de kansen van AI in je onderwijspraktijk.</p>
+                    <p>Praktijkgerichte e-learning modules, volledig zelf ontwikkeld voor het basisonderwijs. Leer in je eigen tempo stap voor stap werken met Canva, ontdek hoe je leskisten maximaal benut, of verken de didactische inzet van AI.</p>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                     <span style="background: rgba(140, 198, 63, 0.15); color: #3f6212; border: 1px solid rgba(140, 198, 63, 0.3); font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 9999px;">
-                        ✓ Kosteloos voor Wonderwijs scholen
+                        ✓ Wonderwijs gecertificeerd
                     </span>
                     <span style="background: #f1f5f9; color: #475569; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 9999px;">
-                        ⏱️ Direct te starten
+                        🎓 Direct interactief in het portaal
                     </span>
                 </div>
             </div>
@@ -84,19 +85,99 @@
                 <!-- Wordt dynamisch gerenderd door script.js -->
             </div>
         </div>
+
+        <!-- WEERGAVE 2: INTERACTIEVE CANVA DESIGN SCHOOL CURSUS HUB -->
+        <div id="elearningCourseHubView" style="display: none; padding: 24px 0;">
+            <div class="canva-course-topbar">
+                <button type="button" class="btn-back-overview" onclick="window.sluitCourseHub()">
+                    <span>←</span> Terug naar alle cursussen
+                </button>
+                <div id="courseHubHeaderBadges" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;"></div>
+            </div>
+
+            <div style="margin-bottom: 26px;">
+                <h1 id="courseHubTitle" style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.4px;">Cursustitel</h1>
+                <p id="courseHubDesc" style="font-size: 15px; color: #64748b; line-height: 1.6; margin: 0; max-width: 820px;">Cursus omschrijving...</p>
+            </div>
+
+            <div class="canva-course-container">
+                <!-- Linker kolom: Lessen Accordion Lijst -->
+                <div class="canva-lesson-list" id="courseHubLessonsList">
+                    <!-- Dynamisch opgebouwd via script.js -->
+                </div>
+
+                <!-- Rechter kolom: Certificaat, Statistieken & Key Skills -->
+                <div class="canva-sidebar" id="courseHubSidebar">
+                    <!-- Dynamisch opgebouwd via script.js -->
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
-<!-- Modal voor Cursus Details / Player Preview -->
-<div id="elearningDetailModal" class="modal modal-large" style="display: none;">
-    <div class="modal-content" style="max-width: 820px; max-height: 92vh; overflow-y: auto;">
+<!-- MODAL: IN-PORTAL LESACTIVITEIT SPELER & GIDS (Video / Stappenplan / Cheatsheet / Opdracht) -->
+<div id="elearningPlayerModal" class="activity-player-modal" style="display: none;">
+    <div class="activity-player-dialog">
+        <div class="activity-player-header">
+            <div class="activity-player-title-box">
+                <span id="playerActivityIcon" style="font-size: 22px;"></span>
+                <div>
+                    <span id="playerLessonSubtitle" style="font-size: 11.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"></span>
+                    <h3 id="playerActivityTitle" style="font-size: 17px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3;"></h3>
+                </div>
+            </div>
+            <button type="button" class="close-btn" onclick="window.sluitActivityPlayer()" style="font-size: 24px; cursor: pointer; border: none; background: transparent; color: #64748b;">&times;</button>
+        </div>
+
+        <div class="activity-player-body" id="playerActivityBody">
+            <!-- Dynamische lesinhoud (video, stappenplan met tekst en tips, cheatsheet, etc.) -->
+        </div>
+
+        <div class="activity-player-footer">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" id="btnToggleCompleteActivity" class="btn-large-reserve" onclick="window.toggleCompleteCurrentActivity()" style="width: auto; padding: 10px 20px; font-size: 13.5px;">
+                    <span id="btnCompleteText">✓ Markeer als afgerond</span>
+                </button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" id="btnPlayerPrev" class="pill-btn secondary" onclick="window.playerNavigeer(-1)" style="font-size: 12.5px;">
+                    Vorige
+                </button>
+                <button type="button" id="btnPlayerNext" class="pill-btn primary" onclick="window.playerNavigeer(1)" style="font-size: 12.5px;">
+                    Volgende onderdeel →
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CERTIFICAAT WEERGAVE -->
+<div id="elearningCertificaatModal" class="modal modal-large" style="display: none;">
+    <div class="modal-content" style="max-width: 680px; text-align: center; padding: 36px 30px;">
         <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
-        <div id="elearningDetailBody"></div>
+        <div style="font-size: 54px; margin-bottom: 12px;">🏆</div>
+        <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 8px;">Wonderwijs Digital Academy Certificaat</span>
+        <h2 id="certificaatCursusTitel" style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0;">Certificaat</h2>
+        <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">Dit certificaat bevestigt dat onderstaande leerkracht alle modules succesvol heeft afgerond:</p>
+
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%); border: 2.5px solid #8CC63F; border-radius: 18px; padding: 26px 20px; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(140, 198, 63, 0.12);">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #15803d; margin-bottom: 6px;">Uitreiking aan</div>
+            <h3 id="certificaatNaamLeerkracht" style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">Leerkracht Naam</h3>
+            <p id="certificaatSchool" style="font-size: 13px; color: #475569; margin: 0 0 14px 0;">Locatie / School</p>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 12px; color: #64748b; border-top: 1px dashed #bbf7d0; padding-top: 12px;">
+                <span>📅 Datum: <strong id="certificaatDatum">Vandaag</strong></span>
+                <span>⭐ Status: <strong style="color: #15803d;">Volledig behaald</strong></span>
+            </div>
+        </div>
+
+        <button type="button" class="btn-large-reserve" onclick="window.print()" style="width: auto; margin: 0 auto; padding: 12px 28px;">
+            <span>🖨️ Certificaat Afdrukken / Opslaan als PDF</span>
+        </button>
     </div>
 </div>
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261106a"></script>
+<script src="script.js?v=20261106b"></script>
 </body>
 </html>

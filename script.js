@@ -933,60 +933,399 @@ let leskisten = safeGetLocal('ww_leskisten_v15', []);
 leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)));
 
 // ==========================================
+// MENU ZICHTBAARHEID CONFIGURATIE (VOOR MEDEWERKERS)
+// ==========================================
+const defaultMenuConfig = {
+    "index.html": { id: "index.html", naam: "Dashboard", icoon: "📊", zichtbaar: true, vergrendeld: true, beschrijving: "Startpagina met overzicht, agenda en statistieken." },
+    "reserveren.html": { id: "reserveren.html", naam: "Leskisten & reserveren", icoon: "📦", zichtbaar: true, vergrendeld: false, beschrijving: "Uitleensysteem voor alle leskisten en apparatuur." },
+    "elearning.html": { id: "elearning.html", naam: "E-Learning", icoon: "🎓", zichtbaar: true, vergrendeld: false, beschrijving: "Interactieve cursussen en microlearnings voor leerkrachten." },
+    "leerlijnen.html": { id: "leerlijnen.html", naam: "Leerlijn digitale geletterdheid", icoon: "🧭", zichtbaar: true, vergrendeld: false, beschrijving: "Doelen en doorlopende leerlijn groep 1 t/m 8." },
+    "handreiking.html": { id: "handreiking.html", naam: "Handreiking digitale geletterdheid", icoon: "📖", zichtbaar: true, vergrendeld: false, beschrijving: "PDF-viewer en didactische handleiding." },
+    "lesideeen.html": { id: "lesideeen.html", naam: "Lesideeën & inspiratie", icoon: "💡", zichtbaar: true, vergrendeld: false, beschrijving: "Kant-en-klare lesbrieven en inspiratie voor in de klas." }
+};
+
+let menuConfig = safeGetLocal('ww_menu_config_v1', defaultMenuConfig);
+menuConfig = { ...defaultMenuConfig, ...menuConfig };
+
+let elearningProgress = safeGetLocal('ww_elearning_progress_v1', {});
+
+// ==========================================
 // E-LEARNING STANDAARD DATA & OPSLAG
 // ==========================================
 const defaultElearningCursussen = [
     {
         id: 101,
-        titel: "Canva voor Onderwijs: De Basiscursus",
+        titel: "Canva voor Onderwijs: Teacher Essentials",
         categorie: "Creatieve Tools",
-        niveau: "Leerkrachten PO • Beginner",
-        duur: "45 min",
+        niveau: "Beginner",
+        duur: "1 u 4 m",
         auteur: "Wonderwijs ICT & Didactiek",
         thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
         videoUrl: "https://www.youtube.com/watch?v=kY3B11w_x9g",
-        omschrijving: "Leer hoe je als leerkracht snel professionele werkbladen, dagritmekaarten, klasposters en interactieve presentaties maakt met Canva voor Onderwijs.",
-        leerdoelen: "• De interface en handige tools van Canva voor Onderwijs verkennen\n• Kant-en-klare lessjablonen aanpassen naar je eigen groep\n• Werkbladen en posters drukklaar downloaden als PDF\n• Samenwerken met collega's en klasgroepen beheren",
-        cursusUrl: "https://www.canva.com/education/"
+        omschrijving: "Welkom bij de Teacher Essentials cursus. Deze cursus rust je uit met alle essentiële vaardigheden om boeiend en interactief onderwijs te creëren met Canva.",
+        keySkills: ["Student learning", "Collaboration and teamwork", "Teaching and learning", "Canva Education", "Klasbeheer", "Digitale werkbladen"],
+        certificaatTitel: "Certified Legend • Canva Teacher Essentials",
+        lessen: [
+            {
+                id: "les_1",
+                nummer: 1,
+                icoon: "👋",
+                titel: "Welcome to Teacher essentials",
+                beschrijving: "Welcome to the Teacher essentials course. This course will equip you with all the essential skills needed to facilitate engaging learning with Canva.",
+                activiteiten: [
+                    {
+                        id: "act_101_1_1",
+                        titel: "Welcome to Teacher Essentials",
+                        type: "video",
+                        typeLabel: "Video",
+                        duur: "4 min",
+                        videoUrl: "https://www.youtube.com/watch?v=kY3B11w_x9g",
+                        inhoudHtml: `
+                            <h3>Welkom bij de officiële Wonderwijs Canva cursus!</h3>
+                            <p>In deze introductievideo ontdek je hoe Canva voor Onderwijs gratis beschikbaar is voor alle Wonderwijs leerkrachten en hoe je binnen enkele minuten aan de slag kunt.</p>
+                            <h4>Wat we in deze cursus gaan behandelen:</h4>
+                            <ul>
+                                <li>Navigatie en de opbouw van de Canva onderwijsomgeving</li>
+                                <li>Het inrichten en beheren van jouw klaslokaal (Classroom)</li>
+                                <li>Bestaande lesmaterialen en sjablonen aanpassen</li>
+                                <li>Interactieve lessen geven en werk van leerlingen beoordelen</li>
+                            </ul>
+                            <div class="lesson-callout">
+                                <strong>💡 Wonderwijs Tip:</strong> Iedere leerkracht binnen stichting Wonderwijs heeft automatisch recht op een premium Canva for Education licentie via het schoolaccount.
+                            </div>
+                        `
+                    }
+                ]
+            },
+            {
+                id: "les_2",
+                nummer: 2,
+                icoon: "🪐",
+                titel: "Navigating your Canva Education homepage",
+                beschrijving: "Get comfortable with the Canva interface, find templates quickly and organize your school work in clean collaborative folders.",
+                activiteiten: [
+                    {
+                        id: "act_101_2_1",
+                        titel: "De Canva Startpagina Verkennen",
+                        type: "video",
+                        typeLabel: "Video",
+                        duur: "6 min",
+                        videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
+                        inhoudHtml: `
+                            <h3>Vind moeiteloos je weg op de startpagina</h3>
+                            <p>De Canva onderwijsomgeving is ontworpen om binnen 3 klikken te vinden wat je zoekt. Bekijk de video hierboven om de linker navigatiebalk, sjabloonfilters en recente ontwerpen onder de knie te krijgen.</p>
+                        `
+                    },
+                    {
+                        id: "act_101_2_2",
+                        titel: "Mappenstructuur & Zoektips voor Leerkrachten",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "5 min",
+                        inhoudHtml: `
+                            <h3>Slim organiseren met schoolmappen</h3>
+                            <p>Niets is zo frustrerend als een fantastisch werkblad kwijtraken vlak voor de les begint. Met een strakke mappenstructuur werk je georganiseerd en deel je eenvoudig met duo-collega's.</p>
+                            <h4>Stappenplan mappen aanmaken:</h4>
+                            <ol>
+                                <li>Klik in het linkermenu op <strong>Projecten</strong>.</li>
+                                <li>Klik rechtsboven op <strong>Nieuw toevoegen</strong> en kies <strong>Map</strong>.</li>
+                                <li>Geef de map een duidelijke naam, bijv: <em>Groep 5 - Rekenen Blok 3</em> of <em>Thema Herfst 2026</em>.</li>
+                                <li>Kies bij 'Delen' voor je parallelcollega of bouwteam, zodat iedereen direct toegang heeft tot de nieuwste versies.</li>
+                            </ol>
+                            <div class="lesson-callout">
+                                <strong>📌 Handige tip:</strong> Kleurcodeer je mappen met emoji's (zoals 🔢 voor rekenen, 📖 voor taal en 🎨 voor creatief). Dit maakt het visueel direct herkenbaar!
+                            </div>
+                        `
+                    }
+                ]
+            },
+            {
+                id: "les_3",
+                nummer: 3,
+                icoon: "🧩",
+                titel: "Set up and manage your Classroom",
+                beschrijving: "Create and manage classes, invite students and keep track of classroom activity and student work in one place.",
+                activiteiten: [
+                    {
+                        id: "act_101_3_1",
+                        titel: "Set up and manage your Classroom",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "8 min",
+                        inhoudHtml: `
+                            <h3>Jouw digitale klaslokaal inrichten</h3>
+                            <p>In Canva Classroom kun je opdrachten klaarzetten voor leerlingen, samenwerkingsprojecten starten en in realtime meekijken terwijl leerlingen ontwerpen.</p>
+                            <h4>1. Klas aanmaken</h4>
+                            <p>Ga naar je accountinstellingen (rechtsboven bij je profiel) en klik op <strong>Facturering en teams</strong> of <strong>Klasbeheer</strong>. Klik op <em>Nieuwe klas maken</em>.</p>
+                            <h4>2. Leerlingen uitnodigen</h4>
+                            <p>Je kunt leerlingen uitnodigen via:</p>
+                            <ul>
+                                <li><strong>Unieke uitnodigingslink:</strong> Kopieer de link en zet deze in Microsoft Teams of de schoolsite.</li>
+                                <li><strong>Klassencode:</strong> Leerlingen voeren op canva.com/join een 6-cijferige code in.</li>
+                                <li><strong>Google Classroom / Microsoft School Data Sync:</strong> Direct met één klik alle leerlingen importeren.</li>
+                            </ul>
+                            <h4>3. Rechten instellen</h4>
+                            <p>Zorg dat leerlingen ingesteld staan als <em>Leerling</em>. Hierdoor kunnen ze alleen ontwerpen binnen jouw klasomgeving en geen openbare links publiceren buiten de stichting.</p>
+                        `
+                    },
+                    {
+                        id: "act_101_3_2",
+                        titel: "Canva Tips: Creating a class",
+                        type: "cheatsheet",
+                        typeLabel: "Cheatsheet",
+                        duur: "3 min",
+                        inhoudHtml: `
+                            <h3>Snelle Naslagkaart: Klasbeheer Do's &amp; Don'ts</h3>
+                            <ul>
+                                <li>✅ <strong>Wel doen:</strong> Maak voor ieder schooljaar een nieuwe klas aan (bijv. <em>Wonderwijs 2026 - Groep 6B</em>).</li>
+                                <li>✅ <strong>Wel doen:</strong> Zet de sjabloonvergrendeling aan als je wilt dat leerlingen alleen tekst invullen en niet per ongeluk de kaders of layout verschuiven.</li>
+                                <li>❌ <strong>Niet doen:</strong> Leerlingen met privé-e-mailadressen toevoegen. Gebruik altijd het officiële schoolaccount.</li>
+                                <li>💡 <strong>Pro-tip:</strong> Gebruik de functie <em>Klassensjabloon publiceren</em>. Leerlingen krijgen dan automatisch een eigen kopie in hun dashboard zonder elkaars werk te overschrijven.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: "les_4",
+                nummer: 4,
+                icoon: "💡",
+                titel: "Find, create and adapt teaching resources",
+                beschrijving: "Discover how to find lesson templates, customize them with your own curriculum, and print high-quality materials.",
+                activiteiten: [
+                    {
+                        id: "act_101_4_1",
+                        titel: "Lessjablonen en werkbladen op maat maken",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "7 min",
+                        inhoudHtml: `
+                            <h3>Van standaard sjabloon naar jouw eigen lesdoel</h3>
+                            <p>Canva heeft tienduizenden kant-en-klare educatieve templates: van tafelsommen en klokkijken tot geschiedenistijdlijnen en dagritmekaarten.</p>
+                            <h4>Stappen voor snelle aanpassing:</h4>
+                            <ol>
+                                <li>Typ in de zoekbalk op de startpagina: <em>werkblad groep 4 spelling</em> of <em>mindmap geschiedenis</em>.</li>
+                                <li>Filter aan de linkerkant op <strong>Taal: Nederlands</strong> en <strong>Onderwijsniveau</strong>.</li>
+                                <li>Klik op <em>Dit sjabloon aanpassen</em>.</li>
+                                <li>Vervang de voorbeeldwoorden met de woorden uit jouw huidige taalmethode (bijv. Staal of Taalactief).</li>
+                                <li>Klik rechtsboven op <strong>Delen &gt; Downloaden &gt; PDF - Afdrukken</strong> voor een haarscherpe afdruk op de schoolprinter.</li>
+                            </ol>
+                        `
+                    },
+                    {
+                        id: "act_101_4_2",
+                        titel: "Bibliotheek van sjablonen & exporteeropties",
+                        type: "cheatsheet",
+                        typeLabel: "Cheatsheet",
+                        duur: "4 min",
+                        inhoudHtml: `
+                            <h3>Beste exportinstellingen voor schoolgebruik</h3>
+                            <ul>
+                                <li>📄 <strong>PDF - Afdrukken (300 DPI):</strong> Voor werkbladen, toetsen en kleurplaten. Vink <em>Crop marks and bleed</em> aan voor professioneel drukwerk.</li>
+                                <li>🖼️ <strong>PNG (Hoge kwaliteit):</strong> Voor afbeeldingen op het digibord of in de ouder-app (Social Schools/Parro).</li>
+                                <li>📽️ <strong>MP4-video:</strong> Voor animaties of bewegende instructiefilmpjes met muziek.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: "les_5",
+                nummer: 5,
+                icoon: "👾",
+                titel: "Delivering lessons and activities",
+                beschrijving: "Present your lessons directly in Canva or share interactive tasks with your students on their chromebooks or iPads.",
+                activiteiten: [
+                    {
+                        id: "act_101_5_1",
+                        titel: "Live Presenteren & Interactieve Digibord Tools",
+                        type: "video",
+                        typeLabel: "Video",
+                        duur: "5 min",
+                        videoUrl: "https://www.youtube.com/watch?v=kY3B11w_x9g",
+                        inhoudHtml: `
+                            <h3>Interactief lesgeven vanaf het digibord</h3>
+                            <p>Druk tijdens het presenteren op de volgende magische sneltoetsen op je toetsenbord om de klas te verrassen:</p>
+                            <ul>
+                                <li>Druk op <strong>C</strong> voor confetti 🎉</li>
+                                <li>Druk op <strong>D</strong> voor een tromgeroffel 🥁</li>
+                                <li>Druk op <strong>O</strong> voor zwevende zeepbellen 🫧</li>
+                                <li>Druk op <strong>Q</strong> voor stilte (een zacht 'shhh' animatie) 🤫</li>
+                                <li>Typ een cijfer (bijv. <strong>3</strong>) voor een automatische timer van 3 minuten! ⏱️</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: "les_6",
+                nummer: 6,
+                icoon: "😊",
+                titel: "Review student work and give feedback",
+                beschrijving: "Review student work and give feedback. Motivate students with personalized comments and digital stickers.",
+                activiteiten: [
+                    {
+                        id: "act_101_6_1",
+                        titel: "Feedback geven & leerlingwerk beoordelen",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "6 min",
+                        inhoudHtml: `
+                            <h3>Positieve en constructieve feedback in Canva</h3>
+                            <p>Als leerlingen een opdracht inleveren in Canva Classroom, zie je in één oogopslag wie klaar is en wie nog bezig is.</p>
+                            <h4>Feedback geven in 3 stappen:</h4>
+                            <ol>
+                                <li>Selecteer een element of tekst in het werk van de leerling.</li>
+                                <li>Klik op het tekstwolk-icoontje (<em>Opmerking toevoegen</em>).</li>
+                                <li>Typ je feedback en voeg eventueel een motiverende sticker toe uit de elementenbibliotheek (zoek op <em>Compliment sticker</em> of <em>Great job</em>).</li>
+                            </ol>
+                            <p>De leerling krijgt direct een notificatie en kan reageren of de verbetering doorvoeren!</p>
+                        `
+                    }
+                ]
+            },
+            {
+                id: "les_7",
+                nummer: 7,
+                icoon: "🎉",
+                titel: "Congratulations on completing Teacher Essentials",
+                beschrijving: "Congratulations on completing Teacher Essentials! Je hebt alle modules met succes doorlopen. Behaal nu je officiële Wonderwijs certificaat.",
+                activiteiten: [
+                    {
+                        id: "act_101_7_1",
+                        titel: "Eindreflectie & Certificaat genereren",
+                        type: "opdracht",
+                        typeLabel: "Opdracht",
+                        duur: "5 min",
+                        inhoudHtml: `
+                            <h3>Gefeliciteerd met het afronden van de cursus! 🎓</h3>
+                            <p>Je beheerst nu alle basisvaardigheden van Canva voor Onderwijs. Vink onderstaande vaardigheden af die je hebt uitgeprobeerd:</p>
+                            <ul>
+                                <li>☑️ Ik heb ingelogd op Canva met mijn schoolaccount</li>
+                                <li>☑️ Ik weet hoe ik mappen aanmaak en deel met collega's</li>
+                                <li>☑️ Ik kan een bestaand werkbladsjabloon aanpassen en printen</li>
+                                <li>☑️ Ik ken de magische sneltoetsen voor het digibord (zoals timers en confetti)</li>
+                            </ul>
+                            <p style="margin-top: 15px;">Klik op <strong>'Markeer als afgerond'</strong> om je officiële Wonderwijs certificaat te ontgrendelen!</p>
+                        `
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 102,
         titel: "Starten met Robotica: Bee-Bot & Dash in de Klas",
         categorie: "Programmeren & Robotica",
-        niveau: "Groep 1 t/m 5 • Beginner",
-        duur: "60 min",
+        niveau: "Beginner",
+        duur: "1 u 0 m",
         auteur: "Verwonderlab Team",
         thumbnail: "img/les_dansende_robot.jpg",
         videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
         omschrijving: "Stapsgewijze gids voor het succesvol inzetten van vloerrobots. Combineer programmeren spelenderwijs met taal, spelling en rekenen op de themamat.",
-        leerdoelen: "• Fysiek programmeren met knoppen vs app-gestuurd programmeren\n• Directe integratie met taal, spelling en getalbegrip\n• Effectieve klassenorganisatie en rotatieschema's",
-        cursusUrl: "https://wonderwijs.nl"
+        keySkills: ["Algoritmisch denken", "Bee-Bot", "Dash & Dot", "Sequenties", "Samenwerken"],
+        certificaatTitel: "Wonderwijs Robotica Expert • Onder- & Middenbouw",
+        lessen: [
+            {
+                id: "les_rb_1",
+                nummer: 1,
+                icoon: "🤖",
+                titel: "Introductie Vloerrobots in het Basisonderwijs",
+                beschrijving: "Waarom robotica in groep 1 t/m 5? De didactische kracht van tastbare technologie.",
+                activiteiten: [
+                    {
+                        id: "act_102_1_1",
+                        titel: "De Kracht van Tastbaar Programmeren",
+                        type: "video",
+                        typeLabel: "Video",
+                        duur: "5 min",
+                        videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
+                        inhoudHtml: "<h3>Tastbaar programmeren zonder schermen</h3><p>Kinderen leren het beste door te doen. Met de Bee-Bot programmeren jonge kinderen met fysieke knoppen op de rug van de robot, waardoor het concept van volgorde (algoritme) tastbaar wordt.</p>"
+                    }
+                ]
+            },
+            {
+                id: "les_rb_2",
+                nummer: 2,
+                icoon: "🗺️",
+                titel: "Matten & Didactische Koppeling met Rekenen en Taal",
+                beschrijving: "Laat de robot niet zomaar rondrijden, maar koppel het direct aan je weekdoelen.",
+                activiteiten: [
+                    {
+                        id: "act_102_2_1",
+                        titel: "Spelling & Getalbegrip op de Mat",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "10 min",
+                        inhoudHtml: "<h3>Woorden spellen en sommen oplossen</h3><p>Leg letters of cijfers in de transparante vakken van de mat. De leerling plant de route naar de juiste letter of het juiste antwoord.</p>"
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 103,
         titel: "AI in het Basisonderwijs: Kansen, Ethiek & Prompten",
         categorie: "AI in de Klas",
-        niveau: "Alle groepen • Beginner",
+        niveau: "Beginner",
         duur: "50 min",
         auteur: "Wonderwijs Innovatie",
         thumbnail: "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
         videoUrl: "",
         omschrijving: "Praktische kennismaking met generatieve AI voor het basisonderwijs. Bespaar kostbare tijd bij lesvoorbereiding en leerlingen leren omgaan met AI.",
-        leerdoelen: "• Effectieve prompts schrijven voor gedifferentieerde lesstof\n• Kritisch analyseren van AI-antwoorden en bronvermelding\n• Kindveilige en privacy-bewuste omgang met AI tools",
-        cursusUrl: "https://wonderwijs.nl"
+        keySkills: ["Prompt engineering", "Didactische AI", "Ethiek & Privacy", "Differentiatie"],
+        certificaatTitel: "AI Didactiek Brevet • Wonderwijs",
+        lessen: [
+            {
+                id: "les_ai_1",
+                nummer: 1,
+                icoon: "🧠",
+                titel: "Wat is AI en hoe werkt het?",
+                beschrijving: "Een nuchtere en praktische blik op generatieve AI voor het onderwijs.",
+                activiteiten: [
+                    {
+                        id: "act_103_1_1",
+                        titel: "Basisprincipes van Taalmodellen",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "8 min",
+                        inhoudHtml: "<h3>Hoe AI taal genereert</h3><p>AI denkt niet zoals een mens, maar berekent het meest waarschijnlijke volgende woord op basis van patronen.</p>"
+                    }
+                ]
+            }
+        ]
     },
     {
         id: 104,
         titel: "Digitale Geletterdheid & De Wonderwijs Leerlijnen",
         categorie: "Digitale Geletterdheid",
-        niveau: "Leerkrachten & Coördinatoren • Alle niveaus",
+        niveau: "Alle niveaus",
         duur: "40 min",
         auteur: "Wonderwijs Expertgroep DG",
         thumbnail: "Verwonderlab.jpg",
         videoUrl: "",
         omschrijving: "Krijg een helder overzicht van de vier DG-domeinen, de doorlopende leerlijn van groep 1 t/m 8 en de praktische koppeling met de Wonderwijs handreiking.",
-        leerdoelen: "• De kerndoelen 21, 22, 23 en 24 in de dagelijkse praktijk herkennen\n• Activiteiten koppelen aan bestaande methodelessen\n• Voortgang bijhouden en borgen in het schoolplan",
-        cursusUrl: "https://wonderwijs.nl"
+        keySkills: ["Kerndoelen 21-24", "Doorlopende leerlijn", "Mediawijsheid", "Computational Thinking"],
+        certificaatTitel: "Wonderwijs DG Certificaat • Expert",
+        lessen: [
+            {
+                id: "les_dg_1",
+                nummer: 1,
+                icoon: "🧭",
+                titel: "De Vier Domeinen van Digitale Geletterdheid",
+                beschrijving: "Praktische uitleg van ICT-basisvaardigheden, Mediawijsheid, Informatievaardigheden en Computational Thinking.",
+                activiteiten: [
+                    {
+                        id: "act_104_1_1",
+                        titel: "Domeinen in de Dagelijkse Klaspraktijk",
+                        type: "guide",
+                        typeLabel: "Guide",
+                        duur: "10 min",
+                        inhoudHtml: "<h3>De 4 domeinen zonder extra werkdruk</h3><p>Je hoeft geen apart vak 'digitale geletterdheid' te geven: integreer het in bestaande reken-, taal-, wereldoriëntatie- en creatieve lessen.</p>"
+                    }
+                ]
+            }
+        ]
     }
 ];
 
@@ -1830,6 +2169,8 @@ function slaDataOp() {
         localStorage.setItem('ww_lesideeen_v16', JSON.stringify(lesideeen));
         localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
         localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
+        localStorage.setItem('ww_elearning_progress_v1', JSON.stringify(elearningProgress));
+        localStorage.setItem('ww_menu_config_v1', JSON.stringify(menuConfig));
         localStorage.setItem('ww_scholen_v1', JSON.stringify(scholen));
         localStorage.setItem('ww_beheerders_v1', JSON.stringify(beheerdersLijst));
         localStorage.setItem('ww_favorieten_v1', JSON.stringify(mijnFavorieten));
@@ -2210,6 +2551,23 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     localStorage.setItem('ww_email_templates_v1', JSON.stringify(emailTemplates));
                     if (typeof window.laadEmailTemplatesInAdmin === "function") {
                         window.laadEmailTemplatesInAdmin();
+                    }
+                }
+            }
+        }, checkError);
+
+        // Menu Zichtbaarheid Configuratie (voor medewerkers)
+        onSnapshot(doc(db, "instellingen", "menu_config"), (snap) => {
+            if (snap.exists()) {
+                const cloudMenu = snap.data();
+                if (cloudMenu && typeof cloudMenu === 'object') {
+                    menuConfig = { ...defaultMenuConfig, ...cloudMenu };
+                    localStorage.setItem('ww_menu_config_v1', JSON.stringify(menuConfig));
+                    if (typeof window.pasMenuZichtbaarheidToe === "function") {
+                        window.pasMenuZichtbaarheidToe();
+                    }
+                    if (typeof window.renderMenuBeheerTab === "function") {
+                        window.renderMenuBeheerTab();
                     }
                 }
             }
@@ -2756,9 +3114,6 @@ window.isCurrentAdmin = function() {
     if (beheerdersView && beheerdersView.style.display !== "none") {
         return true;
     }
-    if (document.getElementById('adminLeskistenBody')) {
-        return true;
-    }
     return false;
 };
 
@@ -2838,6 +3193,120 @@ window.logoutAdmin = function() {
     }
 };
 
+window.saveMenuConfigToCloud = async function(newConfig) {
+    if (typeof db === 'undefined' || !db) return;
+    try {
+        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        await withTimeout(setDoc(doc(db, "instellingen", "menu_config"), newConfig), 4000);
+    } catch(err) {
+        console.warn("Fout bij opslaan menu config in cloud:", err);
+    }
+};
+
+window.pasMenuZichtbaarheidToe = function() {
+    const isBeheerder = typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin();
+
+    // 1. Pas toe op de sidebar menu-items
+    document.querySelectorAll('.sidebar .menu .menu-item').forEach(link => {
+        if (link.classList.contains('logout')) return;
+        const href = (link.getAttribute('href') || '').split('?')[0].split('/').pop();
+        if (!href) return;
+        const cfg = menuConfig[href];
+        if (!cfg) return;
+
+        const oldBadge = link.querySelector('.badge-menu-hidden');
+        if (oldBadge) oldBadge.remove();
+
+        if (cfg.zichtbaar === false) {
+            if (isBeheerder) {
+                link.style.display = 'flex';
+                link.style.opacity = '0.7';
+                const badge = document.createElement('span');
+                badge.className = 'badge-menu-hidden';
+                badge.innerText = 'verborgen';
+                badge.title = 'Deze pagina is momenteel onzichtbaar voor medewerkers';
+                link.appendChild(badge);
+            } else {
+                link.style.display = 'none';
+            }
+        } else {
+            link.style.removeProperty('display');
+            link.style.removeProperty('opacity');
+        }
+    });
+
+    // 2. Pas ook toe op mobiele navigatie
+    document.querySelectorAll('.bottom-nav-item').forEach(link => {
+        const href = (link.getAttribute('href') || '').split('?')[0].split('/').pop();
+        if (!href) return;
+        const cfg = menuConfig[href];
+        if (!cfg) return;
+
+        if (cfg.zichtbaar === false && !isBeheerder) {
+            link.style.display = 'none';
+        } else {
+            link.style.removeProperty('display');
+        }
+    });
+};
+
+window.toggleMenuZichtbaarheid = async function(pageId) {
+    if (!menuConfig[pageId] || menuConfig[pageId].vergrendeld) return;
+    menuConfig[pageId].zichtbaar = !menuConfig[pageId].zichtbaar;
+    localStorage.setItem('ww_menu_config_v1', JSON.stringify(menuConfig));
+    if (typeof window.pasMenuZichtbaarheidToe === 'function') {
+        window.pasMenuZichtbaarheidToe();
+    }
+    if (typeof window.renderMenuBeheerTab === 'function') {
+        window.renderMenuBeheerTab();
+    }
+    if (window.saveMenuConfigToCloud) {
+        await window.saveMenuConfigToCloud(menuConfig);
+    }
+};
+
+window.renderMenuBeheerTab = function() {
+    const grid = document.getElementById('adminMenuConfigGrid');
+    if (!grid) return;
+
+    grid.innerHTML = Object.values(menuConfig).map(item => {
+        const isZichtbaar = item.zichtbaar !== false;
+        const statusBadge = isZichtbaar 
+            ? `<span class="menu-visibility-badge visible">🟢 Zichtbaar voor medewerkers</span>`
+            : `<span class="menu-visibility-badge hidden">🔴 Verborgen voor medewerkers</span>`;
+            
+        let actionBtn = '';
+        if (item.vergrendeld) {
+            actionBtn = `<button type="button" class="btn-toggle-menu" disabled style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed; border-color:#e2e8f0;">🔒 Altijd zichtbaar (Startpagina)</button>`;
+        } else if (isZichtbaar) {
+            actionBtn = `<button type="button" class="btn-toggle-menu btn-hide" onclick="window.toggleMenuZichtbaarheid('${item.id}')">🚫 Maak onzichtbaar voor medewerkers</button>`;
+        } else {
+            actionBtn = `<button type="button" class="btn-toggle-menu btn-show" onclick="window.toggleMenuZichtbaarheid('${item.id}')">👁️ Maak weer zichtbaar voor medewerkers</button>`;
+        }
+
+        return `
+            <div class="menu-config-card">
+                <div>
+                    <div class="menu-config-header">
+                        <div class="menu-config-title">
+                            <span class="menu-config-icon">${item.icoon || '📄'}</span>
+                            <div>
+                                <div>${escapeHtml(item.naam)}</div>
+                                <span style="font-size: 11px; color: #64748b; font-weight: 500;">Bestand: ${escapeHtml(item.id)}</span>
+                            </div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <p class="menu-config-desc" style="margin-top: 10px;">${escapeHtml(item.beschrijving || '')}</p>
+                </div>
+                <div>
+                    ${actionBtn}
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
 window.initMobileNavigation = function() {
     // 1. Verwijder eventuele oude menu-knoppen (overbodig door vaste navigatiebalk)
     const existingToggle = document.getElementById('mobileMenuToggleBtn');
@@ -2853,6 +3322,7 @@ window.initMobileNavigation = function() {
         const path = window.location.pathname.toLowerCase();
         const isDashboard = path.endsWith('index.html') || path.endsWith('/') || path === '';
         const isReserveren = path.endsWith('reserveren.html');
+        const isElearning = path.endsWith('elearning.html');
         const isLesideeen = path.endsWith('lesideeen.html');
         const isLeerlijnen = path.endsWith('leerlijnen.html');
         const isHandreiking = path.endsWith('handreiking.html');
@@ -2867,13 +3337,13 @@ window.initMobileNavigation = function() {
                 <span class="nav-icon">📅</span>
                 <span class="nav-label">Reserveren</span>
             </a>
+            <a href="elearning.html" class="bottom-nav-item ${isElearning ? 'active' : ''}">
+                <span class="nav-icon">🎓</span>
+                <span class="nav-label">E-Learning</span>
+            </a>
             <a href="leerlijnen.html" class="bottom-nav-item ${isLeerlijnen ? 'active' : ''}">
                 <span class="nav-icon">🎯</span>
                 <span class="nav-label">Leerlijnen</span>
-            </a>
-            <a href="handreiking.html" class="bottom-nav-item ${isHandreiking ? 'active' : ''}">
-                <span class="nav-icon">📖</span>
-                <span class="nav-label">Handreiking</span>
             </a>
             <a href="lesideeen.html" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
                 <span class="nav-icon">💡</span>
@@ -2891,6 +3361,9 @@ window.initMobileNavigation = function() {
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.initMobileNavigation === "function") {
         window.initMobileNavigation();
+    }
+    if (typeof window.pasMenuZichtbaarheidToe === "function") {
+        window.pasMenuZichtbaarheidToe();
     }
 
     const vereistDomein = (window.AUTH_CONFIG && window.AUTH_CONFIG.allowedDomain) ? window.AUTH_CONFIG.allowedDomain.toLowerCase() : "@wonderwijs.nl";
@@ -4172,6 +4645,15 @@ ${beschrijving}
                 thumb = await window.compressImage(thumb, 800, 600, 0.78);
             } catch(e) {}
         }
+        const rawSkills = getVal('editElearningSkills', '');
+        const keySkills = rawSkills 
+            ? rawSkills.split(',').map(s => s.trim()).filter(Boolean) 
+            : ['Didactiek', 'Digitale Geletterdheid'];
+        const certificaatTitel = getVal('editElearningCertificaatTitel', 'Wonderwijs E-Learning Certificaat');
+        const lessen = Array.isArray(window.adminHuidigeLessen) && window.adminHuidigeLessen.length > 0
+            ? JSON.parse(JSON.stringify(window.adminHuidigeLessen))
+            : [];
+
         const cursusData = {
             id: cId,
             titel: getVal('editElearningTitel', 'Naamloze Cursus'),
@@ -4183,7 +4665,10 @@ ${beschrijving}
             videoUrl: (getVal('editElearningVideo', '') || '').trim(),
             omschrijving: getVal('editElearningOmschrijving', ''),
             leerdoelen: getVal('editElearningLeerdoelen', ''),
-            cursusUrl: (getVal('editElearningCursusUrl', 'https://wonderwijs.nl') || 'https://wonderwijs.nl').trim()
+            cursusUrl: (getVal('editElearningCursusUrl', 'https://wonderwijs.nl') || 'https://wonderwijs.nl').trim(),
+            keySkills: keySkills,
+            certificaatTitel: certificaatTitel,
+            lessen: lessen
         };
         
         verwijderdeElearning = (verwijderdeElearning || []).filter(v => v !== String(cId));
@@ -4245,6 +4730,9 @@ window.switchAdminTab = function(tabId, btnElement) {
     }
     if (tabId === 'tab-emailtemplate' && typeof window.laadEmailTemplatesInAdmin === 'function') {
         window.laadEmailTemplatesInAdmin();
+    }
+    if (tabId === 'tab-menubeheer' && typeof window.renderMenuBeheerTab === 'function') {
+        window.renderMenuBeheerTab();
     }
     if ((tabId === 'tab-elearning' || tabId === 'tab-leskisten' || tabId === 'tab-reserveringen') && typeof window.renderBeheerdersTabellen === 'function') {
         window.renderBeheerdersTabellen();
@@ -8458,7 +8946,7 @@ if (typeof window.importeerHistorischeReserveringen === 'function') {
 }
 
 // ==========================================
-// E-LEARNING INTERFACE & BEHEER FUNCTIES
+// E-LEARNING INTERFACE & BEHEER FUNCTIES (CANVA DESIGN SCHOOL STIJL)
 // ==========================================
 window.filterElearning = function(cat) {
     window._actieveElearningCategorie = cat;
@@ -8518,9 +9006,26 @@ window.renderElearningGrid = function() {
     
     grid.innerHTML = list.map(c => {
         let thumbSrc = c.thumbnail && c.thumbnail.startsWith('data:image') ? c.thumbnail : (c.thumbnail || 'Verwonderlab.jpg');
+        const lessenCount = (c.lessen && Array.isArray(c.lessen)) ? c.lessen.length : 0;
+        
+        // Bereken voortgang percentage voor deze cursus
+        let totalActs = 0;
+        let completedActs = 0;
+        if (c.lessen && Array.isArray(c.lessen)) {
+            c.lessen.forEach(l => {
+                if (l.activiteiten && Array.isArray(l.activiteiten)) {
+                    l.activiteiten.forEach(a => {
+                        totalActs++;
+                        if (elearningProgress && elearningProgress[a.id]) completedActs++;
+                    });
+                }
+            });
+        }
+        const perc = totalActs > 0 ? Math.round((completedActs / totalActs) * 100) : 0;
+        
         return `
             <div class="elearning-card">
-                <div class="elearning-thumbnail-box" onclick="window.openElearningDetailModal(${c.id})" style="cursor: pointer;">
+                <div class="elearning-thumbnail-box" onclick="window.openCourseView(${c.id})" style="cursor: pointer;">
                     <img src="${escapeHtml(thumbSrc)}" alt="${escapeHtml(c.titel || 'Cursus')}" loading="lazy">
                     <div class="elearning-card-badges">
                         <span class="elearning-cat-badge">${escapeHtml(c.categorie || 'E-Learning')}</span>
@@ -8530,21 +9035,31 @@ window.renderElearningGrid = function() {
                 <div class="elearning-card-body">
                     <div class="elearning-meta-row">
                         <span>🎯 ${escapeHtml(c.niveau || 'Voor leerkrachten')}</span>
+                        <span>•</span>
+                        <span>⚡ ${lessenCount} lessen</span>
                     </div>
-                    <h3 class="elearning-card-title" onclick="window.openElearningDetailModal(${c.id})" style="cursor: pointer;">${escapeHtml(c.titel || 'Naamloze cursus')}</h3>
+                    <h3 class="elearning-card-title" onclick="window.openCourseView(${c.id})" style="cursor: pointer;">${escapeHtml(c.titel || 'Naamloze cursus')}</h3>
                     <p class="elearning-card-desc">${escapeHtml(c.omschrijving || '')}</p>
+
+                    ${totalActs > 0 ? `
+                        <div style="margin-bottom: 14px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #64748b; margin-bottom: 5px;">
+                                <span>Voortgang</span>
+                                <span>${perc}% (${completedActs}/${totalActs})</span>
+                            </div>
+                            <div style="width: 100%; height: 6px; background: #f1f5f9; border-radius: 9999px; overflow: hidden;">
+                                <div style="width: ${perc}%; height: 100%; background: ${perc === 100 ? '#16a34a' : '#8CC63F'}; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+
                     <div class="elearning-card-footer">
                         <span class="elearning-author">
                             <span>👤</span> ${escapeHtml(c.auteur || 'Wonderwijs')}
                         </span>
-                        <div style="display: flex; gap: 6px;">
-                            <button type="button" class="btn-table-edit" onclick="window.openElearningDetailModal(${c.id})" style="padding: 7px 12px; font-size: 12px;">
-                                Info &amp; Doelen
-                            </button>
-                            <a href="${escapeHtml(c.cursusUrl || '#')}" target="_blank" rel="noopener noreferrer" class="btn-elearning-start">
-                                <span>Start</span> ↗
-                            </a>
-                        </div>
+                        <button type="button" class="btn-elearning-start" onclick="window.openCourseView(${c.id})">
+                            <span>${perc > 0 ? 'Ga verder' : 'Start cursus'}</span> →
+                        </button>
                     </div>
                 </div>
             </div>
@@ -8552,90 +9067,495 @@ window.renderElearningGrid = function() {
     }).join('');
 };
 
-window.openElearningDetailModal = function(id) {
+// ==========================================
+// CANVA DESIGN SCHOOL LESSON HUB WEERGAVE
+// ==========================================
+window.openCourseView = function(id) {
     const cursus = (elearningCursussen || []).find(c => c.id == id);
     if (!cursus) return;
-    const modal = document.getElementById('elearningDetailModal');
-    const body = document.getElementById('elearningDetailBody');
-    if (!modal || !body) return;
     
-    let thumbSrc = cursus.thumbnail && cursus.thumbnail.startsWith('data:image') ? cursus.thumbnail : (cursus.thumbnail || 'Verwonderlab.jpg');
+    window._huidigeCursus = cursus;
     
-    let videoHtml = '';
-    if (cursus.videoUrl && cursus.videoUrl.trim() !== '') {
-        let vUrl = cursus.videoUrl.trim();
-        const match = vUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})/);
-        if (match && match[1]) {
-            vUrl = `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0`;
-            videoHtml = `
-                <div style="margin: 20px 0; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08);">
-                    <iframe src="${vUrl}" allowfullscreen style="width: 100%; min-height: 280px; border: none; display: block;"></iframe>
-                </div>
-            `;
-        }
-    }
-    
-    let doelenListHtml = '';
-    if (cursus.leerdoelen && cursus.leerdoelen.trim() !== '') {
-        const doelenLines = cursus.leerdoelen.split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
-        if (doelenLines.length > 0) {
-            doelenListHtml = `
-                <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 14px; padding: 18px 20px; margin: 20px 0;">
-                    <h4 style="font-size: 14px; font-weight: 800; color: #166534; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
-                        <span>🎯</span> Wat leer je in deze e-learning?
-                    </h4>
-                    <ul style="margin: 0; padding-left: 20px; color: #15803d; font-size: 13.5px; line-height: 1.6;">
-                        ${doelenLines.map(d => `<li style="margin-bottom: 4px;">${escapeHtml(d)}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
-        }
-    }
-    
-    body.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 16px; flex-wrap: wrap;">
-            <div>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap;">
-                    <span style="background: #0f172a; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">
-                        ${escapeHtml(cursus.categorie || 'Algemeen')}
-                    </span>
-                    <span style="background: #f1f5f9; color: #334155; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">
-                        ⏱️ ${escapeHtml(cursus.duur || 'Zelfstudie')}
-                    </span>
-                    <span style="background: rgba(140, 198, 63, 0.15); color: #3f6212; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">
-                        🎯 ${escapeHtml(cursus.niveau || 'Leerkrachten PO')}
-                    </span>
-                </div>
-                <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.3px;">
-                    ${escapeHtml(cursus.titel || '')}
-                </h2>
-                ${cursus.auteur ? `<p style="font-size: 13px; color: #64748b; margin: 0;">Ontwikkeld door: <strong>${escapeHtml(cursus.auteur)}</strong></p>` : ''}
-            </div>
-        </div>
-        
-        ${videoHtml ? videoHtml : `
-            <div style="width: 100%; max-height: 260px; border-radius: 14px; overflow: hidden; margin: 15px 0 20px 0; background: #f8fafc;">
-                <img src="${escapeHtml(thumbSrc)}" style="width: 100%; height: 240px; object-fit: cover; display: block;" alt="${escapeHtml(cursus.titel)}">
-            </div>
-        `}
-        
-        <div style="color: #334155; font-size: 14.5px; line-height: 1.65; margin: 16px 0;">
-            <p style="margin: 0;">${escapeHtml(cursus.omschrijving || '')}</p>
-        </div>
-        
-        ${doelenListHtml}
-        
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-            <span style="font-size: 12.5px; color: #64748b;">
-                💡 Na het afronden kun je de geleerde vaardigheden direct inzetten in je groep.
+    const overviewView = document.getElementById('elearningOverviewView');
+    const hubView = document.getElementById('elearningCourseHubView');
+    if (overviewView) overviewView.style.display = 'none';
+    if (hubView) hubView.style.display = 'block';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Header gegevens vullen
+    const titleEl = document.getElementById('courseHubTitle');
+    const descEl = document.getElementById('courseHubDesc');
+    const badgesEl = document.getElementById('courseHubHeaderBadges');
+    if (titleEl) titleEl.innerText = cursus.titel || '';
+    if (descEl) descEl.innerText = cursus.omschrijving || '';
+    if (badgesEl) {
+        badgesEl.innerHTML = `
+            <span style="background: #0f172a; color: white; font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 9999px;">
+                ${escapeHtml(cursus.categorie || 'E-Learning')}
             </span>
-            <a href="${escapeHtml(cursus.cursusUrl || '#')}" target="_blank" rel="noopener noreferrer" class="btn-large-reserve" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: auto; padding: 12px 28px; font-size: 14px;">
-                <span>Start deze E-Learning nu</span>
-                <span style="font-size: 16px; margin-left: 6px;">🚀</span>
-            </a>
-        </div>
-    `;
-    modal.style.display = 'flex';
+            <span style="background: rgba(140, 198, 63, 0.15); color: #3f6212; border: 1px solid rgba(140, 198, 63, 0.3); font-size: 11.5px; font-weight: 700; padding: 4px 11px; border-radius: 9999px;">
+                🎯 ${escapeHtml(cursus.niveau || 'Beginner')}
+            </span>
+        `;
+    }
+
+    // Linker kolom: Lessen Accordion Lijst
+    const lessonsListEl = document.getElementById('courseHubLessonsList');
+    if (lessonsListEl) {
+        const lessen = Array.isArray(cursus.lessen) ? cursus.lessen : [];
+        if (lessen.length === 0) {
+            lessonsListEl.innerHTML = `
+                <div style="background: white; border: 1.5px dashed #cbd5e1; border-radius: 16px; padding: 30px; text-align: center; color: #64748b;">
+                    Nog geen lessen toegevoegd aan deze cursus.
+                </div>
+            `;
+        } else {
+            lessonsListEl.innerHTML = lessen.map((les, lIdx) => {
+                const isActive = lIdx === 0; // Eerste les standaard open
+                const activiteiten = Array.isArray(les.activiteiten) ? les.activiteiten : [];
+
+                const actHtml = activiteiten.map(act => {
+                    const isDone = elearningProgress && elearningProgress[act.id];
+                    let iconSym = '📋';
+                    if (act.type === 'video') iconSym = '▶';
+                    else if (act.type === 'cheatsheet') iconSym = '📖';
+                    else if (act.type === 'opdracht') iconSym = '✏️';
+
+                    return `
+                        <div class="canva-activity-card ${isDone ? 'completed' : ''}" onclick="window.openCanvaActivity(${cursus.id}, '${les.id}', '${act.id}')">
+                            <div class="canva-activity-info">
+                                <span class="canva-activity-title">${escapeHtml(act.titel || 'Activiteit')}</span>
+                                <span class="canva-activity-subtitle">
+                                    <span>${escapeHtml(act.typeLabel || act.type || 'Gids')}</span>
+                                    ${act.duur ? `<span>• ⏱️ ${escapeHtml(act.duur)}</span>` : ''}
+                                    ${isDone ? `<strong style="color: #16a34a; margin-left: 6px;">✓ Afgerond</strong>` : ''}
+                                </span>
+                            </div>
+                            <div class="canva-activity-action-btn">
+                                <span>${isDone ? '✓' : iconSym}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="canva-lesson-accordion ${isActive ? 'active' : ''}" id="accordion_les_${lIdx}">
+                        <div class="canva-lesson-header" onclick="window.toggleCanvaLesson(${lIdx})">
+                            <div class="canva-lesson-icon-box">
+                                <span>${les.icoon || '📚'}</span>
+                            </div>
+                            <div class="canva-lesson-title-area">
+                                <span class="canva-lesson-tag">Lesson ${les.nummer || (lIdx + 1)}</span>
+                                <h3 class="canva-lesson-title">${escapeHtml(les.titel || '')}</h3>
+                            </div>
+                            <div class="canva-lesson-chevron">▼</div>
+                        </div>
+                        <div class="canva-lesson-body">
+                            ${les.beschrijving ? `<p class="canva-lesson-desc">${escapeHtml(les.beschrijving)}</p>` : ''}
+                            <div class="canva-activity-list">
+                                ${actHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Rechter kolom: Certificaat, Statistieken & Key Skills
+    const sidebarEl = document.getElementById('courseHubSidebar');
+    if (sidebarEl) {
+        let totalActs = 0;
+        let completedActs = 0;
+        if (cursus.lessen && Array.isArray(cursus.lessen)) {
+            cursus.lessen.forEach(l => {
+                if (l.activiteiten && Array.isArray(l.activiteiten)) {
+                    l.activiteiten.forEach(a => {
+                        totalActs++;
+                        if (elearningProgress && elearningProgress[a.id]) completedActs++;
+                    });
+                }
+            });
+        }
+        const isCertEarned = totalActs > 0 && completedActs >= totalActs;
+        const perc = totalActs > 0 ? Math.round((completedActs / totalActs) * 100) : 0;
+        const lessenCount = Array.isArray(cursus.lessen) ? cursus.lessen.length : 0;
+
+        const skillsArr = Array.isArray(cursus.keySkills) && cursus.keySkills.length > 0
+            ? cursus.keySkills
+            : ['Canva Education', 'Lesontwerp', 'Didactiek', 'Samenwerken', 'Klasbeheer'];
+
+        sidebarEl.innerHTML = `
+            <!-- Certificaat Kaart -->
+            <div class="canva-cert-card">
+                <div class="canva-cert-preview ${isCertEarned ? 'earned' : ''}">
+                    <span class="canva-cert-badge">${isCertEarned ? '🏆' : '📜'}</span>
+                    <div class="canva-cert-title">${escapeHtml(cursus.certificaatTitel || 'Certified Legend')}</div>
+                    <span class="canva-cert-sub">Wonderwijs Digital Academy</span>
+                </div>
+                <button type="button" class="btn-canva-cert ${isCertEarned ? 'earned' : ''}" onclick="window.openCertificaatModal(${cursus.id})">
+                    <span>${isCertEarned ? '🎓 Certificaat Bekijken & Printen' : 'Certificaat behalen'}</span>
+                </button>
+                <div class="canva-learner-counter">
+                    <span>👥</span>
+                    <span><strong>${cursus.deelnemersCount || 164}</strong> leerkrachten afgerond</span>
+                </div>
+            </div>
+
+            <!-- Cursus Statistieken -->
+            <div class="canva-stats-card">
+                <div style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin-bottom: 2px;">
+                    Cursus Details &amp; Voortgang
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 6px;">
+                        <span>Voortgang</span>
+                        <span style="color: ${isCertEarned ? '#16a34a' : '#0f172a'};">${perc}% (${completedActs}/${totalActs})</span>
+                    </div>
+                    <div style="width: 100%; height: 7px; background: #f1f5f9; border-radius: 9999px; overflow: hidden;">
+                        <div style="width: ${perc}%; height: 100%; background: ${isCertEarned ? '#16a34a' : '#8CC63F'}; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <div class="canva-stat-row">
+                    <div class="canva-stat-icon">⏱️</div>
+                    <div>
+                        <div style="font-size: 11px; color: #64748b; font-weight: 500;">Tijdsduur</div>
+                        <div>${escapeHtml(cursus.duur || '1 u 4 m')}</div>
+                    </div>
+                </div>
+
+                <div class="canva-stat-row">
+                    <div class="canva-stat-icon">⚡</div>
+                    <div>
+                        <div style="font-size: 11px; color: #64748b; font-weight: 500;">Inhoud</div>
+                        <div>${lessenCount} lessen (${totalActs} onderdelen)</div>
+                    </div>
+                </div>
+
+                <div class="canva-stat-row">
+                    <div class="canva-stat-icon">📊</div>
+                    <div>
+                        <div style="font-size: 11px; color: #64748b; font-weight: 500;">Niveau</div>
+                        <div>${escapeHtml(cursus.niveau || 'Beginner')}</div>
+                    </div>
+                </div>
+
+                <div class="canva-skills-wrapper">
+                    <h4 class="canva-skills-label">Key skills</h4>
+                    <div class="canva-skills-pills">
+                        ${skillsArr.map(sk => `<span class="canva-skill-pill">${escapeHtml(sk)}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
+window.sluitCourseHub = function() {
+    const overviewView = document.getElementById('elearningOverviewView');
+    const hubView = document.getElementById('elearningCourseHubView');
+    if (overviewView) overviewView.style.display = 'block';
+    if (hubView) hubView.style.display = 'none';
+    if (window.renderElearningGrid) window.renderElearningGrid();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.toggleCanvaLesson = function(lIdx) {
+    const accordion = document.getElementById(`accordion_les_${lIdx}`);
+    if (accordion) {
+        accordion.classList.toggle('active');
+    }
+};
+
+// ==========================================
+// IN-PORTAL LESSPELER & GIDS VIEWER
+// ==========================================
+window.openCanvaActivity = function(cursusId, lesId, actId) {
+    const cursus = (elearningCursussen || []).find(c => c.id == cursusId);
+    if (!cursus || !cursus.lessen) return;
+    
+    let activeLes = null;
+    let activeAct = null;
+    cursus.lessen.forEach(l => {
+        if (l.id === lesId || String(l.nummer) === String(lesId)) {
+            activeLes = l;
+            if (l.activiteiten) {
+                const found = l.activiteiten.find(a => a.id === actId);
+                if (found) activeAct = found;
+            }
+        }
+    });
+
+    if (!activeAct) return;
+
+    window._activePlayerInfo = {
+        cursusId: cursusId,
+        lesId: lesId,
+        actId: actId,
+        cursus: cursus,
+        les: activeLes,
+        act: activeAct
+    };
+
+    const modal = document.getElementById('elearningPlayerModal');
+    const iconEl = document.getElementById('playerActivityIcon');
+    const subtitleEl = document.getElementById('playerLessonSubtitle');
+    const titleEl = document.getElementById('playerActivityTitle');
+    const bodyEl = document.getElementById('playerActivityBody');
+    const btnText = document.getElementById('btnCompleteText');
+
+    if (iconEl) iconEl.innerText = activeLes.icoon || '📖';
+    if (subtitleEl) subtitleEl.innerText = `${activeLes.titel || 'Les'} • ${activeAct.typeLabel || activeAct.type || 'Onderdeel'}`;
+    if (titleEl) titleEl.innerText = activeAct.titel || '';
+
+    // Render actieve inhoud
+    if (bodyEl) {
+        let contentHtml = '';
+        if (activeAct.type === 'video' && activeAct.videoUrl) {
+            let vUrl = activeAct.videoUrl.trim();
+            const match = vUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})/);
+            if (match && match[1]) {
+                vUrl = `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0&autoplay=1`;
+            }
+            contentHtml += `
+                <div style="position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); background: #000;">
+                    <iframe src="${vUrl}" allowfullscreen allow="autoplay" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            `;
+        }
+
+        contentHtml += activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
+        bodyEl.innerHTML = contentHtml;
+    }
+
+    // Knopstatus bijwerken
+    const isDone = elearningProgress && elearningProgress[actId];
+    if (btnText) {
+        btnText.innerText = isDone ? '✓ Afgerond (klik om opnieuw te doen)' : '✓ Markeer als afgerond';
+    }
+
+    if (modal) modal.style.display = 'flex';
+};
+
+window.sluitActivityPlayer = function() {
+    const modal = document.getElementById('elearningPlayerModal');
+    if (modal) {
+        // Stop video playback door iframe leeg te maken
+        const ifr = modal.querySelector('iframe');
+        if (ifr) ifr.src = '';
+        modal.style.display = 'none';
+    }
+};
+
+window.toggleCompleteCurrentActivity = function() {
+    if (!window._activePlayerInfo || !window._activePlayerInfo.actId) return;
+    const actId = window._activePlayerInfo.actId;
+    
+    if (!elearningProgress) elearningProgress = {};
+    elearningProgress[actId] = !elearningProgress[actId];
+    localStorage.setItem('ww_elearning_progress_v1', JSON.stringify(elearningProgress));
+
+    const isDone = elearningProgress[actId];
+    const btnText = document.getElementById('btnCompleteText');
+    if (btnText) {
+        btnText.innerText = isDone ? '✓ Afgerond (klik om opnieuw te doen)' : '✓ Markeer als afgerond';
+    }
+
+    // Werk de actieve cursuspagina direct bij
+    if (window._huidigeCursus) {
+        window.openCourseView(window._huidigeCursus.id);
+    }
+};
+
+window.playerNavigeer = function(delta) {
+    if (!window._activePlayerInfo || !window._huidigeCursus) return;
+    const cursus = window._huidigeCursus;
+    
+    // Maak een platte lijst van alle activiteiten in deze cursus
+    const allActivities = [];
+    if (cursus.lessen && Array.isArray(cursus.lessen)) {
+        cursus.lessen.forEach(l => {
+            if (l.activiteiten && Array.isArray(l.activiteiten)) {
+                l.activiteiten.forEach(a => {
+                    allActivities.push({ lesId: l.id, actId: a.id });
+                });
+            }
+        });
+    }
+
+    const currentIdx = allActivities.findIndex(x => x.actId === window._activePlayerInfo.actId);
+    if (currentIdx === -1) return;
+
+    const nextIdx = currentIdx + delta;
+    if (nextIdx >= 0 && nextIdx < allActivities.length) {
+        const nextItem = allActivities[nextIdx];
+        window.openCanvaActivity(cursus.id, nextItem.lesId, nextItem.actId);
+    } else {
+        window.sluitActivityPlayer();
+    }
+};
+
+window.openCertificaatModal = function(cursusId) {
+    const cursus = (elearningCursussen || []).find(c => c.id == cursusId);
+    if (!cursus) return;
+
+    const modal = document.getElementById('elearningCertificaatModal');
+    const titelEl = document.getElementById('certificaatCursusTitel');
+    const naamEl = document.getElementById('certificaatNaamLeerkracht');
+    const schoolEl = document.getElementById('certificaatSchool');
+    const datumEl = document.getElementById('certificaatDatum');
+
+    const ingelogdeNaam = localStorage.getItem('ww_huidige_leerkracht') || "Leerkracht Wonderwijs";
+    const ingelogdeSchool = localStorage.getItem('ww_standaard_school') || "Stichting Wonderwijs";
+
+    if (titelEl) titelEl.innerText = cursus.certificaatTitel || cursus.titel || "Certificaat";
+    if (naamEl) naamEl.innerText = ingelogdeNaam;
+    if (schoolEl) schoolEl.innerText = ingelogdeSchool;
+    if (datumEl) datumEl.innerText = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    if (modal) modal.style.display = 'flex';
+};
+
+// ==========================================
+// ADMIN LESSON BUILDER IN BEHEERDERS MODAL
+// ==========================================
+window.adminHuidigeLessen = [];
+
+window.renderAdminLessonBuilder = function() {
+    const container = document.getElementById('adminLessonBuilderContainer');
+    if (!container) return;
+
+    if (!window.adminHuidigeLessen || window.adminHuidigeLessen.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #64748b; font-size: 13px;">
+                Nog geen lessen toegevoegd. Klik op <strong>'➕ Les toevoegen'</strong> om te beginnen.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = window.adminHuidigeLessen.map((les, lIdx) => {
+        const actList = Array.isArray(les.activiteiten) ? les.activiteiten : [];
+
+        const actHtml = actList.map((act, aIdx) => `
+            <div class="admin-activity-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 12.5px; color: #0f172a;">Onderdeel ${aIdx + 1}</strong>
+                    <button type="button" onclick="window.adminVerwijderActiviteit(${lIdx}, ${aIdx})" style="color: #dc2626; border: none; background: transparent; cursor: pointer; font-size: 11.5px; font-weight: 700;">✕ Verwijder</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" value="${escapeHtml(act.titel || '')}" placeholder="Titel van onderdeel" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'titel', this.value)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                    <select onchange="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'type', this.value)" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white;">
+                        <option value="video" ${act.type === 'video' ? 'selected' : ''}>Video (▶)</option>
+                        <option value="guide" ${act.type === 'guide' ? 'selected' : ''}>Guide / Gids (📋)</option>
+                        <option value="cheatsheet" ${act.type === 'cheatsheet' ? 'selected' : ''}>Cheatsheet (📖)</option>
+                        <option value="opdracht" ${act.type === 'opdracht' ? 'selected' : ''}>Opdracht (✏️)</option>
+                    </select>
+                </div>
+                ${act.type === 'video' ? `
+                    <input type="text" value="${escapeHtml(act.videoUrl || '')}" placeholder="YouTube Video URL (bijv. https://www.youtube.com/watch?v=...)" oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'videoUrl', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; margin-bottom: 6px;">
+                ` : ''}
+                <textarea rows="3" placeholder="Lesinhoud, uitleg, tips of stappenplan (HTML of platte tekst)..." oninput="window.adminUpdateActiviteit(${lIdx}, ${aIdx}, 'inhoudHtml', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">${escapeHtml(act.inhoudHtml || '')}</textarea>
+            </div>
+        `).join('');
+
+        return `
+            <div class="admin-lesson-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 13px; font-weight: 800; color: #0f172a;">Les ${lIdx + 1}</span>
+                    <button type="button" onclick="window.adminVerwijderLes(${lIdx})" style="color: #dc2626; border: none; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700;">🗑️ Les verwijderen</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 50px 1fr; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" value="${escapeHtml(les.icoon || '👋')}" placeholder="Emoji" oninput="window.adminUpdateLes(${lIdx}, 'icoon', this.value)" style="text-align: center; font-size: 18px; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <input type="text" value="${escapeHtml(les.titel || '')}" placeholder="Lestitel (bijv. Welcome to Teacher Essentials)" oninput="window.adminUpdateLes(${lIdx}, 'titel', this.value)" style="padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 700;">
+                </div>
+                <textarea rows="2" placeholder="Korte inleidende beschrijving van deze les..." oninput="window.adminUpdateLes(${lIdx}, 'beschrijving', this.value)" style="width: 100%; box-sizing: border-box; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; margin-bottom: 10px;">${escapeHtml(les.beschrijving || '')}</textarea>
+
+                <div style="background: #f1f5f9; padding: 10px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 11.5px; font-weight: 700; color: #475569;">Onderdelen / Activiteiten in deze les:</span>
+                        <button type="button" onclick="window.adminVoegActiviteitToe(${lIdx})" style="padding: 4px 8px; font-size: 11px; background: #0f172a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 700;">➕ Onderdeel toevoegen</button>
+                    </div>
+                    ${actHtml || '<div style="font-size: 11px; color: #888; text-align: center; padding: 6px;">Nog geen onderdelen. Klik op <strong>+ Onderdeel toevoegen</strong>.</div>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+window.adminVoegLesToe = function() {
+    const num = (window.adminHuidigeLessen ? window.adminHuidigeLessen.length : 0) + 1;
+    const icons = ['👋', '🪐', '🧩', '💡', '👾', '😊', '🎉', '🤖', '🚀', '🎨', '💻'];
+    const chosenIcon = icons[(num - 1) % icons.length];
+    
+    if (!window.adminHuidigeLessen) window.adminHuidigeLessen = [];
+    window.adminHuidigeLessen.push({
+        id: `les_${Date.now()}`,
+        nummer: num,
+        icoon: chosenIcon,
+        titel: `Nieuwe Les ${num}`,
+        beschrijving: 'Korte beschrijving van de inhoud van deze les.',
+        activiteiten: [
+            {
+                id: `act_${Date.now()}_1`,
+                titel: 'Introductie en Uitleg',
+                type: 'guide',
+                typeLabel: 'Guide',
+                duur: '5 min',
+                inhoudHtml: '<h3>Stappenplan</h3><p>Schrijf hier je eigen lesinstructie voor de leerkrachten.</p>'
+            }
+        ]
+    });
+    window.renderAdminLessonBuilder();
+};
+
+window.adminVerwijderLes = function(lIdx) {
+    if (confirm("Weet je zeker dat je deze les wilt verwijderen?")) {
+        window.adminHuidigeLessen.splice(lIdx, 1);
+        window.renderAdminLessonBuilder();
+    }
+};
+
+window.adminUpdateLes = function(lIdx, field, val) {
+    if (window.adminHuidigeLessen && window.adminHuidigeLessen[lIdx]) {
+        window.adminHuidigeLessen[lIdx][field] = val;
+    }
+};
+
+window.adminVoegActiviteitToe = function(lIdx) {
+    if (!window.adminHuidigeLessen || !window.adminHuidigeLessen[lIdx]) return;
+    if (!window.adminHuidigeLessen[lIdx].activiteiten) window.adminHuidigeLessen[lIdx].activiteiten = [];
+    
+    window.adminHuidigeLessen[lIdx].activiteiten.push({
+        id: `act_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        titel: 'Nieuw Lesonderdeel',
+        type: 'guide',
+        typeLabel: 'Guide',
+        duur: '5 min',
+        inhoudHtml: '<p>Schrijf hier de inhoud van dit onderdeel.</p>'
+    });
+    window.renderAdminLessonBuilder();
+};
+
+window.adminVerwijderActiviteit = function(lIdx, aIdx) {
+    if (window.adminHuidigeLessen && window.adminHuidigeLessen[lIdx] && window.adminHuidigeLessen[lIdx].activiteiten) {
+        window.adminHuidigeLessen[lIdx].activiteiten.splice(aIdx, 1);
+        window.renderAdminLessonBuilder();
+    }
+};
+
+window.adminUpdateActiviteit = function(lIdx, aIdx, field, val) {
+    if (window.adminHuidigeLessen && window.adminHuidigeLessen[lIdx] && window.adminHuidigeLessen[lIdx].activiteiten && window.adminHuidigeLessen[lIdx].activiteiten[aIdx]) {
+        window.adminHuidigeLessen[lIdx].activiteiten[aIdx][field] = val;
+        if (field === 'type') {
+            const labels = { video: 'Video', guide: 'Guide', cheatsheet: 'Cheatsheet', opdracht: 'Opdracht' };
+            window.adminHuidigeLessen[lIdx].activiteiten[aIdx].typeLabel = labels[val] || val;
+            window.renderAdminLessonBuilder();
+        }
+    }
 };
 
 window.openElearningModal = function(id = null) {
@@ -8660,17 +9580,25 @@ window.openElearningModal = function(id = null) {
             }
             if (document.getElementById('editElearningVideo')) document.getElementById('editElearningVideo').value = c.videoUrl || '';
             if (document.getElementById('editElearningOmschrijving')) document.getElementById('editElearningOmschrijving').value = c.omschrijving || '';
-            if (document.getElementById('editElearningLeerdoelen')) document.getElementById('editElearningLeerdoelen').value = c.leerdoelen || '';
-            if (document.getElementById('editElearningCursusUrl')) document.getElementById('editElearningCursusUrl').value = c.cursusUrl || '';
+            if (document.getElementById('editElearningSkills')) {
+                document.getElementById('editElearningSkills').value = Array.isArray(c.keySkills) ? c.keySkills.join(', ') : '';
+            }
+            if (document.getElementById('editElearningCertificaatTitel')) {
+                document.getElementById('editElearningCertificaatTitel').value = c.certificaatTitel || '';
+            }
+            window.adminHuidigeLessen = Array.isArray(c.lessen) ? JSON.parse(JSON.stringify(c.lessen)) : [];
         }
         const delBtn = document.getElementById('btnDeleteElearningFromModal');
         if (delBtn) delBtn.style.display = 'flex';
     } else {
         document.getElementById('modalElearningTitle').innerText = "Nieuwe Cursus Toevoegen";
         if (document.getElementById('editElearningId')) document.getElementById('editElearningId').value = '';
+        window.adminHuidigeLessen = [];
         const delBtn = document.getElementById('btnDeleteElearningFromModal');
         if (delBtn) delBtn.style.display = 'none';
     }
+
+    window.renderAdminLessonBuilder();
     const m = document.getElementById('editElearningModal');
     if (m) m.style.display = 'flex';
 };
@@ -8719,5 +9647,8 @@ window.handleElearningImageUpload = async function(event) {
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('elearningGrid') && typeof window.renderElearningGrid === 'function') {
         window.renderElearningGrid();
+    }
+    if (document.getElementById('adminMenuConfigGrid') && typeof window.renderMenuBeheerTab === 'function') {
+        window.renderMenuBeheerTab();
     }
 });
