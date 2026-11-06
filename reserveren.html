@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Leskisten & reserveren</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261026i">
+    <link rel="stylesheet" href="style.css?v=20261106a">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         .modal-content {
@@ -25,6 +25,7 @@
             <p class="menu-label">Menu</p>
             <a href="index.html" class="menu-item">Dashboard</a>
             <a href="reserveren.html" class="menu-item active" id="menuMateriaalTekst">Leskisten & reserveren</a>
+            <a href="elearning.html" class="menu-item">E-Learning</a>
             <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
             <a href="handreiking.html" class="menu-item">Handreiking digitale geletterdheid</a>
             <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
@@ -79,6 +80,8 @@
                 <div id="modalVideoContainer" class="info-video" style="display: none; margin-top: 15px;">
                     <iframe id="modalVideo" src="" allowfullscreen style="width: 100%; border-radius: 16px; min-height: 250px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.08);"></iframe>
                 </div>
+                <!-- Galerij met sfeer- en praktijkfoto's onder de video -->
+                <div id="modalGalerijContainer" style="display: none; margin-top: 20px; margin-bottom: 16px;"></div>
                 <div id="modalGekoppeldeIdeeen" style="margin-top: 24px; padding-top: 20px; border-top: 1.5px dashed var(--slate-200); display: none;">
                     <h3 style="font-size: 15px; font-weight: 800; color: var(--slate-900); margin-bottom: 12px;">💡 Inspiratie & Kant-en-klare Lesbrieven</h3>
                     <div id="gekoppeldeIdeeenLijst" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -98,7 +101,11 @@
                 <h3 style="margin-top: 24px;">Inhoud van de leskist</h3>
                 <div id="modalInhoud" class="info-text" style="background: rgba(248, 250, 252, 0.8); border: 1px solid var(--slate-200); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 18px; color: var(--slate-700);">Laden...</div>
                 
-                <div id="modalPdfContainer" style="margin-bottom: 24px; display: none; background: #f0fdf4; padding: 16px; border-radius: var(--radius-md); border: 1px solid #bbf7d0;"></div>
+                <!-- Externe link (bijv. SharePoint of website) -->
+                <div id="modalExterneLinkContainer" style="margin-bottom: 16px; display: none;"></div>
+
+                <!-- Dropdown voor leskaarten & bijlagen -->
+                <div id="modalPdfContainer" style="margin-bottom: 20px; display: none;"></div>
                 
                 <div style="border-top: 1.5px solid var(--slate-100); padding-top: 20px;">
                     <form id="reserveForm">
@@ -170,8 +177,17 @@
     </div>
 </div>
 
+<!-- Lightbox modal voor foto's -->
+<div id="imageLightboxModal" class="lightbox-overlay" onclick="closeImageLightbox(event)" style="display: none;">
+    <div class="lightbox-dialog" onclick="event.stopPropagation()">
+        <button type="button" class="lightbox-close" onclick="closeImageLightbox()" aria-label="Sluiten">&times;</button>
+        <img id="lightboxImage" src="" alt="Foto weergave" class="lightbox-img">
+        <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+</div>
+
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261102a"></script>
+<script src="script.js?v=20261106a"></script>
 </body>
 </html>

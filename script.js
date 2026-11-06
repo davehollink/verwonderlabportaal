@@ -20,6 +20,17 @@ function safeGetLocal(key, defaultData) {
     return defaultData;
 }
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+window.escapeHtml = escapeHtml;
+
 window.openInOutlook = function(to, subject, body) {
     const cleanTo = (to || "").trim();
     const encodedSubject = encodeURIComponent(subject || "");
@@ -920,6 +931,75 @@ localStorage.setItem('ww_verwijderde_materialen_v1', JSON.stringify(verwijderdeM
 
 let leskisten = safeGetLocal('ww_leskisten_v15', []);
 leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.id)) && (!k._docId || !verwijderdeMaterialen.includes(k._docId)));
+
+// ==========================================
+// E-LEARNING STANDAARD DATA & OPSLAG
+// ==========================================
+const defaultElearningCursussen = [
+    {
+        id: 101,
+        titel: "Canva voor Onderwijs: De Basiscursus",
+        categorie: "Creatieve Tools",
+        niveau: "Leerkrachten PO • Beginner",
+        duur: "45 min",
+        auteur: "Wonderwijs ICT & Didactiek",
+        thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+        videoUrl: "https://www.youtube.com/watch?v=kY3B11w_x9g",
+        omschrijving: "Leer hoe je als leerkracht snel professionele werkbladen, dagritmekaarten, klasposters en interactieve presentaties maakt met Canva voor Onderwijs.",
+        leerdoelen: "• De interface en handige tools van Canva voor Onderwijs verkennen\n• Kant-en-klare lessjablonen aanpassen naar je eigen groep\n• Werkbladen en posters drukklaar downloaden als PDF\n• Samenwerken met collega's en klasgroepen beheren",
+        cursusUrl: "https://www.canva.com/education/"
+    },
+    {
+        id: 102,
+        titel: "Starten met Robotica: Bee-Bot & Dash in de Klas",
+        categorie: "Programmeren & Robotica",
+        niveau: "Groep 1 t/m 5 • Beginner",
+        duur: "60 min",
+        auteur: "Verwonderlab Team",
+        thumbnail: "img/les_dansende_robot.jpg",
+        videoUrl: "https://www.youtube.com/watch?v=sQC9zB_e23I",
+        omschrijving: "Stapsgewijze gids voor het succesvol inzetten van vloerrobots. Combineer programmeren spelenderwijs met taal, spelling en rekenen op de themamat.",
+        leerdoelen: "• Fysiek programmeren met knoppen vs app-gestuurd programmeren\n• Directe integratie met taal, spelling en getalbegrip\n• Effectieve klassenorganisatie en rotatieschema's",
+        cursusUrl: "https://wonderwijs.nl"
+    },
+    {
+        id: 103,
+        titel: "AI in het Basisonderwijs: Kansen, Ethiek & Prompten",
+        categorie: "AI in de Klas",
+        niveau: "Alle groepen • Beginner",
+        duur: "50 min",
+        auteur: "Wonderwijs Innovatie",
+        thumbnail: "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=800&q=80",
+        videoUrl: "",
+        omschrijving: "Praktische kennismaking met generatieve AI voor het basisonderwijs. Bespaar kostbare tijd bij lesvoorbereiding en leerlingen leren omgaan met AI.",
+        leerdoelen: "• Effectieve prompts schrijven voor gedifferentieerde lesstof\n• Kritisch analyseren van AI-antwoorden en bronvermelding\n• Kindveilige en privacy-bewuste omgang met AI tools",
+        cursusUrl: "https://wonderwijs.nl"
+    },
+    {
+        id: 104,
+        titel: "Digitale Geletterdheid & De Wonderwijs Leerlijnen",
+        categorie: "Digitale Geletterdheid",
+        niveau: "Leerkrachten & Coördinatoren • Alle niveaus",
+        duur: "40 min",
+        auteur: "Wonderwijs Expertgroep DG",
+        thumbnail: "Verwonderlab.jpg",
+        videoUrl: "",
+        omschrijving: "Krijg een helder overzicht van de vier DG-domeinen, de doorlopende leerlijn van groep 1 t/m 8 en de praktische koppeling met de Wonderwijs handreiking.",
+        leerdoelen: "• De kerndoelen 21, 22, 23 en 24 in de dagelijkse praktijk herkennen\n• Activiteiten koppelen aan bestaande methodelessen\n• Voortgang bijhouden en borgen in het schoolplan",
+        cursusUrl: "https://wonderwijs.nl"
+    }
+];
+
+let rawVerwijderdeElearning = safeGetLocal('ww_verwijderde_elearning_v1', []);
+let verwijderdeElearning = (Array.isArray(rawVerwijderdeElearning) ? rawVerwijderdeElearning : [])
+    .map(s => String(s).trim());
+
+let elearningCursussen = safeGetLocal('ww_elearning_v1', defaultElearningCursussen);
+elearningCursussen = (Array.isArray(elearningCursussen) ? elearningCursussen : defaultElearningCursussen)
+    .filter(c => c && !verwijderdeElearning.includes(String(c.id)));
+if (!elearningCursussen || elearningCursussen.length === 0) {
+    elearningCursussen = defaultElearningCursussen.filter(c => !verwijderdeElearning.includes(String(c.id)));
+}
 const standaardLesideeen = [
 
     {
@@ -1748,6 +1828,8 @@ function slaDataOp() {
         }
 
         localStorage.setItem('ww_lesideeen_v16', JSON.stringify(lesideeen));
+        localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
+        localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
         localStorage.setItem('ww_scholen_v1', JSON.stringify(scholen));
         localStorage.setItem('ww_beheerders_v1', JSON.stringify(beheerdersLijst));
         localStorage.setItem('ww_favorieten_v1', JSON.stringify(mijnFavorieten));
@@ -1994,10 +2076,19 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         }
                     });
 
+                    let mergedGalerij = (ck.galerij && Array.isArray(ck.galerij) && ck.galerij.length > 0) 
+                        ? ck.galerij 
+                        : (local && Array.isArray(local.galerij) ? local.galerij : []);
+                    let mergedExterneLink = ck.externeLink || (local ? local.externeLink : '');
+                    let mergedExterneLinkTitel = ck.externeLinkTitel || (local ? local.externeLinkTitel : '');
+
                     return {
                         ...ck,
                         afbeelding: mergedAfbeelding,
-                        pdfs: mergedPdfs
+                        pdfs: mergedPdfs,
+                        galerij: mergedGalerij,
+                        externeLink: mergedExterneLink,
+                        externeLinkTitel: mergedExterneLinkTitel
                     };
                 }).sort((a, b) => (a.naam || '').localeCompare((b.naam || ''), 'nl', { sensitivity: 'base', numeric: true }));
 
@@ -2121,6 +2212,44 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         window.laadEmailTemplatesInAdmin();
                     }
                 }
+            }
+        }, checkError);
+
+        // Realtime E-Learning modules luisteraar
+        onSnapshot(collection(db, "elearning"), (snapshot) => {
+            if (!snapshot.empty) {
+                const cloudCursussen = [];
+                snapshot.docs.forEach(d => {
+                    const cd = { ...d.data(), _docId: d.id };
+                    const idStr = cd.id != null ? String(cd.id) : '';
+                    if (verwijderdeElearning.includes(idStr) || verwijderdeElearning.includes(d.id)) {
+                        deleteDoc(d.ref).catch(e => console.warn("Cleanup verwijderde elearning:", e));
+                        return;
+                    }
+                    cloudCursussen.push(cd);
+                });
+
+                const cloudMap = new Map();
+                cloudCursussen.forEach(c => {
+                    const key = c.id != null ? String(c.id) : (c._docId || '');
+                    if (key) cloudMap.set(key, c);
+                });
+
+                elearningCursussen.forEach(lc => {
+                    if (!lc) return;
+                    const idStr = lc.id != null ? String(lc.id) : '';
+                    if (!verwijderdeElearning.includes(idStr) && idStr && !cloudMap.has(idStr)) {
+                        cloudMap.set(idStr, lc);
+                        if (window.saveElearningToCloud) {
+                            window.saveElearningToCloud(lc).catch(e => console.warn("Background sync elearning:", e));
+                        }
+                    }
+                });
+
+                elearningCursussen = Array.from(cloudMap.values());
+                slaDataOp();
+                if (typeof window.renderBeheerdersTabellen === "function") window.renderBeheerdersTabellen();
+                if (typeof window.renderElearningGrid === "function") window.renderElearningGrid();
             }
         }, checkError);
 
@@ -2335,6 +2464,33 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             }
         };
         window.deleteLesideeFromCloud = async function(id) { await deleteDoc(doc(db, "lesideeen", id.toString())); };
+        
+        window.saveElearningToCloud = async function(cursusData) {
+            if (!db) return;
+            try {
+                let finalThumb = cursusData.thumbnail || 'Verwonderlab.jpg';
+                if (finalThumb.startsWith('data:image') && finalThumb.length > 180 * 1024 && typeof window.compressImage === 'function') {
+                    try {
+                        finalThumb = await window.compressImage(finalThumb, 800, 600, 0.78);
+                    } catch(e) {}
+                }
+                const docData = { ...cursusData, thumbnail: finalThumb };
+                await withTimeout(setDoc(doc(db, "elearning", cursusData.id.toString()), docData), 5000);
+                verwijderdeElearning = verwijderdeElearning.filter(v => v !== String(cursusData.id));
+                localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
+            } catch(err) {
+                console.warn("Fout bij opslaan elearning in cloud:", err);
+            }
+        };
+
+        window.deleteElearningFromCloud = async function(id) {
+            if (!db) return;
+            try {
+                await deleteDoc(doc(db, "elearning", id.toString())).catch(() => {});
+            } catch(err) {
+                console.warn("Fout bij verwijderen elearning uit cloud:", err);
+            }
+        };
         window.deleteMateriaalFromCloud = async function(id, docId, targetKist) {
             if (!db) return;
             try {
@@ -3565,6 +3721,35 @@ window.renderBeheerdersTabellen = function() {
             }).join('');
         }
     }
+
+    const elearningBody = document.getElementById('adminElearningBody');
+    if (elearningBody) {
+        if (!elearningCursussen || elearningCursussen.length === 0) {
+            elearningBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b; padding:25px;">Nog geen e-learning modules toegevoegd. Klik op 'Nieuwe cursus toevoegen' om te beginnen.</td></tr>`;
+        } else {
+            elearningBody.innerHTML = elearningCursussen.map(cursus => {
+                let thumbSrc = cursus.thumbnail && cursus.thumbnail.startsWith('data:image') ? cursus.thumbnail : (cursus.thumbnail || 'Verwonderlab.jpg');
+                return `<tr>
+                    <td style="padding: 10px 16px;">
+                        <img src="${thumbSrc}" style="width: 55px; height: 38px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.06);">
+                    </td>
+                    <td style="padding: 10px 16px;">
+                        <strong>${escapeHtml(cursus.titel || 'Naamloos')}</strong>
+                        ${cursus.auteur ? `<br><span style="font-size:11.5px; color:#64748b;">${escapeHtml(cursus.auteur)}</span>` : ''}
+                    </td>
+                    <td style="padding: 10px 16px;">
+                        <span style="font-size: 11.5px; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-weight: 600;">${escapeHtml(cursus.categorie || 'Algemeen')}</span>
+                    </td>
+                    <td style="padding: 10px 16px; font-size: 12.5px; color: #334155;">${escapeHtml(cursus.niveau || 'Alle niveaus')}</td>
+                    <td style="padding: 10px 16px; font-size: 12.5px; color: #334155;">⏱️ ${escapeHtml(cursus.duur || '-')}</td>
+                    <td style="text-align: right; padding: 10px 16px; white-space: nowrap;">
+                        <button class="btn-table-edit" onclick="window.openElearningModal(${cursus.id})">✏️ Bewerken</button>
+                        <button class="btn-table-delete" onclick="window.deleteElearning(${cursus.id})">🗑️ Verwijderen</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+    }
 }
 
 window.updateKalenderEnLijst = function() {
@@ -3670,7 +3855,7 @@ window._kalenderNavDate = new Date();
 // ==========================================
 document.addEventListener('submit', async (e) => { 
     const form = e.target; 
-    if (['editLeskistForm', 'editLesideeForm', 'periodeForm', 'reserveForm', 'schoolForm', 'storingForm'].includes(form.id)) { 
+    if (['editLeskistForm', 'editLesideeForm', 'periodeForm', 'reserveForm', 'schoolForm', 'storingForm', 'editElearningForm'].includes(form.id)) { 
         e.preventDefault(); 
         const btn = form.querySelector('button[type="submit"]') || form.querySelector('button.btn-green-action') || form.querySelector('button'); 
         await verwerkFormulier(form.id, btn); 
@@ -3748,6 +3933,9 @@ async function verwerkFormulier(formId, btnElement) {
                 beschrijving: getVal('editBeschrijving'), 
                 inhoud: getVal('editInhoud'), 
                 videoUrl: getVal('editVideo'), 
+                externeLink: (getVal('editExterneLink', '') || '').trim(),
+                externeLinkTitel: (getVal('editExterneLinkTitel', '') || '').trim(),
+                galerij: Array.isArray(currentGalerijFotos) ? [...currentGalerijFotos] : [],
                 beschikbaar: getCheck('editBeschikbaar', true), 
                 afbeelding: imgData, 
                 pdfs: kistPdfs 
@@ -3975,6 +4163,47 @@ ${beschrijving}
         }
 
         alert('✅ Je melding is opgeslagen in het systeem en Outlook wordt nu geopend om de melding te versturen!'); 
+    } else if (formId === 'editElearningForm') {
+        const rawId = getVal('editElearningId');
+        const cId = rawId ? parseInt(rawId) : Date.now();
+        let thumb = (getVal('editElearningThumbnail', '') || '').trim();
+        if (thumb.startsWith('data:image') && thumb.length > 180 * 1024 && typeof window.compressImage === 'function') {
+            try {
+                thumb = await window.compressImage(thumb, 800, 600, 0.78);
+            } catch(e) {}
+        }
+        const cursusData = {
+            id: cId,
+            titel: getVal('editElearningTitel', 'Naamloze Cursus'),
+            categorie: getVal('editElearningCategorie', 'Creatieve Tools'),
+            niveau: getVal('editElearningNiveau', 'Leerkrachten PO'),
+            duur: getVal('editElearningDuur', '45 min'),
+            auteur: getVal('editElearningAuteur', 'Wonderwijs'),
+            thumbnail: thumb || 'Verwonderlab.jpg',
+            videoUrl: (getVal('editElearningVideo', '') || '').trim(),
+            omschrijving: getVal('editElearningOmschrijving', ''),
+            leerdoelen: getVal('editElearningLeerdoelen', ''),
+            cursusUrl: (getVal('editElearningCursusUrl', 'https://wonderwijs.nl') || 'https://wonderwijs.nl').trim()
+        };
+        
+        verwijderdeElearning = (verwijderdeElearning || []).filter(v => v !== String(cId));
+        localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
+        
+        const idx = (elearningCursussen || []).findIndex(c => String(c.id) === String(cId));
+        if (idx > -1) {
+            elearningCursussen[idx] = { ...elearningCursussen[idx], ...cursusData };
+        } else {
+            elearningCursussen.push(cursusData);
+        }
+        slaDataOp();
+        if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+        if (window.renderElearningGrid) window.renderElearningGrid();
+        window.sluitAlleModals();
+        if (window.saveElearningToCloud) {
+            await window.saveElearningToCloud(cursusData).catch(err => console.error("Cloud opslag elearning:", err));
+        }
+        if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
+        alert("✅ E-Learning cursus succesvol opgeslagen!");
     }
     } catch(err) { 
         alert("❌ Er is iets misgegaan tijdens het verwerken: " + err.message); 
@@ -4016,6 +4245,9 @@ window.switchAdminTab = function(tabId, btnElement) {
     }
     if (tabId === 'tab-emailtemplate' && typeof window.laadEmailTemplatesInAdmin === 'function') {
         window.laadEmailTemplatesInAdmin();
+    }
+    if ((tabId === 'tab-elearning' || tabId === 'tab-leskisten' || tabId === 'tab-reserveringen') && typeof window.renderBeheerdersTabellen === 'function') {
+        window.renderBeheerdersTabellen();
     }
 };
 
@@ -4572,38 +4804,68 @@ window.openLeskistInfo = function(id) {
     if (pdfContainer) {
         if (kist.pdfs && Array.isArray(kist.pdfs) && kist.pdfs.length > 0) {
             let pdfHtml = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <strong style="color: #166534; font-size: 14.5px; display: flex; align-items: center; gap: 6px;">
-                        <span>📄</span> Leskaarten &amp; Bijlagen (${kist.pdfs.length})
-                    </strong>
-                    <span style="font-size: 12px; color: #15803d; font-weight: 600;">Direct te openen of downloaden</span>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="pdf-dropdown-wrapper">
+                    <button type="button" class="pdf-dropdown-btn" onclick="window.toggleLeskaartenDropdown(this)" aria-expanded="false">
+                        <span class="pdf-dropdown-label">
+                            <span class="pdf-dropdown-icon">📄</span>
+                            <span>Leskaarten &amp; Bijlagen (${kist.pdfs.length})</span>
+                        </span>
+                        <span class="pdf-dropdown-arrow">▼</span>
+                    </button>
+                    <div class="pdf-dropdown-menu">
             `;
             kist.pdfs.forEach((pdf, pIdx) => {
                 pdfHtml += `
-                    <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 2px 4px rgba(140, 198, 63, 0.08);">
-                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden;">
-                            <span style="font-size: 22px; flex-shrink: 0;">📄</span>
-                            <div style="min-width: 0; overflow: hidden;">
-                                <div style="font-weight: 700; font-size: 13.5px; color: #1e293b; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${pdf.naam}</div>
-                                <div style="font-size: 11px; color: #64748b;">${pdf.grootte || 'PDF Document'}</div>
+                    <div class="pdf-dropdown-item">
+                        <div class="pdf-item-info">
+                            <span style="font-size: 18px; flex-shrink: 0;">📄</span>
+                            <div class="pdf-item-text">
+                                <span class="pdf-item-title" title="${escapeHtml(pdf.naam)}">${escapeHtml(pdf.naam)}</span>
+                                <span class="pdf-item-size">${escapeHtml(pdf.grootte || 'PDF Document')}</span>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                            <button type="button" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${pIdx}, '${kist.id}')" class="btn-green-action" style="padding: 7px 14px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; background: #8CC63F; color: white; font-weight: 700;">
-                                <span>📥</span> Bekijk / Download
-                            </button>
-                        </div>
+                        <button type="button" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${pIdx}, '${kist.id}')" class="btn-pdf-download">
+                            <span>Bekijk</span> ↗
+                        </button>
                     </div>
                 `;
             });
-            pdfHtml += '</div>';
+            pdfHtml += `
+                    </div>
+                </div>
+            `;
             pdfContainer.innerHTML = pdfHtml;
             pdfContainer.style.display = 'block';
         } else {
             pdfContainer.innerHTML = '';
             pdfContainer.style.display = 'none';
+        }
+    }
+
+    // Externe link weergave (SharePoint, website, OneDrive)
+    const extLinkContainer = document.getElementById('modalExterneLinkContainer');
+    if (extLinkContainer) {
+        if (kist.externeLink && kist.externeLink.trim() !== '') {
+            const url = kist.externeLink.trim();
+            const titel = kist.externeLinkTitel && kist.externeLinkTitel.trim() !== '' ? kist.externeLinkTitel.trim() : 'Externe map / website openen';
+            const isSharepoint = url.toLowerCase().includes('sharepoint') || url.toLowerCase().includes('onedrive');
+            const icon = isSharepoint ? '📁' : '🔗';
+            const label = isSharepoint ? 'SharePoint Documenten' : 'Externe Bron';
+            
+            extLinkContainer.innerHTML = `
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="material-ext-link-card">
+                    <span class="ext-link-icon">${icon}</span>
+                    <div class="ext-link-text">
+                        <span class="ext-link-badge">${label}</span>
+                        <strong class="ext-link-title">${escapeHtml(titel)}</strong>
+                    </div>
+                    <span class="ext-link-arrow">↗</span>
+                </a>
+            `;
+            extLinkContainer.style.display = 'block';
+        } else {
+            extLinkContainer.innerHTML = '';
+            extLinkContainer.style.display = 'none';
         }
     }
 
@@ -4618,6 +4880,41 @@ window.openLeskistInfo = function(id) {
     } else {
         if (videoIframe) videoIframe.src = "";
         if (videoContainer) videoContainer.style.display = "none";
+    }
+
+    // Praktijk- & sfeerfoto's galerij onder het filmpje
+    const galerijContainer = document.getElementById('modalGalerijContainer');
+    if (galerijContainer) {
+        if (kist.galerij && Array.isArray(kist.galerij) && kist.galerij.length > 0) {
+            let galHtml = `
+                <div class="modal-galerij-box">
+                    <div class="modal-galerij-header">
+                        <span class="modal-galerij-title">
+                            <span>📸</span> In de praktijk (${kist.galerij.length} ${kist.galerij.length === 1 ? 'foto' : 'foto\'s'})
+                        </span>
+                        <span class="modal-galerij-hint">Klik voor vergroting</span>
+                    </div>
+                    <div class="galerij-grid">
+            `;
+            kist.galerij.forEach((imgSrc, gIdx) => {
+                const escapedSrc = escapeHtml(imgSrc);
+                const escapedCap = escapeHtml(`${kist.naam || 'Materiaal'} - Foto ${gIdx + 1}`);
+                galHtml += `
+                    <div class="galerij-thumbnail-wrapper" onclick="window.openImageLightbox('${escapedSrc}', '${escapedCap}')">
+                        <img src="${escapedSrc}" alt="${escapedCap}" loading="lazy">
+                    </div>
+                `;
+            });
+            galHtml += `
+                    </div>
+                </div>
+            `;
+            galerijContainer.innerHTML = galHtml;
+            galerijContainer.style.display = 'block';
+        } else {
+            galerijContainer.innerHTML = '';
+            galerijContainer.style.display = 'none';
+        }
     }
 
     // NIEUW: Gekoppelde lesideeën tonen in de pop-up ter inspiratie
@@ -4740,7 +5037,41 @@ window.openLeskistInfo = function(id) {
     
     const resModal = document.getElementById('infoReserveModal');
     if(resModal) resModal.style.display = 'flex';
-}
+};
+
+window.toggleLeskaartenDropdown = function(btn) {
+    if (!btn) return;
+    const wrapper = btn.closest('.pdf-dropdown-wrapper');
+    if (!wrapper) return;
+    const menu = wrapper.querySelector('.pdf-dropdown-menu');
+    if (!menu) return;
+    const isOpen = menu.classList.contains('open');
+    if (isOpen) {
+        menu.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+    } else {
+        menu.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+    }
+};
+
+window.openImageLightbox = function(src, caption) {
+    const modal = document.getElementById('imageLightboxModal');
+    const img = document.getElementById('lightboxImage');
+    const cap = document.getElementById('lightboxCaption');
+    if (!modal || !img) return;
+    img.src = src;
+    if (cap) cap.innerText = caption || '';
+    modal.style.display = 'flex';
+};
+
+window.closeImageLightbox = function(event) {
+    if (event && event.target && event.target.id !== 'imageLightboxModal' && !event.target.classList.contains('lightbox-close')) {
+        return;
+    }
+    const modal = document.getElementById('imageLightboxModal');
+    if (modal) modal.style.display = 'none';
+};
 
 // Admin Functies (Bewerken/Verwijderen)
 window.beoordeelReservering = async function(id, nieuweStatus) {
@@ -5513,6 +5844,61 @@ window.handleStoringFotoUpload = function(event) {
     reader.readAsDataURL(file);
 };
 
+let currentGalerijFotos = [];
+
+window.renderGalerijPreview = function() {
+    const container = document.getElementById('galerijPreviewContainer');
+    if (!container) return;
+    if (!currentGalerijFotos || currentGalerijFotos.length === 0) {
+        container.innerHTML = '<span style="font-size: 12px; color: #94a3b8; font-style: italic; grid-column: 1 / -1;">Nog geen extra praktijkfoto\'s toegevoegd.</span>';
+        return;
+    }
+    container.innerHTML = currentGalerijFotos.map((src, idx) => `
+        <div class="admin-galerij-item">
+            <img src="${escapeHtml(src)}" alt="Foto ${idx + 1}">
+            <button type="button" class="btn-remove-galerij" onclick="window.removeGalerijFoto(${idx})" title="Verwijder foto">✕</button>
+        </div>
+    `).join('');
+};
+
+window.handleGalerijUpload = async function(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+            let dataUrl = await new Promise((resolve) => {
+                const r = new FileReader();
+                r.onload = e => resolve(e.target.result);
+                r.readAsDataURL(file);
+            });
+            if (typeof window.compressImage === 'function') {
+                dataUrl = await window.compressImage(dataUrl, 800, 600, 0.75);
+            }
+            currentGalerijFotos.push(dataUrl);
+        } catch(err) {
+            console.error("Fout bij foto upload:", err);
+        }
+    }
+    event.target.value = '';
+    window.renderGalerijPreview();
+};
+
+window.addGalerijUrl = function() {
+    const input = document.getElementById('editGalerijUrlInput');
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) return;
+    currentGalerijFotos.push(val);
+    input.value = '';
+    window.renderGalerijPreview();
+};
+
+window.removeGalerijFoto = function(idx) {
+    currentGalerijFotos.splice(idx, 1);
+    window.renderGalerijPreview();
+};
+
 window.openMateriaalModal = function(id = null) { 
     const form = document.getElementById('editLeskistForm'); 
     if(form) form.reset(); 
@@ -5537,8 +5923,11 @@ window.openMateriaalModal = function(id = null) {
             if(document.getElementById('editBeschrijving')) document.getElementById('editBeschrijving').value = kist.beschrijving || ""; 
             if(document.getElementById('editInhoud')) document.getElementById('editInhoud').value = kist.inhoud || ""; 
             if(document.getElementById('editVideo')) document.getElementById('editVideo').value = kist.videoUrl || ""; 
+            if(document.getElementById('editExterneLink')) document.getElementById('editExterneLink').value = kist.externeLink || ""; 
+            if(document.getElementById('editExterneLinkTitel')) document.getElementById('editExterneLinkTitel').value = kist.externeLinkTitel || ""; 
             if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = kist.beschikbaar !== false; 
             currentPdfs = (kist.pdfs && Array.isArray(kist.pdfs)) ? JSON.parse(JSON.stringify(kist.pdfs)) : []; 
+            currentGalerijFotos = (kist.galerij && Array.isArray(kist.galerij)) ? [...kist.galerij] : [];
 
             // Laad eventuele ontbrekende bestandsdata asynchroon uit IndexedDB
             currentPdfs.forEach(p => {
@@ -5561,11 +5950,15 @@ window.openMateriaalModal = function(id = null) {
         if(document.getElementById('editKistId')) document.getElementById('editKistId').value = ""; 
         if(document.getElementById('editAfbeelding')) document.getElementById('editAfbeelding').value = ""; 
         if(document.getElementById('imagePreview')) document.getElementById('imagePreview').innerHTML = ""; 
+        if(document.getElementById('editExterneLink')) document.getElementById('editExterneLink').value = ""; 
+        if(document.getElementById('editExterneLinkTitel')) document.getElementById('editExterneLinkTitel').value = ""; 
         if(document.getElementById('editBeschikbaar')) document.getElementById('editBeschikbaar').checked = true; 
         currentPdfs = []; 
+        currentGalerijFotos = [];
     } 
 
     if(window.updatePdfPreview) window.updatePdfPreview(); 
+    if(window.renderGalerijPreview) window.renderGalerijPreview();
     const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
     if (submitBtn) { submitBtn.innerText = "Opslaan"; submitBtn.disabled = false; }
     const delBtn = document.getElementById('btnDeleteKistFromModal');
@@ -8063,3 +8456,268 @@ document.addEventListener('DOMContentLoaded', () => {
 if (typeof window.importeerHistorischeReserveringen === 'function') {
     window.importeerHistorischeReserveringen();
 }
+
+// ==========================================
+// E-LEARNING INTERFACE & BEHEER FUNCTIES
+// ==========================================
+window.filterElearning = function(cat) {
+    window._actieveElearningCategorie = cat;
+    const filterBtns = document.querySelectorAll('#elearningFilters .filter-btn');
+    filterBtns.forEach(btn => {
+        if (btn.innerText.includes(cat) || (cat === 'Alle' && btn.innerText.includes('Alle'))) {
+            btn.classList.add('active');
+            btn.style.background = '#8CC63F';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = 'transparent';
+        } else {
+            btn.classList.remove('active');
+            btn.style.background = '#f1f5f9';
+            btn.style.color = '#475569';
+            btn.style.borderColor = '#cbd5e1';
+        }
+    });
+    if (window.renderElearningGrid) window.renderElearningGrid();
+};
+
+window.zoekElearning = function(term) {
+    window._actieveElearningZoekTerm = term;
+    if (window.renderElearningGrid) window.renderElearningGrid();
+};
+
+window.renderElearningGrid = function() {
+    const grid = document.getElementById('elearningGrid');
+    if (!grid) return;
+    
+    let list = [...(elearningCursussen || [])];
+    
+    if (window._actieveElearningCategorie && window._actieveElearningCategorie !== 'Alle') {
+        list = list.filter(c => c.categorie === window._actieveElearningCategorie);
+    }
+    
+    if (window._actieveElearningZoekTerm && window._actieveElearningZoekTerm.trim() !== '') {
+        const q = window._actieveElearningZoekTerm.toLowerCase().trim();
+        list = list.filter(c => 
+            (c.titel && c.titel.toLowerCase().includes(q)) ||
+            (c.omschrijving && c.omschrijving.toLowerCase().includes(q)) ||
+            (c.categorie && c.categorie.toLowerCase().includes(q)) ||
+            (c.niveau && c.niveau.toLowerCase().includes(q))
+        );
+    }
+    
+    if (list.length === 0) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: white; border-radius: 16px; border: 1.5px dashed #cbd5e1;">
+                <span style="font-size: 40px; display: block; margin-bottom: 12px;">🔍</span>
+                <h3 style="font-size: 18px; color: #0f172a; margin-bottom: 6px;">Geen cursussen gevonden</h3>
+                <p style="font-size: 14px; color: #64748b; margin-bottom: 16px;">Er zijn geen e-learning modules die voldoen aan je zoekcriteria.</p>
+                <button onclick="window.filterElearning('Alle')" style="background: #8CC63F; color: white; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 700; cursor: pointer;">Toon alle cursussen</button>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = list.map(c => {
+        let thumbSrc = c.thumbnail && c.thumbnail.startsWith('data:image') ? c.thumbnail : (c.thumbnail || 'Verwonderlab.jpg');
+        return `
+            <div class="elearning-card">
+                <div class="elearning-thumbnail-box" onclick="window.openElearningDetailModal(${c.id})" style="cursor: pointer;">
+                    <img src="${escapeHtml(thumbSrc)}" alt="${escapeHtml(c.titel || 'Cursus')}" loading="lazy">
+                    <div class="elearning-card-badges">
+                        <span class="elearning-cat-badge">${escapeHtml(c.categorie || 'E-Learning')}</span>
+                        <span class="elearning-dur-badge">⏱️ ${escapeHtml(c.duur || 'Zelfstudie')}</span>
+                    </div>
+                </div>
+                <div class="elearning-card-body">
+                    <div class="elearning-meta-row">
+                        <span>🎯 ${escapeHtml(c.niveau || 'Voor leerkrachten')}</span>
+                    </div>
+                    <h3 class="elearning-card-title" onclick="window.openElearningDetailModal(${c.id})" style="cursor: pointer;">${escapeHtml(c.titel || 'Naamloze cursus')}</h3>
+                    <p class="elearning-card-desc">${escapeHtml(c.omschrijving || '')}</p>
+                    <div class="elearning-card-footer">
+                        <span class="elearning-author">
+                            <span>👤</span> ${escapeHtml(c.auteur || 'Wonderwijs')}
+                        </span>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn-table-edit" onclick="window.openElearningDetailModal(${c.id})" style="padding: 7px 12px; font-size: 12px;">
+                                Info &amp; Doelen
+                            </button>
+                            <a href="${escapeHtml(c.cursusUrl || '#')}" target="_blank" rel="noopener noreferrer" class="btn-elearning-start">
+                                <span>Start</span> ↗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+window.openElearningDetailModal = function(id) {
+    const cursus = (elearningCursussen || []).find(c => c.id == id);
+    if (!cursus) return;
+    const modal = document.getElementById('elearningDetailModal');
+    const body = document.getElementById('elearningDetailBody');
+    if (!modal || !body) return;
+    
+    let thumbSrc = cursus.thumbnail && cursus.thumbnail.startsWith('data:image') ? cursus.thumbnail : (cursus.thumbnail || 'Verwonderlab.jpg');
+    
+    let videoHtml = '';
+    if (cursus.videoUrl && cursus.videoUrl.trim() !== '') {
+        let vUrl = cursus.videoUrl.trim();
+        const match = vUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})/);
+        if (match && match[1]) {
+            vUrl = `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0`;
+            videoHtml = `
+                <div style="margin: 20px 0; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08);">
+                    <iframe src="${vUrl}" allowfullscreen style="width: 100%; min-height: 280px; border: none; display: block;"></iframe>
+                </div>
+            `;
+        }
+    }
+    
+    let doelenListHtml = '';
+    if (cursus.leerdoelen && cursus.leerdoelen.trim() !== '') {
+        const doelenLines = cursus.leerdoelen.split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
+        if (doelenLines.length > 0) {
+            doelenListHtml = `
+                <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 14px; padding: 18px 20px; margin: 20px 0;">
+                    <h4 style="font-size: 14px; font-weight: 800; color: #166534; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
+                        <span>🎯</span> Wat leer je in deze e-learning?
+                    </h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #15803d; font-size: 13.5px; line-height: 1.6;">
+                        ${doelenLines.map(d => `<li style="margin-bottom: 4px;">${escapeHtml(d)}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+    }
+    
+    body.innerHTML = `
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 16px; flex-wrap: wrap;">
+            <div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap;">
+                    <span style="background: #0f172a; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">
+                        ${escapeHtml(cursus.categorie || 'Algemeen')}
+                    </span>
+                    <span style="background: #f1f5f9; color: #334155; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">
+                        ⏱️ ${escapeHtml(cursus.duur || 'Zelfstudie')}
+                    </span>
+                    <span style="background: rgba(140, 198, 63, 0.15); color: #3f6212; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 9999px;">
+                        🎯 ${escapeHtml(cursus.niveau || 'Leerkrachten PO')}
+                    </span>
+                </div>
+                <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.3px;">
+                    ${escapeHtml(cursus.titel || '')}
+                </h2>
+                ${cursus.auteur ? `<p style="font-size: 13px; color: #64748b; margin: 0;">Ontwikkeld door: <strong>${escapeHtml(cursus.auteur)}</strong></p>` : ''}
+            </div>
+        </div>
+        
+        ${videoHtml ? videoHtml : `
+            <div style="width: 100%; max-height: 260px; border-radius: 14px; overflow: hidden; margin: 15px 0 20px 0; background: #f8fafc;">
+                <img src="${escapeHtml(thumbSrc)}" style="width: 100%; height: 240px; object-fit: cover; display: block;" alt="${escapeHtml(cursus.titel)}">
+            </div>
+        `}
+        
+        <div style="color: #334155; font-size: 14.5px; line-height: 1.65; margin: 16px 0;">
+            <p style="margin: 0;">${escapeHtml(cursus.omschrijving || '')}</p>
+        </div>
+        
+        ${doelenListHtml}
+        
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1.5px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <span style="font-size: 12.5px; color: #64748b;">
+                💡 Na het afronden kun je de geleerde vaardigheden direct inzetten in je groep.
+            </span>
+            <a href="${escapeHtml(cursus.cursusUrl || '#')}" target="_blank" rel="noopener noreferrer" class="btn-large-reserve" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: auto; padding: 12px 28px; font-size: 14px;">
+                <span>Start deze E-Learning nu</span>
+                <span style="font-size: 16px; margin-left: 6px;">🚀</span>
+            </a>
+        </div>
+    `;
+    modal.style.display = 'flex';
+};
+
+window.openElearningModal = function(id = null) {
+    const form = document.getElementById('editElearningForm');
+    if (form) form.reset();
+    const prev = document.getElementById('elearningImagePreview');
+    if (prev) prev.innerHTML = '';
+    
+    if (id) {
+        document.getElementById('modalElearningTitle').innerText = "Cursus Bewerken";
+        const c = (elearningCursussen || []).find(item => item.id == id);
+        if (c) {
+            if (document.getElementById('editElearningId')) document.getElementById('editElearningId').value = c.id;
+            if (document.getElementById('editElearningTitel')) document.getElementById('editElearningTitel').value = c.titel || '';
+            if (document.getElementById('editElearningCategorie')) document.getElementById('editElearningCategorie').value = c.categorie || 'Creatieve Tools';
+            if (document.getElementById('editElearningNiveau')) document.getElementById('editElearningNiveau').value = c.niveau || '';
+            if (document.getElementById('editElearningDuur')) document.getElementById('editElearningDuur').value = c.duur || '';
+            if (document.getElementById('editElearningAuteur')) document.getElementById('editElearningAuteur').value = c.auteur || '';
+            if (document.getElementById('editElearningThumbnail')) document.getElementById('editElearningThumbnail').value = c.thumbnail || '';
+            if (c.thumbnail && prev) {
+                prev.innerHTML = `<img src="${c.thumbnail}" style="max-height: 80px; border-radius: 8px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">`;
+            }
+            if (document.getElementById('editElearningVideo')) document.getElementById('editElearningVideo').value = c.videoUrl || '';
+            if (document.getElementById('editElearningOmschrijving')) document.getElementById('editElearningOmschrijving').value = c.omschrijving || '';
+            if (document.getElementById('editElearningLeerdoelen')) document.getElementById('editElearningLeerdoelen').value = c.leerdoelen || '';
+            if (document.getElementById('editElearningCursusUrl')) document.getElementById('editElearningCursusUrl').value = c.cursusUrl || '';
+        }
+        const delBtn = document.getElementById('btnDeleteElearningFromModal');
+        if (delBtn) delBtn.style.display = 'flex';
+    } else {
+        document.getElementById('modalElearningTitle').innerText = "Nieuwe Cursus Toevoegen";
+        if (document.getElementById('editElearningId')) document.getElementById('editElearningId').value = '';
+        const delBtn = document.getElementById('btnDeleteElearningFromModal');
+        if (delBtn) delBtn.style.display = 'none';
+    }
+    const m = document.getElementById('editElearningModal');
+    if (m) m.style.display = 'flex';
+};
+
+window.deleteElearning = async function(id, evt) {
+    if (evt) evt.stopPropagation();
+    if (!confirm("Weet je zeker dat je deze cursus wilt verwijderen?")) return;
+    const idStr = String(id);
+    verwijderdeElearning.push(idStr);
+    localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
+    elearningCursussen = (elearningCursussen || []).filter(c => String(c.id) !== idStr);
+    slaDataOp();
+    if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+    if (window.renderElearningGrid) window.renderElearningGrid();
+    window.sluitAlleModals();
+    if (window.deleteElearningFromCloud) {
+        await window.deleteElearningFromCloud(idStr).catch(console.warn);
+    }
+};
+
+window.handleElearningImageUpload = async function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const preview = document.getElementById('elearningImagePreview');
+    const input = document.getElementById('editElearningThumbnail');
+    if (preview) preview.innerHTML = '<span style="font-size:12px; color:#64748b;">Foto verwerken... ⏳</span>';
+    try {
+        let dataUrl = await new Promise((resolve) => {
+            const r = new FileReader();
+            r.onload = e => resolve(e.target.result);
+            r.readAsDataURL(file);
+        });
+        if (typeof window.compressImage === 'function') {
+            dataUrl = await window.compressImage(dataUrl, 800, 600, 0.78);
+        }
+        if (input) input.value = dataUrl;
+        if (preview) {
+            preview.innerHTML = `<img src="${dataUrl}" style="max-height: 80px; border-radius: 8px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">`;
+        }
+    } catch(err) {
+        console.error("Fout bij upload cursus afbeelding:", err);
+    }
+};
+
+// Start eventuele deep link routering en e-learning weergave bij het laden
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('elearningGrid') && typeof window.renderElearningGrid === 'function') {
+        window.renderElearningGrid();
+    }
+});

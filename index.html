@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab Dashboard</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261026i">
+    <link rel="stylesheet" href="style.css?v=20261106a">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* Zorgt ervoor dat te lange pop-ups (modals) een scrollbalk krijgen en niet buiten beeld vallen */
@@ -28,6 +28,7 @@
             <p class="menu-label">Menu</p>
             <a href="index.html" class="menu-item active">Dashboard</a>
             <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
+            <a href="elearning.html" class="menu-item">E-Learning</a>
             <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
             <a href="handreiking.html" class="menu-item">Handreiking digitale geletterdheid</a>
             <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
@@ -158,6 +159,7 @@
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-scholen', this)">Locaties beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-leskisten', this)">Materialen beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-lesideeen', this)">Lesideeën beheer</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('tab-elearning', this)">🎓 E-Learning beheer</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('tab-gebruikers', this)">Gebruikersbeheer</button>
             </div>
             
@@ -450,6 +452,34 @@
                     </div>
                     <div class="table-responsive-wrapper">
                         <table class="data-table"><thead><tr><th>Titel</th><th>Beschrijving</th><th style="text-align: right;">Actie</th></tr></thead><tbody id="adminLesideeenBody"></tbody></table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB: E-LEARNING BEHEER -->
+            <div id="tab-elearning" class="admin-tab-content" style="display: none;">
+                <section class="admin-section">
+                    <div class="section-header-flex">
+                        <div>
+                            <h2 style="margin: 0 0 5px 0;">🎓 E-Learning Modules & Cursussen</h2>
+                            <p style="margin: 0; font-size: 13px; color: #64748b;">Beheer hier cursussen (zoals Canva beginner, Robotica, Micro:bit of AI in de klas) voor leerkrachten.</p>
+                        </div>
+                        <button class="btn-green-action" onclick="window.openElearningModal()"><span>➕</span> Nieuwe cursus toevoegen</button>
+                    </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Thumbnail</th>
+                                    <th>Titel</th>
+                                    <th>Categorie</th>
+                                    <th>Doelgroep / Niveau</th>
+                                    <th>Duur</th>
+                                    <th style="text-align: right;">Actie</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminElearningBody"></tbody>
+                        </table>
                     </div>
                 </section>
             </div>
@@ -996,10 +1026,125 @@
             </div>
             <div class="form-group">
                 <label>Video URL:</label>
-                <input type="text" id="editVideo">
+                <input type="text" id="editVideo" placeholder="Bijv. https://www.youtube.com/watch?v=...">
             </div>
+
+            <!-- Externe link (bijv. SharePoint of website) -->
+            <div class="form-group" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 10px;">
+                <label style="font-weight: 700; color: var(--slate-800); margin-bottom: 6px; display: block;">🔗 Externe link (SharePoint / Website):</label>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+                    <input type="text" id="editExterneLinkTitel" placeholder="Titel (bijv. SharePoint Map of Handleiding)" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <input type="url" id="editExterneLink" placeholder="Link URL (bijv. https://wonderwijs.sharepoint.com/...)" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                </div>
+                <p style="font-size: 11px; color: #64748b; margin-top: 5px; margin-bottom: 0;">Voeg een directe link toe naar een SharePoint-map, OneDrive-map of externe website met lesmaterialen.</p>
+            </div>
+
+            <!-- Praktijk- en sfeerfoto's voor onder de video -->
+            <div class="form-group" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 10px;">
+                <label style="font-weight: 700; color: var(--slate-800); margin-bottom: 6px; display: block;">📸 Praktijk- & Sfeerfoto's (weergave onder de video):</label>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <label class="btn-green-action" style="cursor: pointer; padding: 8px 14px; font-size: 12.5px; white-space: nowrap; margin: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                        <span>➕ Foto's uploaden</span>
+                        <input type="file" id="editGalerijFiles" accept="image/*" multiple style="display: none;" onchange="window.handleGalerijUpload(event)">
+                    </label>
+                    <input type="text" id="editGalerijUrlInput" placeholder="Of plak een afbeeldings-URL..." style="flex: 1; min-width: 180px; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                    <button type="button" onclick="window.addGalerijUrl()" style="padding: 8px 14px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Toevoegen</button>
+                </div>
+                <div id="galerijPreviewContainer" class="admin-galerij-grid"></div>
+                <p style="font-size: 11px; color: #64748b; margin-top: 6px; margin-bottom: 0;">Upload sfeerfoto's van kinderen die met deze kist werken of voorbeelden van resultaten. Deze verschijnen in een nette fotogalerij onder het YouTube-filmpje.</p>
+            </div>
+
             <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 20px; font-size: 14px; padding: 12px 24px;">💾 Materiaal Opslaan</button>
             <button type="button" id="btnDeleteKistFromModal" style="display: none; width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; padding: 11px 20px; border-radius: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; cursor: pointer; font-weight: 700; align-items: center; gap: 8px;" onclick="const kId = document.getElementById('editKistId').value; if(kId) window.deleteMateriaal(kId, event);">🗑️ Dit materiaal verwijderen</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal voor E-Learning Beheer -->
+<div id="editElearningModal" class="modal modal-large">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1.5px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">🎓</div>
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">E-Learning Beheer</span>
+                <h2 id="modalElearningTitle" style="color: var(--slate-950); font-size: 22px; font-weight: 800; margin: 0;">Cursus Bewerken</h2>
+            </div>
+        </div>
+
+        <form id="editElearningForm">
+            <input type="hidden" id="editElearningId">
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">📌 1. Basisgegevens Cursus</h3>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Titel van de cursus / module:</label>
+                    <input type="text" id="editElearningTitel" placeholder="Bijv. Canva voor Onderwijs: De Basiscursus" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Categorie:</label>
+                        <select id="editElearningCategorie" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="Creatieve Tools">Creatieve Tools (Canva, etc.)</option>
+                            <option value="Digitale Geletterdheid">Digitale Geletterdheid</option>
+                            <option value="Programmeren & Robotica">Programmeren & Robotica</option>
+                            <option value="AI in de Klas">AI in de Klas</option>
+                            <option value="Digitaal Burgerschap">Digitaal Burgerschap</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Doelgroep / Niveau:</label>
+                        <input type="text" id="editElearningNiveau" placeholder="Bijv. Leerkrachten PO • Beginner" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Geschatte tijdsduur:</label>
+                        <input type="text" id="editElearningDuur" placeholder="Bijv. 45 min of 3 modules (1,5 uur)" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Gemaakt door / Auteur:</label>
+                        <input type="text" id="editElearningAuteur" placeholder="Bijv. Wonderwijs ICT & Didactiek" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🖼️ 2. Afbeelding & Media</h3>
+                <div class="form-group">
+                    <label style="font-weight: 700; font-size: 13px;">Thumbnail / Omslagafbeelding:</label>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="editElearningThumbnail" placeholder="URL naar afbeelding (bijv. https://... of img/...)" style="flex: 1; min-width: 220px; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                        <label class="btn-green-action" style="cursor: pointer; padding: 10px 14px; font-size: 13px; white-space: nowrap; margin: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                            <span>📷 Foto kiezen</span>
+                            <input type="file" id="editElearningFile" accept="image/*" style="display: none;" onchange="window.handleElearningImageUpload(event)">
+                        </label>
+                    </div>
+                    <div id="elearningImagePreview" style="margin-top: 10px;"></div>
+                </div>
+                <div class="form-group" style="margin-top: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Introductie Video / Embed URL (optioneel):</label>
+                    <input type="text" id="editElearningVideo" placeholder="Bijv. YouTube link of Canva preview" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">📝 3. Inhoud, Doelen & Cursuslink</h3>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Korte omschrijving:</label>
+                    <textarea id="editElearningOmschrijving" rows="3" placeholder="Wat leert de leerkracht in deze e-learning module?" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Wat leer je? (Puntgewijs, 1 per regel):</label>
+                    <textarea id="editElearningLeerdoelen" rows="3" placeholder="• De basisinterface van Canva verkennen&#10;• Werkbladen & posters ontwerpen&#10;• Samenwerken in klasgroepen" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 700; font-size: 13px;">Directe link naar de cursus / leeromgeving:</label>
+                    <input type="url" id="editElearningCursusUrl" placeholder="Bijv. https://www.canva.com/design/... of https://wonderwijs.sharepoint.com/..." required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    <p style="font-size: 11px; color: #64748b; margin-top: 5px;">De knop 'Start Cursus' stuurt leerkrachten direct door naar deze link.</p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 10px; font-size: 14px; padding: 12px 24px;">💾 Cursus Opslaan</button>
+            <button type="button" id="btnDeleteElearningFromModal" style="display: none; width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; padding: 11px 20px; border-radius: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; cursor: pointer; font-weight: 700; align-items: center; gap: 8px;" onclick="const eId = document.getElementById('editElearningId').value; if(eId) window.deleteElearning(eId, event);">🗑️ Deze cursus verwijderen</button>
         </form>
     </div>
 </div>
@@ -1478,6 +1623,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261102a"></script>
+<script src="script.js?v=20261106a"></script>
 </body>
 </html>
