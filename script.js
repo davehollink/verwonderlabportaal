@@ -969,19 +969,18 @@ function getHuidigeGebruikerId() {
 function laadGebruikerElearningProgress() {
     const uid = getHuidigeGebruikerId();
     const userSpecific = safeGetLocal('ww_elearning_progress_' + uid, null);
-    const globalV1 = safeGetLocal('ww_elearning_progress_v1', null);
-    const merged = {};
-    if (globalV1 && typeof globalV1 === 'object') {
-        Object.assign(merged, globalV1);
-    }
     if (userSpecific && typeof userSpecific === 'object') {
-        Object.assign(merged, userSpecific);
+        return userSpecific;
     }
-    return merged;
+    const globalV1 = safeGetLocal('ww_elearning_progress_v1', null);
+    if (globalV1 && typeof globalV1 === 'object') {
+        return globalV1;
+    }
+    return {};
 }
 
 function slaGebruikerElearningProgressOp(progress) {
-    elearningProgress = progress || elearningProgress || {};
+    elearningProgress = progress || {};
     const uid = getHuidigeGebruikerId();
     localStorage.setItem('ww_elearning_progress_' + uid, JSON.stringify(elearningProgress));
     localStorage.setItem('ww_elearning_progress_v1', JSON.stringify(elearningProgress));
@@ -2762,8 +2761,8 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             onSnapshot(doc(db, "voortgang_elearning", veiligId), (snap) => {
                 if (snap.exists()) {
                     const data = snap.data();
-                    if (data && data.voortgang && typeof data.voortgang === 'object') {
-                        elearningProgress = { ...elearningProgress, ...data.voortgang };
+                    if (data && typeof data.voortgang === 'object') {
+                        elearningProgress = data.voortgang ? { ...data.voortgang } : {};
                         slaGebruikerElearningProgressOp(elearningProgress);
                         
                         if (typeof window.renderElearningGrid === "function") window.renderElearningGrid();
@@ -2850,7 +2849,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             };
 
             try {
-                await setDoc(doc(db, "voortgang_elearning", veiligId), payload, { merge: true });
+                await setDoc(doc(db, "voortgang_elearning", veiligId), payload);
             } catch(e) {
                 console.warn("Fout bij opslaan voortgang_elearning cloud:", e);
             }
@@ -9538,16 +9537,6 @@ window.openCourseView = function(id) {
                     else if (act.type === 'cheatsheet') iconSym = '📖';
                     else if (act.type === 'opdracht') iconSym = '✏️';
 
-window.vertaalTypeLabel = function(type) {
-    if (!type) return 'Gids';
-    const t = String(type).toLowerCase().trim();
-    if (t === 'guide' || t === 'gids') return 'Gids';
-    if (t === 'video') return 'Video';
-    if (t === 'cheatsheet' || t === 'spiekbrief') return 'Spiekbrief';
-    if (t === 'opdracht' || t === 'assignment') return 'Opdracht';
-    return type;
-};
-
                     return `
                         <div class="canva-activity-card ${isDone ? 'completed' : ''}" onclick="window.openCanvaActivity(${cursus.id}, '${les.id}', '${act.id}')">
                             <div class="canva-activity-info">
@@ -9555,7 +9544,7 @@ window.vertaalTypeLabel = function(type) {
                                 <span class="canva-activity-subtitle">
                                     <span>${escapeHtml(window.vertaalTypeLabel(act.typeLabel || act.type))}</span>
                                     ${act.duur ? `<span>• ⏱️ ${escapeHtml(act.duur)}</span>` : ''}
-                                    ${isDone ? `<strong style="color: #16a34a; margin-left: 6px;">✓ Afgerond</strong>` : ''}
+                                    ${isDone ? `<span class="canva-activity-done-badge" onclick="window.toggleActivityStatusFromHub(${cursus.id}, '${les.id}', '${act.id}', event)" title="Klik om afronding van dit onderdeel ongedaan te maken">✓ Afgerond <span class="undo-hint">(ongedaan maken)</span></span>` : ''}
                                 </span>
                             </div>
                             <div class="canva-activity-action-btn ${isDone ? 'completed' : ''}" onclick="window.toggleActivityStatusFromHub(${cursus.id}, '${les.id}', '${act.id}', event)" title="${isDone ? 'Klik om afronding van dit onderdeel ongedaan te maken' : 'Markeer als afgerond'}">
@@ -9768,10 +9757,22 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
         if (isDone) {
             finishBtn.classList.add('completed');
             if (finishBtnText) finishBtnText.innerHTML = '✓ Les afgerond';
+            finishBtn.title = 'Klik om deze les weer als nog niet afgerond te markeren';
         } else {
             finishBtn.classList.remove('completed');
             if (finishBtnText) finishBtnText.innerHTML = 'Les afronden';
+            finishBtn.title = 'Markeer deze les als afgerond';
         }
+        finishBtn.onmouseenter = () => {
+            if (finishBtn.classList.contains('completed') && finishBtnText) {
+                finishBtnText.innerHTML = '✕ Afronding herroepen';
+            }
+        };
+        finishBtn.onmouseleave = () => {
+            if (finishBtn.classList.contains('completed') && finishBtnText) {
+                finishBtnText.innerHTML = '✓ Les afgerond';
+            }
+        };
     }
 
     // 2. Linker kolom
