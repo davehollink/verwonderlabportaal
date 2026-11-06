@@ -5045,6 +5045,29 @@ body::after {
     }
 }
 
+/* Zijbalk inklap status (Hamburger menu toggle) */
+.canva-reader-overlay.sidebar-collapsed .canva-reader-brand {
+    display: none !important;
+}
+
+.canva-reader-overlay.sidebar-collapsed .canva-reader-sidebar-left {
+    display: none !important;
+}
+
+.canva-reader-overlay.sidebar-collapsed .canva-reader-container {
+    grid-template-columns: 1fr 280px;
+}
+
+.canva-reader-overlay.sidebar-collapsed .canva-reader-banner-close-btn {
+    display: flex !important;
+}
+
+@media (max-width: 992px) {
+    .canva-reader-overlay.sidebar-collapsed .canva-reader-container {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Linker kolom: Lesoverzicht & onderdelen */
 .canva-reader-sidebar-left {
     border-right: 1px solid #e2e8f0;
@@ -5468,6 +5491,122 @@ body::after {
 .admin-tool-btn.btn-tool-img:hover {
     background: #e9d5ff;
 }
+
+/* ==============================================================
+   CELEBRATION POPUP: LES AFGEROND (CANVA REGENBOOG MODAL)
+   ============================================================== */
+.celebration-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeInCelebration 0.25s ease-out;
+}
+
+@keyframes fadeInCelebration {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.celebration-modal-dialog {
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.28);
+    animation: popInCelebration 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+@keyframes popInCelebration {
+    from { transform: scale(0.92) translateY(12px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.celebration-banner {
+    width: 100%;
+    height: 175px;
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(135deg, #f43f5e 0%, #ec4899 45%, #a855f7 80%, #8b5cf6 100%);
+}
+
+.celebration-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.celebration-body {
+    padding: 28px 32px 34px 32px;
+    text-align: center;
+}
+
+.celebration-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.4px;
+    margin: 0 0 8px 0;
+}
+
+.celebration-text {
+    font-size: 14.5px;
+    color: #64748b;
+    line-height: 1.55;
+    margin: 0 0 26px 0;
+}
+
+.celebration-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-celebration-next {
+    background: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-celebration-next:hover {
+    background: #6d28d9;
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.btn-celebration-course {
+    background: #ffffff;
+    color: #334155;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-celebration-course:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
 
 
 

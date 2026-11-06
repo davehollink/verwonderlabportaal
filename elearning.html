@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - E-Learning & Professionalisering</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261106c">
+    <link rel="stylesheet" href="style.css?v=20261106d">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -119,21 +119,21 @@
 <div id="elearningPlayerModal" class="canva-reader-overlay" style="display: none;">
     <!-- Topbar: Logo, close knop, gradient banner met les afronden knop -->
     <header class="canva-reader-header">
-        <div class="canva-reader-brand">
-            <div class="canva-reader-logo">
-                <span>✨</span>
-                <span>Verwonderlab Academy</span>
+        <div class="canva-reader-brand" id="canvaReaderBrand">
+            <div class="canva-reader-logo" style="display: flex; align-items: center; gap: 8px;">
+                <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" style="height: 38px; max-width: 150px; border-radius: 8px; object-fit: contain;">
             </div>
             <button type="button" class="canva-reader-close-btn" onclick="window.sluitActivityPlayer()" title="Sluiten (terug naar overzicht)" aria-label="Sluiten">✕</button>
         </div>
         <div class="canva-reader-topbar-banner">
             <div class="canva-reader-banner-left">
-                <button type="button" class="canva-reader-toggle-menu" onclick="window.toggleCanvaReaderMobileMenu()" title="Menu in/uitklappen">☰</button>
+                <button type="button" class="canva-reader-toggle-menu" onclick="window.toggleCanvaReaderSidebar()" title="Zijbalk inklappen of uitklappen">☰</button>
+                <button type="button" class="canva-reader-close-btn canva-reader-banner-close-btn" onclick="window.sluitActivityPlayer()" title="Terug naar overzicht" aria-label="Sluiten" style="display: none; width: 32px; height: 32px; background: rgba(255,255,255,0.22); color: white; border: none; font-size: 15px;">✕</button>
                 <span id="playerTopBannerTitle" class="canva-reader-banner-title">Canva voor Onderwijs</span>
             </div>
             <div style="display: flex; gap: 12px; align-items: center;">
                 <button type="button" id="btnFinishLesson" class="btn-finish-lesson" onclick="window.toggleCompleteCurrentActivity()">
-                    <span id="btnFinishLessonText">Finish lesson</span>
+                    <span id="btnFinishLessonText">Les afronden</span>
                 </button>
             </div>
         </div>
@@ -141,7 +141,7 @@
 
     <!-- 3-Koloms lezer container -->
     <div class="canva-reader-container">
-        <!-- LINKER KOLOM: Les indicator, navigatie door activiteiten & "Continue later" -->
+        <!-- LINKER KOLOM: Les indicator, navigatie door activiteiten & "Later verdergaan" -->
         <aside class="canva-reader-sidebar-left" id="canvaReaderSidebarLeft">
             <div>
                 <span id="playerSidebarLessonNum" class="canva-sidebar-lesson-label">Lesson 2 of 7</span>
@@ -154,7 +154,7 @@
 
             <div>
                 <button type="button" class="btn-continue-later" onclick="window.sluitActivityPlayer()">
-                    <span>←</span> Continue later
+                    <span>←</span> Later verdergaan
                 </button>
             </div>
         </aside>
@@ -194,7 +194,7 @@
                 <!-- Footer acties onder de les -->
                 <div style="margin-top: 48px; padding-top: 24px; border-top: 1.5px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
                     <button type="button" class="btn-continue-later" onclick="window.sluitActivityPlayer()" style="width: auto;">
-                        <span>←</span> Terug naar overzicht
+                        <span>←</span> Later verdergaan
                     </button>
                     <div style="display: flex; gap: 10px;">
                         <button type="button" id="btnPlayerPrev" class="pill-btn secondary" onclick="window.playerNavigeer(-1)">
@@ -218,6 +218,84 @@
                 <div class="canva-otp-list" id="playerOtpList">
                     <!-- Dynamisch gegenereerd op basis van de h3 kopjes in de les -->
                 </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<!-- POP-UP: LES AFGEROND CELEBRATION MODAL (CONFORM SCREENSHOT REGENBOOG MODAL) -->
+<div id="lesAfgerondModal" class="celebration-modal-overlay" style="display: none;" onclick="window.sluitLesAfgerondModal(event)">
+    <div class="celebration-modal-dialog" onclick="event.stopPropagation()">
+        <!-- Feestelijke banner met regenboog & confetti -->
+        <div class="celebration-banner">
+            <svg class="celebration-svg" viewBox="0 0 460 175" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="celBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f43f5e" />
+                        <stop offset="35%" stop-color="#ec4899" />
+                        <stop offset="75%" stop-color="#a855f7" />
+                        <stop offset="100%" stop-color="#8b5cf6" />
+                    </linearGradient>
+                    <linearGradient id="rb1" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#f43f5e"/><stop offset="1" stop-color="#fb7185"/></linearGradient>
+                    <linearGradient id="rb2" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#fb923c"/><stop offset="1" stop-color="#f97316"/></linearGradient>
+                    <linearGradient id="rb3" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#facc15"/><stop offset="1" stop-color="#eab308"/></linearGradient>
+                    <linearGradient id="rb4" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient>
+                    <linearGradient id="rb5" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#0284c7"/></linearGradient>
+                    <linearGradient id="rb6" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#a855f7"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+                    <filter id="starGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+                
+                <rect width="460" height="175" fill="url(#celBgGrad)" />
+
+                <!-- Confetti particles -->
+                <rect x="42" y="36" width="13" height="13" rx="2" fill="#38bdf8" transform="rotate(25 42 36)" opacity="0.95" />
+                <rect x="88" y="78" width="11" height="11" rx="2" fill="#06b6d4" transform="rotate(-20 88 78)" opacity="0.9" />
+                <rect x="65" y="130" width="8" height="8" rx="1.5" fill="#facc15" transform="rotate(35 65 130)" opacity="0.9" />
+                <rect x="175" y="24" width="11" height="11" rx="2" fill="#fb7185" transform="rotate(18 175 24)" opacity="0.85" />
+                <rect x="290" y="30" width="13" height="13" rx="2" fill="#fde047" transform="rotate(-28 290 30)" opacity="0.95" />
+                <rect x="375" y="52" width="14" height="14" rx="2" fill="#38bdf8" transform="rotate(-18 375 52)" opacity="0.95" />
+                <rect x="400" y="118" width="11" height="11" rx="2" fill="#e879f9" transform="rotate(32 400 118)" opacity="0.9" />
+                <rect x="340" y="125" width="9" height="9" rx="1.5" fill="#f43f5e" transform="rotate(-15 340 125)" opacity="0.85" />
+
+                <!-- Regenboog bogen (gecentreerd op x=230, y=145) -->
+                <path d="M 152 145 A 78 78 0 0 1 308 145" stroke="url(#rb1)" stroke-width="9.5" fill="none" stroke-linecap="round" />
+                <path d="M 160.5 145 A 69.5 69.5 0 0 1 299.5 145" stroke="url(#rb2)" stroke-width="9.5" fill="none" stroke-linecap="round" />
+                <path d="M 169 145 A 61 61 0 0 1 291 145" stroke="url(#rb3)" stroke-width="9.5" fill="none" stroke-linecap="round" />
+                <path d="M 177.5 145 A 52.5 52.5 0 0 1 282.5 145" stroke="url(#rb4)" stroke-width="9.5" fill="none" stroke-linecap="round" />
+                <path d="M 186 145 A 44 44 0 0 1 274 145" stroke="url(#rb5)" stroke-width="9.5" fill="none" stroke-linecap="round" />
+                <path d="M 194.5 145 A 35.5 35.5 0 0 1 265.5 145" stroke="url(#rb6)" stroke-width="9.5" fill="none" stroke-linecap="round" />
+
+                <!-- Wolkje links onder regenboog -->
+                <circle cx="158" cy="144" r="15" fill="#38bdf8" />
+                <circle cx="146" cy="147" r="12" fill="#06b6d4" />
+                <circle cx="170" cy="147" r="12" fill="#38bdf8" />
+
+                <!-- Gouden glinster / sterretje bovenop de regenboog -->
+                <path d="M 230 70 Q 230 83 238 85 Q 230 87 230 100 Q 230 87 222 85 Q 230 83 230 70 Z" fill="#fde047" filter="url(#starGlow)" />
+                <circle cx="214" cy="74" r="3" fill="#ffffff" />
+                <circle cx="248" cy="78" r="2.5" fill="#ffffff" />
+            </svg>
+        </div>
+
+        <!-- Tekst & Knoppen -->
+        <div class="celebration-body">
+            <h2 class="celebration-title">Les afgerond!</h2>
+            <p class="celebration-text">Perfect! Je kunt deze les gerust nog eens bekijken wanneer je wilt.</p>
+
+            <div class="celebration-actions">
+                <button type="button" class="btn-celebration-next" onclick="window.beginVolgendeLes()">
+                    Begin met de volgende les
+                </button>
+                <button type="button" class="btn-celebration-course" onclick="window.terugNaarCursus()">
+                    Terug naar de cursus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </aside>
     </div>
@@ -259,6 +337,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261106c"></script>
+<script src="script.js?v=20261106d"></script>
 </body>
 </html>

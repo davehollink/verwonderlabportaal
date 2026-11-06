@@ -9368,10 +9368,10 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
     if (finishBtn) {
         if (isDone) {
             finishBtn.classList.add('completed');
-            if (finishBtnText) finishBtnText.innerHTML = '✓ Lesson finished';
+            if (finishBtnText) finishBtnText.innerHTML = '✓ Les afgerond';
         } else {
             finishBtn.classList.remove('completed');
-            if (finishBtnText) finishBtnText.innerHTML = 'Finish lesson';
+            if (finishBtnText) finishBtnText.innerHTML = 'Les afronden';
         }
     }
 
@@ -9571,10 +9571,18 @@ window.closeImageLightbox = function(event) {
     if (modal) modal.style.display = 'none';
 };
 
-window.toggleCanvaReaderMobileMenu = function() {
+window.toggleCanvaReaderSidebar = function() {
+    const overlay = document.getElementById('elearningPlayerModal');
+    if (overlay) {
+        overlay.classList.toggle('sidebar-collapsed');
+    }
     const sb = document.getElementById('canvaReaderSidebarLeft');
-    if (sb) sb.classList.toggle('mobile-open');
+    if (sb && window.innerWidth <= 992) {
+        sb.classList.toggle('mobile-open');
+    }
 };
+// Alias voor backward compatibility
+window.toggleCanvaReaderMobileMenu = window.toggleCanvaReaderSidebar;
 
 window.sluitActivityPlayer = function() {
     const modal = document.getElementById('elearningPlayerModal');
@@ -9582,6 +9590,7 @@ window.sluitActivityPlayer = function() {
         const ifr = modal.querySelector('iframe');
         if (ifr) ifr.src = '';
         modal.style.display = 'none';
+        modal.classList.remove('sidebar-collapsed');
     }
 };
 
@@ -9590,35 +9599,54 @@ window.toggleCompleteCurrentActivity = function() {
     const actId = window._activePlayerInfo.actId;
     
     if (!elearningProgress) elearningProgress = {};
-    elearningProgress[actId] = !elearningProgress[actId];
+    elearningProgress[actId] = true;
     localStorage.setItem('ww_elearning_progress_v1', JSON.stringify(elearningProgress));
 
-    const isDone = elearningProgress[actId];
     const finishBtn = document.getElementById('btnFinishLesson');
     const finishBtnText = document.getElementById('btnFinishLessonText');
     if (finishBtn) {
-        if (isDone) {
-            finishBtn.classList.add('completed');
-            if (finishBtnText) finishBtnText.innerHTML = '✓ Lesson finished';
-        } else {
-            finishBtn.classList.remove('completed');
-            if (finishBtnText) finishBtnText.innerHTML = 'Finish lesson';
-        }
+        finishBtn.classList.add('completed');
+        if (finishBtnText) finishBtnText.innerHTML = '✓ Les afgerond';
     }
 
     // Update linker zijbalk
     const sbCard = document.querySelector(`.canva-reader-act-card.active`);
     if (sbCard) {
-        if (isDone) sbCard.classList.add('completed');
-        else sbCard.classList.remove('completed');
+        sbCard.classList.add('completed');
         const num = sbCard.querySelector('.canva-reader-act-num');
-        if (num && isDone) num.innerText = '✓';
+        if (num) num.innerText = '✓';
     }
 
     // Werk de achterliggende cursuspagina direct bij
     if (window._huidigeCursus) {
         window.openCourseView(window._huidigeCursus.id);
     }
+
+    // Toon de feestelijke pop-up conform screenshot 2
+    window.openLesAfgerondModal();
+};
+
+window.openLesAfgerondModal = function() {
+    const modal = document.getElementById('lesAfgerondModal');
+    if (modal) modal.style.display = 'flex';
+};
+
+window.sluitLesAfgerondModal = function(event) {
+    if (event && event.target && !event.target.classList.contains('celebration-modal-overlay')) return;
+    const modal = document.getElementById('lesAfgerondModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.beginVolgendeLes = function() {
+    const modal = document.getElementById('lesAfgerondModal');
+    if (modal) modal.style.display = 'none';
+    window.playerNavigeer(1);
+};
+
+window.terugNaarCursus = function() {
+    const modal = document.getElementById('lesAfgerondModal');
+    if (modal) modal.style.display = 'none';
+    window.sluitActivityPlayer();
 };
 
 window.playerNavigeer = function(delta) {
