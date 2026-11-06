@@ -1425,31 +1425,15 @@ if (!elearningCursussen || elearningCursussen.length === 0) {
     elearningCursussen = defaultElearningCursussen.filter(c => !verwijderdeElearning.includes(String(c.id)));
 }
 
-// Zorg ervoor dat cursus 101 altijd de nieuwste Nederlandstalige lessen met afbeeldingen bevat
-const isEnglishOrOutdated = (lessen) => {
-    if (!lessen || !Array.isArray(lessen) || lessen.length < 7) return true;
-    const str = JSON.stringify(lessen);
-    return str.includes('Welcome to Teacher') ||
-           str.includes('Navigating your Canva') ||
-           str.includes('Set up and manage your Classroom') ||
-           str.includes('Find, create and adapt') ||
-           str.includes('Delivering lessons') ||
-           str.includes('Review student work') ||
-           str.includes('Congratulations on completing') ||
-           str.includes('"typeLabel":"Guide"') ||
-           !str.includes('canva_homepage.png');
-};
-
-const c101 = elearningCursussen.find(c => c && String(c.id) === '101');
-if (c101 && defaultElearningCursussen[0]) {
-    if (isEnglishOrOutdated(c101.lessen)) {
-        c101.titel = defaultElearningCursussen[0].titel;
-        c101.omschrijving = defaultElearningCursussen[0].omschrijving;
-        c101.keySkills = defaultElearningCursussen[0].keySkills;
-        c101.lessen = JSON.parse(JSON.stringify(defaultElearningCursussen[0].lessen));
-        localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
+// Zorg ervoor dat cursussen zonder lessen minimaal gevuld worden (alleen als ze leeg zijn!)
+elearningCursussen.forEach(c => {
+    if (c && (!c.lessen || !Array.isArray(c.lessen) || c.lessen.length === 0)) {
+        const defaultMatch = defaultElearningCursussen.find(d => String(d.id) === String(c.id));
+        if (defaultMatch && Array.isArray(defaultMatch.lessen)) {
+            c.lessen = JSON.parse(JSON.stringify(defaultMatch.lessen));
+        }
     }
-}
+});
 const standaardLesideeen = [
 
     {
@@ -2717,15 +2701,12 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         deleteDoc(d.ref).catch(e => console.warn("Cleanup verwijderde elearning:", e));
                         return;
                     }
-                    if (String(cd.id) === '101' && defaultElearningCursussen[0]) {
-                        const needsDutchUpdate = isEnglishOrOutdated(cd.lessen);
-                        if (needsDutchUpdate) {
-                            cd.titel = defaultElearningCursussen[0].titel;
-                            cd.omschrijving = defaultElearningCursussen[0].omschrijving;
-                            cd.keySkills = defaultElearningCursussen[0].keySkills;
-                            cd.lessen = JSON.parse(JSON.stringify(defaultElearningCursussen[0].lessen));
-                            setDoc(d.ref, cd, { merge: true }).catch(() => {});
-                        }
+                    if ((!cd.lessen || !Array.isArray(cd.lessen) || cd.lessen.length === 0) && String(cd.id) === '101' && defaultElearningCursussen[0]) {
+                        cd.titel = defaultElearningCursussen[0].titel;
+                        cd.omschrijving = defaultElearningCursussen[0].omschrijving;
+                        cd.keySkills = defaultElearningCursussen[0].keySkills;
+                        cd.lessen = JSON.parse(JSON.stringify(defaultElearningCursussen[0].lessen));
+                        setDoc(d.ref, cd, { merge: true }).catch(() => {});
                     }
                     cloudCursussen.push(cd);
                 });
@@ -3078,12 +3059,80 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         finalThumb = await window.compressImage(finalThumb, 800, 600, 0.78);
                     } catch(e) {}
                 }
-                const docData = { ...cursusData, thumbnail: finalThumb };
-                await withTimeout(setDoc(doc(db, "elearning", cursusData.id.toString()), docData), 5000);
+
+                // Belangrijk: Firestore documenten hebben een harde limiet van 1MB.
+                // Verwerk alle afbeeldingen in de lessen zodat ze gecomprimeerd zijn en/of in Storage staan!
+                const lessenKopie = JSON.parse(JSON.stringify(cursusData.lessen || []));
+                for (let l = 0; l < lessenKopie.length; l++) {
+                    const les = lessenKopie[l];
+                    if (les && Array.isArray(les.activiteiten)) {
+                        for (let a = 0; a < les.activiteiten.length; a++) {
+                            const act = les.activiteiten[a];
+                            if (act && act.inhoudHtml && act.inhoudHtml.includes('data:image/')) {
+                                try {
+                                    const parser = new DOMParser();
+                                    const docH = parser.parseFromString(act.inhoudHtml, 'text/html');
+                                    const imgs = docH.querySelectorAll('img');
+                                    for (let m = 0; m < imgs.length; m++) {
+                                        const imgEl = imgs[m];
+                                        const src = imgEl.getAttribute('src');
+                                        if (src && src.startsWith('data:image/')) {
+                                            let compSrc = src;
+                                            if (typeof window.compressImage === 'function' && src.length > 80 * 1024) {
+                                                try {
+                                                    compSrc = await window.compressImage(src, 900, 700, 0.75);
+                                                } catch(ce) {}
+                                            }
+                                            
+                                            if (storage && typeof ref === 'function' && typeof uploadString === 'function' && typeof getDownloadURL === 'function') {
+                                                try {
+                                                    const imgStorageRef = ref(storage, `elearning_img/${cursusData.id}_${l}_${a}_${m}_${Date.now()}.jpg`);
+                                                    await withTimeout(uploadString(imgStorageRef, compSrc, 'data_url'), 4000);
+                                                    const dlUrl = await withTimeout(getDownloadURL(imgStorageRef), 4000);
+                                                    if (dlUrl) {
+                                                        imgEl.setAttribute('src', dlUrl);
+                                                    } else {
+                                                        imgEl.setAttribute('src', compSrc);
+                                                    }
+                                                } catch(upErr) {
+                                                    console.warn("Storage upload fallback naar gecomprimeerde dataUrl:", upErr);
+                                                    imgEl.setAttribute('src', compSrc);
+                                                }
+                                            } else {
+                                                imgEl.setAttribute('src', compSrc);
+                                            }
+                                        }
+                                    }
+                                    act.inhoudHtml = docH.body.innerHTML;
+                                } catch(parseErr) {
+                                    console.warn("Fout bij optimaliseren afbeeldingen in les:", parseErr);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const docData = { 
+                    ...cursusData, 
+                    thumbnail: finalThumb, 
+                    lessen: lessenKopie,
+                    laatsteUpdate: new Date().toISOString()
+                };
+
+                await withTimeout(setDoc(doc(db, "elearning", cursusData.id.toString()), docData), 8000);
                 verwijderdeElearning = verwijderdeElearning.filter(v => v !== String(cursusData.id));
                 localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
+
+                // Werk lokale kopie bij
+                cursusData.lessen = lessenKopie;
+                const cIdx = (elearningCursussen || []).findIndex(c => String(c.id) === String(cursusData.id));
+                if (cIdx > -1) {
+                    elearningCursussen[cIdx] = { ...elearningCursussen[cIdx], ...cursusData };
+                    slaDataOp();
+                }
             } catch(err) {
-                console.warn("Fout bij opslaan elearning in cloud:", err);
+                console.error("Fout bij opslaan elearning in cloud:", err);
+                throw err;
             }
         };
 
@@ -4937,6 +4986,10 @@ ${beschrijving}
 
         alert('✅ Je melding is opgeslagen in het systeem en Outlook wordt nu geopend om de melding te versturen!'); 
     } else if (formId === 'editElearningForm') {
+        if (typeof window.syncAllLessonsFromDOM === 'function') {
+            window.syncAllLessonsFromDOM();
+        }
+
         const rawId = getVal('editElearningId');
         const cId = rawId ? parseInt(rawId) : Date.now();
         let thumb = (getVal('editElearningThumbnail', '') || '').trim();
@@ -4983,12 +5036,20 @@ ${beschrijving}
         slaDataOp();
         if (window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
         if (window.renderElearningGrid) window.renderElearningGrid();
-        window.sluitAlleModals();
+        
         if (window.saveElearningToCloud) {
-            await window.saveElearningToCloud(cursusData).catch(err => console.error("Cloud opslag elearning:", err));
+            try {
+                await window.saveElearningToCloud(cursusData);
+            } catch(cloudErr) {
+                console.error("Cloud save fout:", cloudErr);
+                alert("⚠️ Let op: De cursus is lokaal in je browser opgeslagen, maar synchronisatie met de cloud gaf een melding: " + (cloudErr.message || cloudErr));
+            }
         }
+
+        window.sluitAlleModals();
+        try { localStorage.removeItem('ww_elearning_draft_backup'); } catch(e) {}
         if (btnElement) { btnElement.innerText = originalText; btnElement.disabled = false; }
-        alert("✅ E-Learning cursus succesvol opgeslagen!");
+        alert("✅ E-Learning cursus en alle lessen succesvol opgeslagen!");
     }
     } catch(err) { 
         alert("❌ Er is iets misgegaan tijdens het verwerken: " + err.message); 
@@ -10308,6 +10369,7 @@ window.syncVisualEditor = function(lIdx, aIdx) {
         act.inhoudHtml = editor.innerHTML;
         const rawTa = document.getElementById(`adminActInhoud_${lIdx}_${aIdx}`);
         if (rawTa) rawTa.value = editor.innerHTML;
+        window.slaConceptBackupOp();
     }
 };
 
@@ -10318,7 +10380,85 @@ window.syncFromRawTextarea = function(lIdx, aIdx) {
     if (rawTa && act) {
         act.inhoudHtml = rawTa.value;
         if (editor) editor.innerHTML = rawTa.value;
+        window.slaConceptBackupOp();
     }
+};
+
+window.syncAllLessonsFromDOM = function() {
+    if (!window.adminHuidigeLessen || !Array.isArray(window.adminHuidigeLessen)) return;
+    
+    const lessonItems = document.querySelectorAll('.admin-lesson-item');
+    lessonItems.forEach((lItem, lIdx) => {
+        if (!window.adminHuidigeLessen[lIdx]) return;
+        const les = window.adminHuidigeLessen[lIdx];
+        
+        const icoonInput = lItem.querySelector('input[placeholder="Emoji"]');
+        if (icoonInput) les.icoon = icoonInput.value;
+        
+        const titelInput = lItem.querySelector('input[placeholder*="Lestitel"]');
+        if (titelInput) les.titel = titelInput.value;
+        
+        const descInput = lItem.querySelector('textarea[placeholder*="inleidende beschrijving"]');
+        if (descInput) les.beschrijving = descInput.value;
+        
+        const actItems = lItem.querySelectorAll('.admin-activity-item');
+        if (Array.isArray(les.activiteiten)) {
+            actItems.forEach((aItem, aIdx) => {
+                if (!les.activiteiten[aIdx]) return;
+                const act = les.activiteiten[aIdx];
+                
+                const actTitelInput = aItem.querySelector('input[placeholder*="Titel van onderdeel"]');
+                if (actTitelInput) act.titel = actTitelInput.value;
+                
+                const actSelect = aItem.querySelector('select');
+                if (actSelect) {
+                    act.type = actSelect.value;
+                    const labels = { video: 'Video', guide: 'Gids', cheatsheet: 'Spiekbrief', opdracht: 'Opdracht' };
+                    act.typeLabel = labels[act.type] || act.type;
+                }
+                
+                const actDuurInput = aItem.querySelector('input[placeholder*="Duur"]');
+                if (actDuurInput) act.duur = actDuurInput.value;
+                
+                const actOndertitelInput = aItem.querySelector('input[placeholder*="ondertitel"]');
+                if (actOndertitelInput) act.ondertitel = actOndertitelInput.value;
+                
+                const actGoalsInput = aItem.querySelector('input[placeholder*="Leerdoelen"]');
+                if (actGoalsInput) {
+                    act.leerdoelen = actGoalsInput.value.split(',').map(s => s.trim()).filter(Boolean);
+                }
+                
+                const actVideoInput = aItem.querySelector('input[placeholder*="YouTube Video URL"]');
+                if (actVideoInput) act.videoUrl = actVideoInput.value;
+                
+                const editor = document.getElementById(`visualEditor_${lIdx}_${aIdx}`);
+                const rawTa = document.getElementById(`adminActInhoud_${lIdx}_${aIdx}`);
+                if (editor && editor.style.display !== 'none') {
+                    act.inhoudHtml = editor.innerHTML;
+                    if (rawTa) rawTa.value = editor.innerHTML;
+                } else if (rawTa) {
+                    act.inhoudHtml = rawTa.value;
+                    if (editor) editor.innerHTML = rawTa.value;
+                }
+            });
+        }
+    });
+
+    window.slaConceptBackupOp();
+};
+
+window.slaConceptBackupOp = function() {
+    try {
+        const cId = getVal('editElearningId', 'concept');
+        if (window.adminHuidigeLessen && window.adminHuidigeLessen.length > 0) {
+            localStorage.setItem('ww_elearning_draft_backup', JSON.stringify({
+                courseId: cId,
+                titel: getVal('editElearningTitel', ''),
+                lessen: window.adminHuidigeLessen,
+                timestamp: Date.now()
+            }));
+        }
+    } catch(e) {}
 };
 
 window.toggleCodeView = function(lIdx, aIdx) {
@@ -10338,9 +10478,11 @@ window.toggleCodeView = function(lIdx, aIdx) {
         rawTa.style.display = 'none';
         if (btn) btn.innerHTML = '&lt;/&gt; Code bekijken';
     }
+    window.syncVisualEditor(lIdx, aIdx);
 };
 
 window.adminVoegLesToe = function() {
+    window.syncAllLessonsFromDOM();
     const num = (window.adminHuidigeLessen ? window.adminHuidigeLessen.length : 0) + 1;
     const icons = ['👋', '🪐', '🧩', '💡', '👾', '😊', '🎉', '🤖', '🚀', '🎨', '💻'];
     const chosenIcon = icons[(num - 1) % icons.length];
@@ -10367,6 +10509,7 @@ window.adminVoegLesToe = function() {
 };
 
 window.adminVerwijderLes = function(lIdx) {
+    window.syncAllLessonsFromDOM();
     if (confirm("Weet je zeker dat je deze les wilt verwijderen?")) {
         window.adminHuidigeLessen.splice(lIdx, 1);
         window.renderAdminLessonBuilder();
@@ -10376,10 +10519,12 @@ window.adminVerwijderLes = function(lIdx) {
 window.adminUpdateLes = function(lIdx, field, val) {
     if (window.adminHuidigeLessen && window.adminHuidigeLessen[lIdx]) {
         window.adminHuidigeLessen[lIdx][field] = val;
+        window.slaConceptBackupOp();
     }
 };
 
 window.adminVoegActiviteitToe = function(lIdx) {
+    window.syncAllLessonsFromDOM();
     if (!window.adminHuidigeLessen || !window.adminHuidigeLessen[lIdx]) return;
     if (!window.adminHuidigeLessen[lIdx].activiteiten) window.adminHuidigeLessen[lIdx].activiteiten = [];
     
@@ -10395,6 +10540,7 @@ window.adminVoegActiviteitToe = function(lIdx) {
 };
 
 window.adminVerwijderActiviteit = function(lIdx, aIdx) {
+    window.syncAllLessonsFromDOM();
     if (window.adminHuidigeLessen && window.adminHuidigeLessen[lIdx] && window.adminHuidigeLessen[lIdx].activiteiten) {
         window.adminHuidigeLessen[lIdx].activiteiten.splice(aIdx, 1);
         window.renderAdminLessonBuilder();
@@ -10408,6 +10554,8 @@ window.adminUpdateActiviteit = function(lIdx, aIdx, field, val) {
             const labels = { video: 'Video', guide: 'Gids', cheatsheet: 'Spiekbrief', opdracht: 'Opdracht' };
             window.adminHuidigeLessen[lIdx].activiteiten[aIdx].typeLabel = labels[val] || val;
             window.renderAdminLessonBuilder();
+        } else {
+            window.slaConceptBackupOp();
         }
     }
 };
@@ -10441,6 +10589,23 @@ window.openElearningModal = function(id = null) {
                 document.getElementById('editElearningCertificaatTitel').value = c.certificaatTitel || '';
             }
             window.adminHuidigeLessen = Array.isArray(c.lessen) ? JSON.parse(JSON.stringify(c.lessen)) : [];
+
+            // Controleer of er een recenter bewerkt concept / backup in localStorage staat
+            try {
+                const draftRaw = localStorage.getItem('ww_elearning_draft_backup');
+                if (draftRaw) {
+                    const draft = JSON.parse(draftRaw);
+                    if (draft && String(draft.courseId) === String(c.id) && Array.isArray(draft.lessen) && draft.lessen.length > 0) {
+                        const herstel = confirm("💡 Er is een recent bewerkt concept / backup van deze cursus gevonden!\n\nWil je dit bewerkte concept van je lessen herstellen?");
+                        if (herstel) {
+                            window.adminHuidigeLessen = JSON.parse(JSON.stringify(draft.lessen));
+                            if (draft.titel && document.getElementById('editElearningTitel')) {
+                                document.getElementById('editElearningTitel').value = draft.titel;
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
         }
         const delBtn = document.getElementById('btnDeleteElearningFromModal');
         if (delBtn) delBtn.style.display = 'flex';
@@ -10448,6 +10613,21 @@ window.openElearningModal = function(id = null) {
         document.getElementById('modalElearningTitle').innerText = "Nieuwe Cursus Toevoegen";
         if (document.getElementById('editElearningId')) document.getElementById('editElearningId').value = '';
         window.adminHuidigeLessen = [];
+        try {
+            const draftRaw = localStorage.getItem('ww_elearning_draft_backup');
+            if (draftRaw) {
+                const draft = JSON.parse(draftRaw);
+                if (draft && (draft.courseId === 'nieuw' || draft.courseId === 'concept' || !draft.courseId) && Array.isArray(draft.lessen) && draft.lessen.length > 0) {
+                    const herstel = confirm("💡 Er is een onopgeslagen concept van een nieuwe lesreeks gevonden!\n\nWil je dit concept herstellen?");
+                    if (herstel) {
+                        window.adminHuidigeLessen = JSON.parse(JSON.stringify(draft.lessen));
+                        if (draft.titel && document.getElementById('editElearningTitel')) {
+                            document.getElementById('editElearningTitel').value = draft.titel;
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
         const delBtn = document.getElementById('btnDeleteElearningFromModal');
         if (delBtn) delBtn.style.display = 'none';
     }
