@@ -2057,7 +2057,7 @@ window.toonWillekeurigeTip = function() {
 // ==========================================
 // IMAGE COMPRESSIE HULP-FUNCTIE (Canvas Web-optimalisatie)
 // ==========================================
-window.compressImage = function(fileOrDataUrl, maxWidth = 750, maxHeight = 560, quality = 0.65) {
+window.compressImage = function(fileOrDataUrl, maxWidth = 1440, maxHeight = 1080, quality = 0.82) {
     return new Promise((resolve) => {
         if (!fileOrDataUrl) {
             resolve('');
@@ -3101,7 +3101,8 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                                             let compSrc = src;
                                             if (typeof window.compressImage === 'function') {
                                                 try {
-                                                    compSrc = await window.compressImage(src, 750, 560, 0.60);
+                                                    // Behoud hoge resolutie (1440px) en 0.82 kwaliteit voor haarscherpe leesbare Canva screenshots
+                                                    compSrc = await window.compressImage(src, 1440, 1080, 0.82);
                                                 } catch(ce) {}
                                             }
                                             imgEl.setAttribute('src', compSrc);
@@ -3125,41 +3126,10 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
                 let docBytes = new TextEncoder().encode(JSON.stringify(docData)).length;
 
-                // Als het document nog te zwaar is (> 700KB), voer een tweede compressieronde uit
-                if (docBytes > 700000) {
-                    for (let l = 0; l < lessenKopie.length; l++) {
-                        const les = lessenKopie[l];
-                        if (les && Array.isArray(les.activiteiten)) {
-                            for (let a = 0; a < les.activiteiten.length; a++) {
-                                const act = les.activiteiten[a];
-                                if (act && act.inhoudHtml && act.inhoudHtml.includes('data:image/')) {
-                                    try {
-                                        const parser = new DOMParser();
-                                        const docH = parser.parseFromString(act.inhoudHtml, 'text/html');
-                                        const imgs = docH.querySelectorAll('img');
-                                        for (let m = 0; m < imgs.length; m++) {
-                                            const imgEl = imgs[m];
-                                            const src = imgEl.getAttribute('src');
-                                            if (src && src.startsWith('data:image/')) {
-                                                try {
-                                                    const comp2 = await window.compressImage(src, 600, 450, 0.45);
-                                                    imgEl.setAttribute('src', comp2);
-                                                } catch(e) {}
-                                            }
-                                        }
-                                        act.inhoudHtml = docH.body.innerHTML;
-                                    } catch(e) {}
-                                }
-                            }
-                        }
-                    }
-                    docData.lessen = lessenKopie;
-                    docBytes = new TextEncoder().encode(JSON.stringify(docData)).length;
-                }
-
-                // Ultieme veiligheidsbuffer: als het document zelfs na 2 rondes > 700KB is,
-                // sla afbeeldingen afzonderlijk op in Firestore collectie 'elearning_media'
-                if (docBytes > 700000) {
+                // Als het document met haarscherpe afbeeldingen de Firestore 1MB grens nadert (> 800KB):
+                // Verlaag NIET de kwaliteit, maar splits afbeeldingen automatisch af naar 'elearning_media' in Firestore!
+                // Hierdoor blijven screenshots 100% scherp en blijft het hoofddocument veilig onder 100KB.
+                if (docBytes > 800000) {
                     for (let l = 0; l < lessenKopie.length; l++) {
                         const les = lessenKopie[l];
                         if (les && Array.isArray(les.activiteiten)) {
@@ -3188,7 +3158,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                                                     imgEl.setAttribute('src', `elearning-media:${mediaId}`);
                                                     imgEl.setAttribute('data-media-id', mediaId);
                                                 } catch(mediaErr) {
-                                                    console.warn("Fout bij opslaan elearning media:", mediaErr);
+                                                    console.warn("Fout bij offloaden elearning media:", mediaErr);
                                                 }
                                             }
                                         }
@@ -10040,6 +10010,15 @@ window.closeImageLightbox = function(event) {
     if (modal) modal.style.display = 'none';
 };
 
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const lb = document.getElementById('imageLightboxModal');
+        if (lb && lb.style.display !== 'none') {
+            lb.style.display = 'none';
+        }
+    }
+});
+
 window.toggleCanvaReaderSidebar = function() {
     const overlay = document.getElementById('elearningPlayerModal');
     if (overlay) {
@@ -10061,6 +10040,8 @@ window.sluitActivityPlayer = function() {
         modal.style.display = 'none';
         modal.classList.remove('sidebar-collapsed');
     }
+    const lb = document.getElementById('imageLightboxModal');
+    if (lb) lb.style.display = 'none';
 };
 
 window.toggleCompleteCurrentActivity = async function() {
@@ -10618,7 +10599,7 @@ window.adminVoegVisueleAfbeeldingToe = function(lIdx, aIdx) {
                     r.readAsDataURL(file);
                 });
                 if (typeof window.compressImage === 'function') {
-                    dataUrl = await window.compressImage(dataUrl, 750, 560, 0.62);
+                    dataUrl = await window.compressImage(dataUrl, 1440, 1080, 0.82);
                 }
                 const caption = prompt("Onderschrift bij deze afbeelding (optioneel):", file.name.replace(/\.[^/.]+$/, "")) || '';
                 const imgHtml = `<div class="canva-guide-img-container"><img src="${dataUrl}" alt="${escapeHtml(caption)}" loading="lazy">${caption ? `<div class="canva-guide-img-caption"><span>🖼️</span> ${escapeHtml(caption)}</div>` : ''}</div><p><br></p>`;

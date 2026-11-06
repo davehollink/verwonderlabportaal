@@ -3911,24 +3911,24 @@ body::after {
     opacity: 1;
 }
 
-/* Lightbox Modal */
+/* Lightbox Modal (Afbeeldingen fullscreen vergroten) */
 .lightbox-overlay {
     position: fixed;
     inset: 0;
-    z-index: 20000;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(12px);
+    z-index: 9999999; /* Ruim boven de Canva reader (z-index: 99999) zodat vergroten direct over de les opent */
+    background: rgba(15, 23, 42, 0.90);
+    backdrop-filter: blur(14px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 24px;
     animation: fadeIn 0.2s ease-out;
 }
 
 .lightbox-dialog {
     position: relative;
-    max-width: 90vw;
-    max-height: 88vh;
+    max-width: 95vw;
+    max-height: 92vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3936,11 +3936,12 @@ body::after {
 
 .lightbox-dialog img {
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 85vh;
     object-fit: contain;
     border-radius: 14px;
-    box-shadow: 0 25px 60px -10px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 25px 60px -10px rgba(0,0,0,0.65);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    image-rendering: -webkit-optimize-contrast;
 }
 
 .lightbox-close {
@@ -5391,6 +5392,7 @@ body::after {
     cursor: zoom-in;
     object-fit: contain !important;
     box-sizing: border-box !important;
+    image-rendering: -webkit-optimize-contrast;
 }
 
 .canva-guide-img-caption {
