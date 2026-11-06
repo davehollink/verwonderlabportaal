@@ -4986,6 +4986,9 @@ body::after {
     flex-direction: column;
     overflow: hidden;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 /* Bovenbalk van de Canva lezer */
@@ -5317,11 +5320,12 @@ body::after {
     overflow-x: hidden !important;
     overflow-y: auto;
     padding: 40px 48px 80px 48px;
-    scroll-behavior: smooth;
     display: flex;
     justify-content: center;
     box-sizing: border-box !important;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
 }
 
 @media (max-width: 768px) {
@@ -5687,7 +5691,7 @@ body::after {
     color: #475569;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.15s ease, color 0.15s ease;
     line-height: 1.35;
 }
 
@@ -5711,6 +5715,16 @@ body::after {
 
 .canva-otp-item.active .canva-otp-num {
     color: #7c3aed;
+}
+
+.canva-otp-text {
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 /* Toolbar voor beheerders in lesson builder om direct afbeeldingen en koppen in te voegen */

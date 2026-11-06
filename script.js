@@ -2718,27 +2718,34 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     if (key) cloudMap.set(key, c);
                 });
 
+                const _syncingElearningIds = window._syncingElearningIds || (window._syncingElearningIds = new Map());
+                const now = Date.now();
+
                 elearningCursussen.forEach(lc => {
                     if (!lc) return;
                     const idStr = lc.id != null ? String(lc.id) : '';
                     if (verwijderdeElearning.includes(idStr) || !idStr) return;
 
+                    const lastSyncAttempt = _syncingElearningIds.get(idStr) || 0;
+                    // Cooldown van 15 seconden om oneindige sync/re-render loops te voorkomen
+                    const inCooldown = (now - lastSyncAttempt) < 15000;
+
                     if (!cloudMap.has(idStr)) {
                         cloudMap.set(idStr, lc);
-                        if (window.saveElearningToCloud) {
+                        if (!inCooldown && window.saveElearningToCloud) {
+                            _syncingElearningIds.set(idStr, now);
                             window.saveElearningToCloud(lc).catch(e => console.warn("Background sync elearning:", e));
                         }
                     } else {
-                        // Als de lokale versie recenter is bewerkt of meer lessen heeft:
+                        // Alleen syncen als de lokale versie aantoonbaar nieuwer is (> 2 sec verschil) én niet in cooldown
                         const cloudItem = cloudMap.get(idStr);
                         const localTime = new Date(lc.laatsteUpdate || 0).getTime();
                         const cloudTime = new Date(cloudItem.laatsteUpdate || 0).getTime();
-                        const localLesCount = Array.isArray(lc.lessen) ? lc.lessen.length : 0;
-                        const cloudLesCount = Array.isArray(cloudItem.lessen) ? cloudItem.lessen.length : 0;
 
-                        if (localTime > cloudTime || localLesCount > cloudLesCount) {
+                        if (localTime > (cloudTime + 2000) && !inCooldown) {
                             cloudMap.set(idStr, lc);
                             if (window.saveElearningToCloud) {
+                                _syncingElearningIds.set(idStr, now);
                                 window.saveElearningToCloud(lc).catch(e => console.warn("Background sync local newer elearning:", e));
                             }
                         }
@@ -2746,9 +2753,15 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 });
 
                 elearningCursussen = Array.from(cloudMap.values());
-                slaDataOp();
-                if (typeof window.renderBeheerdersTabellen === "function") window.renderBeheerdersTabellen();
-                if (typeof window.renderElearningGrid === "function") window.renderElearningGrid();
+
+                // Voorkom onnodig her-renderen en scherm-knipperen als er geen cursusdata veranderd is
+                const newCursussenJson = JSON.stringify(elearningCursussen.map(c => ({ id: c.id, u: c.laatsteUpdate, l: (c.lessen || []).length })));
+                if (window._lastElearningSyncHash !== newCursussenJson) {
+                    window._lastElearningSyncHash = newCursussenJson;
+                    slaDataOp();
+                    if (typeof window.renderBeheerdersTabellen === "function") window.renderBeheerdersTabellen();
+                    if (typeof window.renderElearningGrid === "function") window.renderElearningGrid();
+                }
             }
         }, checkError);
 
@@ -9926,11 +9939,16 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
             otpListEl.innerHTML = headings.map((h, idx) => {
                 const stepId = `canva_step_${idx + 1}`;
                 h.id = stepId;
-                const cleanText = h.innerText.replace(/^\d+[\.\)]\s*/, '');
+                const cleanText = h.innerText.replace(/^\d+[\.\)]\s*/, '').trim();
+                let displayText = cleanText;
+                if (displayText.length > 55) {
+                    const firstPart = displayText.split(/[.\n]/)[0].trim();
+                    displayText = (firstPart && firstPart.length <= 55 && firstPart.length > 10) ? firstPart : (displayText.substring(0, 50).trim() + '…');
+                }
                 return `
-                    <a class="canva-otp-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}" onclick="window.scrollToOtpStep('${stepId}', this, ${idx})">
+                    <a class="canva-otp-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}" title="${escapeHtml(cleanText)}" onclick="window.scrollToOtpStep('${stepId}', this, ${idx})">
                         <span class="canva-otp-num">${idx + 1}</span>
-                        <span>${escapeHtml(cleanText)}</span>
+                        <span class="canva-otp-text">${escapeHtml(displayText)}</span>
                     </a>
                 `;
             }).join('');
@@ -9939,14 +9957,15 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
         }
     }
 
+    // Modal openen VÓÓR scroll listener koppeling zodat getBoundingClientRect correcte elementgroottes berekent
+    modal.style.display = 'flex';
+
     // Reset scroll naar boven
     const mainArea = document.getElementById('canvaReaderMainArea');
     if (mainArea) mainArea.scrollTop = 0;
 
     // Koppel scroll listener voor "Op deze pagina" actieve highlight
     window._bindOtpScrollSync();
-
-    modal.style.display = 'flex';
 };
 
 window._updateActiveOtpHeading = function() {
@@ -9957,25 +9976,30 @@ window._updateActiveOtpHeading = function() {
     const headings = Array.from(mainArea.querySelectorAll('.canva-guide-body h3, #playerActivityBody h3'));
     if (headings.length === 0) return;
 
+    const containerRect = mainArea.getBoundingClientRect();
+    if (!containerRect.height) return;
+
     let activeIdx = 0;
 
-    // Als de gebruiker helemaal bovenaan staat (scrollTop <= 60), is altijd kopje 1 actief
-    if (mainArea.scrollTop <= 60) {
+    // Als de gebruiker helemaal bovenaan staat (scrollTop < 35), is altijd kopje 1 actief
+    if (mainArea.scrollTop < 35) {
         activeIdx = 0;
-    } else if (mainArea.scrollTop > 200 && mainArea.scrollHeight > mainArea.clientHeight + 100 && (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 40)) {
+    } else if (mainArea.scrollHeight > mainArea.clientHeight + 60 && (mainArea.scrollTop + mainArea.clientHeight >= mainArea.scrollHeight - 40)) {
         // Alleen als er echt gescrold is én men helemaal onderaan is
         activeIdx = headings.length - 1;
     } else {
-        const containerRect = mainArea.getBoundingClientRect();
-        const triggerLine = containerRect.top + 160;
+        // Comfortabele leeslijn op 42% van het scherm
+        const readingLine = containerRect.top + Math.max(120, containerRect.height * 0.42);
 
-        // Loop door alle kopjes en vind het laatste kopje dat voorbij de triggerLine is gekomen
-        headings.forEach((h, i) => {
-            const rect = h.getBoundingClientRect();
-            if (rect.top <= triggerLine) {
+        // Loop door de koppen en vind het huidige zichtbare onderwerp
+        for (let i = 0; i < headings.length; i++) {
+            const rect = headings[i].getBoundingClientRect();
+            if (rect.top <= readingLine) {
                 activeIdx = i;
+            } else {
+                break;
             }
-        });
+        }
     }
 
     const otpItems = Array.from(otpListEl.querySelectorAll('.canva-otp-item'));
@@ -9983,11 +10007,36 @@ window._updateActiveOtpHeading = function() {
         if (idx === activeIdx) {
             if (!item.classList.contains('active')) {
                 item.classList.add('active');
-                // Zorg dat het menu-item binnen het rechterpaneel automatisch meescrolt
-                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                
+                // Houd het item zichtbaar in de rechterbalk zonder storende layout thrashing
+                const sidebarRight = document.querySelector('.canva-reader-sidebar-right');
+                if (sidebarRight) {
+                    const itemTop = item.offsetTop;
+                    const itemHeight = item.offsetHeight;
+                    const sidebarScroll = sidebarRight.scrollTop;
+                    const sidebarHeight = sidebarRight.clientHeight;
+                    
+                    if (itemTop < sidebarScroll + 20 || (itemTop + itemHeight) > (sidebarScroll + sidebarHeight - 40)) {
+                        sidebarRight.scrollTo({
+                            top: Math.max(0, itemTop - 60),
+                            behavior: 'smooth'
+                        });
+                    }
+                }
             }
         } else {
             item.classList.remove('active');
+        }
+    });
+};
+
+let _otpScrollRaf = null;
+const _onMainAreaScroll = function() {
+    if (_otpScrollRaf) return;
+    _otpScrollRaf = requestAnimationFrame(() => {
+        _otpScrollRaf = null;
+        if (typeof window._updateActiveOtpHeading === 'function') {
+            window._updateActiveOtpHeading();
         }
     });
 };
@@ -9996,11 +10045,15 @@ window._bindOtpScrollSync = function() {
     const mainArea = document.getElementById('canvaReaderMainArea');
     if (!mainArea) return;
 
-    mainArea.removeEventListener('scroll', window._updateActiveOtpHeading);
-    mainArea.addEventListener('scroll', window._updateActiveOtpHeading, { passive: true });
+    mainArea.removeEventListener('scroll', _onMainAreaScroll);
+    mainArea.addEventListener('scroll', _onMainAreaScroll, { passive: true });
     
     // Voer direct een update uit
-    setTimeout(window._updateActiveOtpHeading, 60);
+    requestAnimationFrame(() => {
+        if (typeof window._updateActiveOtpHeading === 'function') {
+            window._updateActiveOtpHeading();
+        }
+    });
 };
 
 window.scrollToOtpStep = function(id, linkEl, targetIdx = null) {
@@ -10009,8 +10062,8 @@ window.scrollToOtpStep = function(id, linkEl, targetIdx = null) {
     if (target && mainArea) {
         const targetRect = target.getBoundingClientRect();
         const mainRect = mainArea.getBoundingClientRect();
-        const scrollOffset = mainArea.scrollTop + (targetRect.top - mainRect.top) - 24;
-        mainArea.scrollTo({ top: scrollOffset, behavior: 'smooth' });
+        const scrollOffset = mainArea.scrollTop + (targetRect.top - mainRect.top) - 30;
+        mainArea.scrollTo({ top: Math.max(0, scrollOffset), behavior: 'smooth' });
     }
     document.querySelectorAll('.canva-otp-item').forEach(it => it.classList.remove('active'));
     if (linkEl) linkEl.classList.add('active');
