@@ -1297,21 +1297,6 @@ const defaultElearningCursussen = [
                 ]
             }
         ]
-    },
-    {
-        id: 102,
-        titel: "Canva voor onderwijs: Hoe begin je met creëren met Canva?",
-        categorie: "Creatieve Tools",
-        niveau: "Leerkrachten PO • Beginner",
-        duur: "10 min",
-        auteur: "Verwonderlab",
-        thumbnail: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/600px-Canva_icon_2021.svg.png",
-        videoUrl: "",
-        omschrijving: "Ontdek stap voor stap hoe je begint met creëren in Canva voor Onderwijs.",
-        keySkills: ["Canva voor Onderwijs", "Creëren", "Lesmateriaal"],
-        certificaatTitel: "Canva Creëren • Basiscertificaat",
-        zichtbaar: true,
-        lessen: []
     }
 ];
 
@@ -1319,9 +1304,23 @@ let rawVerwijderdeElearning = safeGetLocal('ww_verwijderde_elearning_v1', []);
 let verwijderdeElearning = (Array.isArray(rawVerwijderdeElearning) ? rawVerwijderdeElearning : [])
     .map(s => String(s).trim());
 
+if (!verwijderdeElearning.includes("102")) {
+    verwijderdeElearning.push("102");
+    localStorage.setItem('ww_verwijderde_elearning_v1', JSON.stringify(verwijderdeElearning));
+}
+
 let elearningCursussen = safeGetLocal('ww_elearning_v1', defaultElearningCursussen);
 elearningCursussen = (Array.isArray(elearningCursussen) ? elearningCursussen : defaultElearningCursussen)
-    .filter(c => c && !verwijderdeElearning.includes(String(c.id)));
+    .filter(c => c && !verwijderdeElearning.includes(String(c.id)) && String(c.id) !== '102');
+
+// Verwijder eventuele achtergebleven dummy 102
+elearningCursussen = elearningCursussen.filter(c => {
+    if (!c) return false;
+    if (String(c.id) === '102') return false;
+    if (c.titel === "Canva voor onderwijs: Hoe begin je met creëren met Canva?" && (!c.lessen || c.lessen.length === 0) && c.omschrijving === "Ontdek stap voor stap hoe je begint met creëren in Canva voor Onderwijs.") return false;
+    return true;
+});
+
 if (!elearningCursussen || elearningCursussen.length === 0) {
     elearningCursussen = defaultElearningCursussen.filter(c => !verwijderdeElearning.includes(String(c.id)));
 }
@@ -1345,12 +1344,6 @@ elearningCursussen.forEach(c => {
         }
     }
 });
-
-// Zorg dat Course 102 ook direct in de initiële weergave zit
-if (!elearningCursussen.some(c => String(c.id) === '102')) {
-    const c102 = defaultElearningCursussen.find(d => String(d.id) === '102');
-    if (c102) elearningCursussen.push(JSON.parse(JSON.stringify(c102)));
-}
 
 try {
     localStorage.setItem('ww_elearning_v1', JSON.stringify(elearningCursussen));
@@ -2659,8 +2652,11 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 snapshot.docs.forEach(d => {
                     const cd = { ...d.data(), _docId: d.id };
                     const idStr = cd.id != null ? String(cd.id) : '';
-                    if (verwijderdeElearning.includes(idStr) || verwijderdeElearning.includes(d.id)) {
-                        deleteDoc(d.ref).catch(e => console.warn("Cleanup verwijderde elearning:", e));
+                    const isDummy102 = idStr === '102' || d.id === '102' ||
+                        (cd.titel === "Canva voor onderwijs: Hoe begin je met creëren met Canva?" && (!cd.lessen || cd.lessen.length === 0) && cd.omschrijving === "Ontdek stap voor stap hoe je begint met creëren in Canva voor Onderwijs.");
+
+                    if (isDummy102 || verwijderdeElearning.includes(idStr) || verwijderdeElearning.includes(d.id)) {
+                        deleteDoc(d.ref).catch(e => console.warn("Cleanup dummy/verwijderde elearning:", e));
                         return;
                     }
                     if ((!cd.lessen || !Array.isArray(cd.lessen) || cd.lessen.length === 0) && String(cd.id) === '101' && defaultElearningCursussen[0]) {
@@ -2685,7 +2681,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 elearningCursussen.forEach(lc => {
                     if (!lc) return;
                     const idStr = lc.id != null ? String(lc.id) : '';
-                    if (verwijderdeElearning.includes(idStr) || !idStr) return;
+                    if (verwijderdeElearning.includes(idStr) || !idStr || idStr === '102') return;
 
                     const lastSyncAttempt = _syncingElearningIds.get(idStr) || 0;
                     // Cooldown van 15 seconden om oneindige sync/re-render loops te voorkomen
@@ -2713,7 +2709,27 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                 });
 
-                elearningCursussen = Array.from(cloudMap.values());
+                // Ontdubbel cursussen op titel zodat er nooit dubbele cursuskaarten getoond worden
+                const gezieneTitels = new Map();
+                const uniekeCursussen = [];
+                cloudMap.forEach(c => {
+                    const t = (c.titel || '').trim().toLowerCase();
+                    if (gezieneTitels.has(t)) {
+                        const bestaande = gezieneTitels.get(t);
+                        const bestLessen = (bestaande.lessen && Array.isArray(bestaande.lessen)) ? bestaande.lessen.length : 0;
+                        const nweLessen = (c.lessen && Array.isArray(c.lessen)) ? c.lessen.length : 0;
+                        if (nweLessen > bestLessen) {
+                            const idx = uniekeCursussen.indexOf(bestaande);
+                            if (idx > -1) uniekeCursussen[idx] = c;
+                            gezieneTitels.set(t, c);
+                        }
+                    } else {
+                        gezieneTitels.set(t, c);
+                        uniekeCursussen.push(c);
+                    }
+                });
+
+                elearningCursussen = uniekeCursussen;
 
                 // Voorkom onnodig her-renderen en scherm-knipperen als er geen cursusdata veranderd is
                 const newCursussenJson = JSON.stringify(elearningCursussen.map(c => ({ id: c.id, u: c.laatsteUpdate, l: (c.lessen || []).length })));
@@ -4489,10 +4505,11 @@ window.renderBeheerdersTabellen = function() {
 
     const elearningBody = document.getElementById('adminElearningBody');
     if (elearningBody) {
-        if (!elearningCursussen || elearningCursussen.length === 0) {
+        const schoneCursussen = (elearningCursussen || []).filter(c => c && String(c.id) !== '102' && !(c.titel === "Canva voor onderwijs: Hoe begin je met creëren met Canva?" && (!c.lessen || c.lessen.length === 0)));
+        if (schoneCursussen.length === 0) {
             elearningBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b; padding:25px;">Nog geen e-learning modules toegevoegd. Klik op 'Nieuwe cursus toevoegen' om te beginnen.</td></tr>`;
         } else {
-            elearningBody.innerHTML = elearningCursussen.map(cursus => {
+            elearningBody.innerHTML = schoneCursussen.map(cursus => {
                 let thumbSrc = cursus.thumbnail && cursus.thumbnail.startsWith('data:image') ? cursus.thumbnail : (cursus.thumbnail || 'Verwonderlab.jpg');
                 const isZichtbaar = cursus.zichtbaar !== false;
                 return `<tr>
@@ -9318,6 +9335,9 @@ window.renderElearningGrid = function() {
     const isBeheerder = typeof window.isCurrentAdmin === 'function' && window.isCurrentAdmin();
     let list = [...(elearningCursussen || [])];
     
+    // Sluit dummy 102 altijd uit
+    list = list.filter(c => c && String(c.id) !== '102' && !(c.titel === "Canva voor onderwijs: Hoe begin je met creëren met Canva?" && (!c.lessen || c.lessen.length === 0)));
+
     // Voor reguliere gebruikers (leerkrachten) worden verborgen cursussen (concept) niet getoond
     if (!isBeheerder) {
         list = list.filter(c => c.zichtbaar !== false);
