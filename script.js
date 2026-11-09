@@ -5649,26 +5649,26 @@ window.openLeskistInfo = function(id) {
         if (kist.pdfs && Array.isArray(kist.pdfs) && kist.pdfs.length > 0) {
             let pdfHtml = `
                 <div class="pdf-dropdown-wrapper">
-                    <button type="button" class="pdf-dropdown-btn" onclick="window.toggleLeskaartenDropdown(this)" aria-expanded="false">
+                    <button type="button" class="pdf-dropdown-btn" onclick="window.toggleLeskaartenDropdown(this, event)" aria-expanded="false">
                         <span class="pdf-dropdown-label">
                             <span class="pdf-dropdown-icon">📄</span>
-                            <span>Leskaarten &amp; Bijlagen (${kist.pdfs.length})</span>
+                            <span class="pdf-dropdown-title">Leskaarten &amp; Bijlagen (${kist.pdfs.length})</span>
                         </span>
                         <span class="pdf-dropdown-arrow">▼</span>
                     </button>
-                    <div class="pdf-dropdown-menu">
+                    <div class="pdf-dropdown-menu" style="display: none;">
             `;
             kist.pdfs.forEach((pdf, pIdx) => {
                 pdfHtml += `
                     <div class="pdf-dropdown-item">
                         <div class="pdf-item-info">
-                            <span style="font-size: 18px; flex-shrink: 0;">📄</span>
+                            <span class="pdf-item-file-icon">📄</span>
                             <div class="pdf-item-text">
                                 <span class="pdf-item-title" title="${escapeHtml(pdf.naam)}">${escapeHtml(pdf.naam)}</span>
                                 <span class="pdf-item-size">${escapeHtml(pdf.grootte || 'PDF Document')}</span>
                             </div>
                         </div>
-                        <button type="button" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${pIdx}, '${kist.id}')" class="btn-pdf-download">
+                        <button type="button" onclick="window.viewOrDownloadPdf('${pdf.fileId || ''}', ${pIdx}, '${kist.id}')" class="btn-pdf-download" title="Bekijk of download ${escapeHtml(pdf.naam)}">
                             <span>Bekijk</span> ↗
                         </button>
                     </div>
@@ -5883,18 +5883,27 @@ window.openLeskistInfo = function(id) {
     if(resModal) resModal.style.display = 'flex';
 };
 
-window.toggleLeskaartenDropdown = function(btn) {
+window.toggleLeskaartenDropdown = function(btn, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     if (!btn) return;
     const wrapper = btn.closest('.pdf-dropdown-wrapper');
     if (!wrapper) return;
     const menu = wrapper.querySelector('.pdf-dropdown-menu');
     if (!menu) return;
-    const isOpen = menu.classList.contains('open');
+
+    const isOpen = menu.classList.contains('open') || menu.style.display === 'flex' || menu.style.display === 'block';
     if (isOpen) {
         menu.classList.remove('open');
+        menu.style.display = 'none';
+        btn.classList.remove('active');
         btn.setAttribute('aria-expanded', 'false');
     } else {
         menu.classList.add('open');
+        menu.style.display = 'flex';
+        btn.classList.add('active');
         btn.setAttribute('aria-expanded', 'true');
     }
 };
