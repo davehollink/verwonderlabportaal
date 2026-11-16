@@ -1332,7 +1332,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK01 Microsoft - Inloggen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK01 Microsoft - Inloggen.pdf"
                     },
                     {
                         "id": "act_201_bk02",
@@ -1340,7 +1340,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK02 OneDrive - Starten vanuit OneDrive.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK02 OneDrive - Starten vanuit OneDrive.pdf"
                     },
                     {
                         "id": "act_201_bk03",
@@ -1348,7 +1348,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK03 OneDrive - Werken met de OneDrive.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK03 OneDrive - Werken met de OneDrive.pdf"
                     },
                     {
                         "id": "act_201_bk03b",
@@ -1356,7 +1356,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK03b OneDrive - Map delen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK03b OneDrive - Map delen.pdf"
                     }
                 ]
             },
@@ -1373,7 +1373,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK04 Word - Openen en opslaan.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK04 Word - Openen en opslaan.pdf"
                     },
                     {
                         "id": "act_201_bk05",
@@ -1381,7 +1381,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK05 Word - Typen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK05 Word - Typen.pdf"
                     },
                     {
                         "id": "act_201_bk06",
@@ -1389,7 +1389,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK06 Word - Tekst verwijderen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK06 Word - Tekst verwijderen.pdf"
                     },
                     {
                         "id": "act_201_bk07",
@@ -1397,7 +1397,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK07 Word - Vergroten en verkleinen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK07 Word - Vergroten en verkleinen.pdf"
                     },
                     {
                         "id": "act_201_bk08",
@@ -1405,7 +1405,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK08 Word - Tekst opmaken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK08 Word - Tekst opmaken.pdf"
                     },
                     {
                         "id": "act_201_bk09",
@@ -1413,7 +1413,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK09 Word - Een kopie maken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK09 Word - Een kopie maken.pdf"
                     }
                 ]
             },
@@ -1430,7 +1430,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK10 Word - Afbeelding invoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK10 Word - Afbeelding invoegen.pdf"
                     },
                     {
                         "id": "act_201_bk11",
@@ -1438,7 +1438,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK11 Word - Afbeeldingen opmaken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK11 Word - Afbeeldingen opmaken.pdf"
                     },
                     {
                         "id": "act_201_bk12",
@@ -1446,7 +1446,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK12 Word - Tabellen invoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK12 Word - Tabellen invoegen.pdf"
                     },
                     {
                         "id": "act_201_bk13",
@@ -1454,7 +1454,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK13 Word - Tabellen opmaken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK13 Word - Tabellen opmaken.pdf"
                     },
                     {
                         "id": "act_201_bk14",
@@ -1462,7 +1462,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK14 Word - Speciale tekens.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK14 Word - Speciale tekens.pdf"
                     }
                 ]
             },
@@ -1479,7 +1479,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK15 Word - Knippen kopiëren plakken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK15 Word - Knippen kopiëren plakken.pdf"
                     },
                     {
                         "id": "act_201_bk16",
@@ -1487,7 +1487,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK16 Word - Opsommingstekens en nummering.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK16 Word - Opsommingstekens en nummering.pdf"
                     },
                     {
                         "id": "act_201_bk17",
@@ -1495,7 +1495,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK17 Word - Uitlijning en inspringen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK17 Word - Uitlijning en inspringen.pdf"
                     },
                     {
                         "id": "act_201_bk18",
@@ -1503,7 +1503,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK18 Word - Ongedaan maken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK18 Word - Ongedaan maken.pdf"
                     },
                     {
                         "id": "act_201_bk19",
@@ -1511,7 +1511,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK19 Word - Pagina_s en paginanummers.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK19 Word - Pagina_s en paginanummers.pdf"
                     }
                 ]
             },
@@ -1528,7 +1528,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK20 PowerPoint - Openen en opslaan.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK20 PowerPoint - Openen en opslaan.pdf"
                     },
                     {
                         "id": "act_201_bk21",
@@ -1536,7 +1536,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK21 PowerPoint - Aan de slag met de tekst.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK21 PowerPoint - Aan de slag met de tekst.pdf"
                     },
                     {
                         "id": "act_201_bk22",
@@ -1544,7 +1544,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK22 PowerPoint - Tekst opmaken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK22 PowerPoint - Tekst opmaken.pdf"
                     },
                     {
                         "id": "act_201_bk23",
@@ -1552,7 +1552,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK23 PowerPoint - Afbeeldingen invoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK23 PowerPoint - Afbeeldingen invoegen.pdf"
                     },
                     {
                         "id": "act_201_bk24",
@@ -1560,7 +1560,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK24 PowerPoint - Animated Gifs.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK24 PowerPoint - Animated Gifs.pdf"
                     },
                     {
                         "id": "act_201_bk25",
@@ -1568,7 +1568,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK25 PowerPoint - Video_s invoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK25 PowerPoint - Video_s invoegen.pdf"
                     },
                     {
                         "id": "act_201_bk26",
@@ -1576,7 +1576,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK26 PowerPoint - Presenteren.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK26 PowerPoint - Presenteren.pdf"
                     },
                     {
                         "id": "act_201_bk27",
@@ -1584,7 +1584,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK27 PowerPoint - Animaties toevoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK27 PowerPoint - Animaties toevoegen.pdf"
                     },
                     {
                         "id": "act_201_bk28",
@@ -1592,7 +1592,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK28 PowerPoint - Achtergronden.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK28 PowerPoint - Achtergronden.pdf"
                     },
                     {
                         "id": "act_201_bk29",
@@ -1600,7 +1600,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK29 PowerPoint - Thema_s en ontwerpen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK29 PowerPoint - Thema_s en ontwerpen.pdf"
                     }
                 ]
             },
@@ -1617,7 +1617,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK30 Excel - De basis.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK30 Excel - De basis.pdf"
                     },
                     {
                         "id": "act_201_bk31",
@@ -1625,7 +1625,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK31 Excel - Rekenen en functies.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK31 Excel - Rekenen en functies.pdf"
                     },
                     {
                         "id": "act_201_bk32",
@@ -1633,7 +1633,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK32 Excel - Diagrammen en grafieken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK32 Excel - Diagrammen en grafieken.pdf"
                     },
                     {
                         "id": "act_201_bk33",
@@ -1641,7 +1641,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK33 Excel - Sorteren en filteren.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK33 Excel - Sorteren en filteren.pdf"
                     }
                 ]
             },
@@ -1658,7 +1658,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK34 MS Paint - Online tekenen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK34 MS Paint - Online tekenen.pdf"
                     },
                     {
                         "id": "act_201_bk35",
@@ -1666,7 +1666,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK35 Google Chrome - Websites bezoeken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK35 Google Chrome - Websites bezoeken.pdf"
                     },
                     {
                         "id": "act_201_bk35b",
@@ -1674,7 +1674,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK35b Microsoft Edge - Websites bezoeken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK35b Microsoft Edge - Websites bezoeken.pdf"
                     },
                     {
                         "id": "act_201_bk36",
@@ -1682,7 +1682,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK36 Google Chrome - Zoeken met Google.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK36 Google Chrome - Zoeken met Google.pdf"
                     },
                     {
                         "id": "act_201_bk37",
@@ -1690,7 +1690,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK37 Google Zoekmachine - Afbeeldingen zoeken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK37 Google Zoekmachine - Afbeeldingen zoeken.pdf"
                     },
                     {
                         "id": "act_201_bk38",
@@ -1698,7 +1698,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK38 Google Zoekmachine - Plaatsen zoeken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK38 Google Zoekmachine - Plaatsen zoeken.pdf"
                     },
                     {
                         "id": "act_201_bk39",
@@ -1706,7 +1706,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK39 Microsoft - Afdrukken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK39 Microsoft - Afdrukken.pdf"
                     }
                 ]
             },
@@ -1723,7 +1723,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - BK40 Microsoft - EXAMEN.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK40 Microsoft - EXAMEN.pdf"
                     },
                     {
                         "id": "act_201_overzicht",
@@ -1731,7 +1731,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "5 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Overzicht leerlijnen v2025-09.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Overzicht leerlijnen v2025-09.pdf"
                     }
                 ]
             }
@@ -1771,7 +1771,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK01 Teams - De basis.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK01 Teams - De basis.pdf"
                     },
                     {
                         "id": "act_202_pk02",
@@ -1779,7 +1779,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK02 Teams - Gesprekken en berichten.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK02 Teams - Gesprekken en berichten.pdf"
                     },
                     {
                         "id": "act_202_pk03",
@@ -1787,7 +1787,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK03 Teams - Bestanden.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK03 Teams - Bestanden.pdf"
                     },
                     {
                         "id": "act_202_pk04",
@@ -1795,7 +1795,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK04 Teams - Class Notebook.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK04 Teams - Class Notebook.pdf"
                     },
                     {
                         "id": "act_202_pk05",
@@ -1803,7 +1803,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK05 Teams - Opdrachten en cijfers.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK05 Teams - Opdrachten en cijfers.pdf"
                     },
                     {
                         "id": "act_202_pk06",
@@ -1811,7 +1811,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK06 Teams - Een online les.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK06 Teams - Een online les.pdf"
                     }
                 ]
             },
@@ -1828,7 +1828,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK07 Forms - Maak je eigen quiz.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK07 Forms - Maak je eigen quiz.pdf"
                     },
                     {
                         "id": "act_202_pk08",
@@ -1836,7 +1836,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK08 Forms - Een quiz opmaken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK08 Forms - Een quiz opmaken.pdf"
                     },
                     {
                         "id": "act_202_pk09",
@@ -1844,7 +1844,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK09 Forms - Een quiz uitdelen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK09 Forms - Een quiz uitdelen.pdf"
                     },
                     {
                         "id": "act_202_pk10",
@@ -1852,7 +1852,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK10 Forms - De resultaten.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK10 Forms - De resultaten.pdf"
                     }
                 ]
             },
@@ -1869,7 +1869,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK11 Word - Koppen en kopstijlen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK11 Word - Koppen en kopstijlen.pdf"
                     },
                     {
                         "id": "act_202_pk12",
@@ -1877,7 +1877,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK12 Word - Inhoudsopgave.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK12 Word - Inhoudsopgave.pdf"
                     },
                     {
                         "id": "act_202_pk13",
@@ -1885,7 +1885,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK13 Word - Kop- en voettekst.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK13 Word - Kop- en voettekst.pdf"
                     },
                     {
                         "id": "act_202_pk14",
@@ -1893,7 +1893,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK14 Word - Voetnoten en eindnoten.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK14 Word - Voetnoten en eindnoten.pdf"
                     },
                     {
                         "id": "act_202_pk15",
@@ -1901,7 +1901,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK15 Word - Hyperlinks (koppelingen).pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK15 Word - Hyperlinks (koppelingen).pdf"
                     }
                 ]
             },
@@ -1918,7 +1918,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK16 Outlook - De basis van Postvak IN.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK16 Outlook - De basis van Postvak IN.pdf"
                     },
                     {
                         "id": "act_202_pk17",
@@ -1926,7 +1926,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK17 Outlook - Een e-mail versturen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK17 Outlook - Een e-mail versturen.pdf"
                     },
                     {
                         "id": "act_202_pk18",
@@ -1934,7 +1934,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK18 Outlook - Beantwoorden, doorsturen en verwijderen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK18 Outlook - Beantwoorden, doorsturen en verwijderen.pdf"
                     },
                     {
                         "id": "act_202_pk19",
@@ -1942,7 +1942,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK19 Outlook - Bijlagen toevoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK19 Outlook - Bijlagen toevoegen.pdf"
                     },
                     {
                         "id": "act_202_pk20",
@@ -1950,7 +1950,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK20 Outlook - Jouw digitale agenda.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK20 Outlook - Jouw digitale agenda.pdf"
                     }
                 ]
             },
@@ -1967,7 +1967,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK21 Microsoft Word - Werken met sjablonen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK21 Microsoft Word - Werken met sjablonen.pdf"
                     },
                     {
                         "id": "act_202_pk22",
@@ -1975,7 +1975,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK22 Microsoft Word - Afdrukstand.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK22 Microsoft Word - Afdrukstand.pdf"
                     },
                     {
                         "id": "act_202_pk23",
@@ -1983,7 +1983,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK23 Microsoft Word - Tekeningen invoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK23 Microsoft Word - Tekeningen invoegen.pdf"
                     },
                     {
                         "id": "act_202_pk24",
@@ -1991,7 +1991,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK24 Microsoft Word - Spraakgestuurd typen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK24 Microsoft Word - Spraakgestuurd typen.pdf"
                     },
                     {
                         "id": "act_202_pk25",
@@ -1999,7 +1999,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK25 Microsoft Word - Spellingscontrole.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK25 Microsoft Word - Spellingscontrole.pdf"
                     },
                     {
                         "id": "act_202_pk26",
@@ -2007,7 +2007,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK26 Microsoft Word - Opmerkingen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK26 Microsoft Word - Opmerkingen.pdf"
                     }
                 ]
             },
@@ -2024,7 +2024,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK27 Microsoft 365 - Versiegeschiedenis.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK27 Microsoft 365 - Versiegeschiedenis.pdf"
                     },
                     {
                         "id": "act_202_pk28",
@@ -2032,7 +2032,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK28 Microsoft 365 - Hulp van Help.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK28 Microsoft 365 - Hulp van Help.pdf"
                     },
                     {
                         "id": "act_202_pk29",
@@ -2040,7 +2040,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK29 Microsoft 365 - Sneller werken met sneltoetsen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK29 Microsoft 365 - Sneller werken met sneltoetsen.pdf"
                     },
                     {
                         "id": "act_202_pk30",
@@ -2048,7 +2048,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK30 Microsoft 365 - Kennisquiz.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK30 Microsoft 365 - Kennisquiz.pdf"
                     }
                 ]
             },
@@ -2065,7 +2065,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK31 Microsoft Clipchamp - Videos opnemen en opslaan.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK31 Microsoft Clipchamp - Videos opnemen en opslaan.pdf"
                     },
                     {
                         "id": "act_202_pk32",
@@ -2073,7 +2073,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK32 Microsoft Clipchamp - Schermopnames maken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK32 Microsoft Clipchamp - Schermopnames maken.pdf"
                     },
                     {
                         "id": "act_202_pk33",
@@ -2081,7 +2081,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK33 Microsoft Clipchamp - Videos bewerken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK33 Microsoft Clipchamp - Videos bewerken.pdf"
                     },
                     {
                         "id": "act_202_pk34",
@@ -2089,7 +2089,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK34 Microsoft Clipchamp - Overgangen en animaties.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK34 Microsoft Clipchamp - Overgangen en animaties.pdf"
                     },
                     {
                         "id": "act_202_pk35",
@@ -2097,7 +2097,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "E-Learning/Microsoft-leerlijn/Microsoft 365 - PK35 Microsoft Clipchamp - Objecten toevoegen.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - PK35 Microsoft Clipchamp - Objecten toevoegen.pdf"
                     }
                 ]
             }
@@ -10734,6 +10734,9 @@ window.renderElearningPdfViewer = async function(pdfUrl, containerEl, title) {
     const renderId = Date.now() + '_' + Math.random();
     window._activeElearningPdfRenderId = renderId;
 
+    if (pdfUrl.startsWith('E-Learning/Microsoft-leerlijn/')) {
+        pdfUrl = pdfUrl.replace('E-Learning/Microsoft-leerlijn/', 'Microsoft leerlijn/');
+    }
     const encodedUrl = encodeURI(pdfUrl);
     const fileName = (pdfUrl.split('/').pop() || (title + '.pdf'));
 
@@ -10802,7 +10805,19 @@ window.renderElearningPdfViewer = async function(pdfUrl, containerEl, title) {
             }
             return;
         } catch (err) {
-            console.warn('PDF.js weergave fallback naar iframe:', err);
+            console.warn('PDF.js fout bij laden leskaart:', err);
+            if (window._activeElearningPdfRenderId !== renderId) return;
+            if (statusEl) statusEl.innerText = 'Bestand nog niet beschikbaar op server';
+            if (pagesWrap) {
+                pagesWrap.innerHTML = `
+                    <div style="width: 100%; max-width: 720px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 14px; padding: 24px; text-align: left; color: #78350f;">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">📄 Deze PDF-leskaart staat nog niet op GitHub / Vercel</div>
+                        <p style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.5;">De browser kon het bestand <code>${escapeHtml(pdfUrl)}</code> niet vinden (404).</p>
+                        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #92400e;">Tip: Upload de map <strong>E-Learning/Microsoft-leerlijn/</strong> (78 PDF's) via <strong>git push</strong> in Terminal of GitHub Desktop (via de GitHub-website geldt een limiet van 25 MB per upload).</p>
+                    </div>
+                `;
+            }
+            return;
         }
     }
 
