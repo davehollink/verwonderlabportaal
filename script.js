@@ -5179,7 +5179,7 @@ window.downloadReserveringenPDF = function() {
         <title>Verwonderlab Reserveringen Overzicht (PDF)</title>
         <style>
             @page { size: A4 landscape; margin: 10mm 12mm; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 20px; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .header-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; border-bottom: 3px solid #8CC63F; padding-bottom: 12px; }
             .logo-img { height: 46px; width: auto; object-fit: contain; }
             h1 { font-size: 22px; color: #432918; margin: 0 0 4px 0; }
@@ -5414,11 +5414,11 @@ window.renderStatistiekenTab = function() {
                     scales: {
                         x: {
                             beginAtZero: true,
-                            ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 11 } },
+                            ticks: { precision: 0, font: { family: 'Ubuntu', size: 11 } },
                             grid: { color: 'rgba(226, 232, 240, 0.6)' }
                         },
                         y: {
-                            ticks: { font: { family: 'Plus Jakarta Sans', weight: '600', size: 12 } },
+                            ticks: { font: { family: 'Ubuntu', weight: '600', size: 12 } },
                             grid: { display: false }
                         }
                     }
@@ -5453,7 +5453,7 @@ window.renderStatistiekenTab = function() {
                             labels: {
                                 boxWidth: 12,
                                 padding: 12,
-                                font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+                                font: { family: 'Ubuntu', size: 11, weight: '600' }
                             }
                         }
                     },
@@ -5489,11 +5489,11 @@ window.renderStatistiekenTab = function() {
                     scales: {
                         y: {
                             beginAtZero: true,
-                            ticks: { precision: 0, font: { family: 'Plus Jakarta Sans', size: 11 } },
+                            ticks: { precision: 0, font: { family: 'Ubuntu', size: 11 } },
                             grid: { color: 'rgba(226, 232, 240, 0.6)' }
                         },
                         x: {
-                            ticks: { font: { family: 'Plus Jakarta Sans', weight: '600', size: 11 } },
+                            ticks: { font: { family: 'Ubuntu', weight: '600', size: 11 } },
                             grid: { display: false }
                         }
                     }
@@ -5527,7 +5527,7 @@ window.renderStatistiekenTab = function() {
                             labels: {
                                 boxWidth: 12,
                                 padding: 12,
-                                font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }
+                                font: { family: 'Ubuntu', size: 11, weight: '600' }
                             }
                         }
                     },
@@ -9872,7 +9872,7 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
         }
 
         let rawContent = activeAct.inhoudHtml || `<p>${escapeHtml(activeAct.beschrijving || 'Geen uitgebreide tekst beschikbaar.')}</p>`;
-        // Grondige lettertype & opmaak sanitatie zodat alle lessen in uniform Plus Jakarta Sans staan
+        // Grondige lettertype & opmaak sanitatie zodat alle lessen in uniform Ubuntu staan
         contentHtml += window.saniteerLesHtml(rawContent);
         bodyEl.innerHTML = contentHtml;
 

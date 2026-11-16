@@ -58,7 +58,7 @@ html {
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--slate-800);
     min-height: 100vh;
     background: 
@@ -4896,7 +4896,7 @@ body::after {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Ubuntu', system-ui, -apple-system, sans-serif;
     transform: translateZ(0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
@@ -5347,10 +5347,10 @@ body::after {
     gap: 4px;
 }
 
-/* Rijke lesinhoud en afbeeldingen in de gids (Automatisch in Plus Jakarta Sans) */
+/* Rijke lesinhoud en afbeeldingen in de gids (Automatisch in Ubuntu) */
 /* ==============================================================
    VOLLEDIGE LETTERTYPE HARMONISATIE VOOR DE LESOMGEVING
-   Alle lessen (huidig en toekomstig) 100% in Plus Jakarta Sans
+   Alle lessen (huidig en toekomstig) 100% in Ubuntu
    ============================================================== */
 .canva-reader-overlay,
 .canva-reader-overlay *,
@@ -5363,13 +5363,13 @@ body::after {
 #playerActivityBody *,
 .visual-lesson-editor,
 .visual-lesson-editor * {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 /* Strikte standaardisatie van de lesinhoud (overruled alle geplakte HTML-formaten) */
 #playerActivityBody,
 .canva-guide-body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: 15.5px !important;
     line-height: 1.75 !important;
     color: #334155 !important;
@@ -5382,7 +5382,7 @@ body::after {
 .canva-guide-body span:not(.canva-guide-img-caption span),
 #playerActivityBody div:not(.canva-guide-img-container):not(.lesson-callout):not(.canva-guide-img-caption),
 .canva-guide-body div:not(.canva-guide-img-container):not(.lesson-callout):not(.canva-guide-img-caption) {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: 15.5px !important;
     line-height: 1.75 !important;
     color: #334155 !important;
@@ -5399,9 +5399,9 @@ body::after {
 .canva-guide-body h4,
 #playerActivityBody h5,
 .canva-guide-body h5 {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     color: #0f172a !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
     letter-spacing: -0.3px !important;
 }
 
@@ -5422,7 +5422,7 @@ body::after {
 #playerActivityBody h3,
 .canva-guide-body h3 {
     font-size: 20px !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
     margin: 34px 0 12px 0 !important;
     scroll-margin-top: 30px;
@@ -5445,7 +5445,7 @@ body::after {
     margin: 0 0 18px 0 !important;
     padding-left: 24px !important;
     color: #334155 !important;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, sans-serif !important;
 }
 
 #playerActivityBody li,
@@ -5454,7 +5454,7 @@ body::after {
     line-height: 1.7 !important;
     font-size: 15.5px !important;
     color: #334155 !important;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, sans-serif !important;
 }
 
 #playerActivityBody strong,
@@ -5463,7 +5463,7 @@ body::after {
 .canva-guide-body b {
     font-weight: 700 !important;
     color: #0f172a !important;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    font-family: 'Ubuntu', system-ui, -apple-system, sans-serif !important;
 }
 
 /* Afbeeldingskader binnen de les */
