@@ -10739,26 +10739,9 @@ window.renderElearningPdfViewer = async function(pdfUrl, containerEl, title) {
         pdfUrl = pdfUrl.replace('E-Learning/Microsoft-leerlijn/', 'Microsoft leerlijn/');
     }
     const encodedUrl = encodeURI(pdfUrl);
-    const fileName = (pdfUrl.split('/').pop() || (title + '.pdf'));
 
     containerEl.innerHTML = `
-        <div class="elearning-pdf-toolbar" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; margin-bottom: 18px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 20px;">📄</span>
-                <div>
-                    <div style="font-size: 13.5px; font-weight: 700; color: #0f172a;">${escapeHtml(title || 'Leskaart')}</div>
-                    <div id="elearningPdfStatus" style="font-size: 12px; color: #64748b;">Leskaart wordt geladen... ⏳</div>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <a href="${escapeHtml(encodedUrl)}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 9px; border: 1.5px solid #cbd5e1; background: #ffffff; color: #0f172a; font-size: 12.5px; font-weight: 700; text-decoration: none;">
-                    <span>↗ Open in nieuw tabblad</span>
-                </a>
-                <a href="${escapeHtml(encodedUrl)}" download="${escapeHtml(fileName)}" style="display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 9px; border: none; background: #8CC63F; color: #ffffff; font-size: 12.5px; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(140, 198, 63, 0.3);">
-                    <span>📥 Download PDF</span>
-                </a>
-            </div>
-        </div>
+        <div id="elearningPdfStatus" style="font-size: 13px; color: #64748b; padding: 12px 0; text-align: center;">Leskaart wordt geladen... ⏳</div>
         <div id="elearningPdfPages" style="display: flex; flex-direction: column; align-items: center; gap: 18px;"></div>
     `;
 
@@ -10779,7 +10762,7 @@ window.renderElearningPdfViewer = async function(pdfUrl, containerEl, title) {
             if (window._activeElearningPdfRenderId !== renderId) return;
 
             const numPages = pdfDoc.numPages || 1;
-            if (statusEl) statusEl.innerText = `${numPages} ${numPages === 1 ? 'pagina' : 'pagina’s'} • Verwonderlab Leskaart`;
+            if (statusEl) statusEl.style.display = 'none';
 
             const targetWidth = Math.min((containerEl.clientWidth || 780) - 8, 860);
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
