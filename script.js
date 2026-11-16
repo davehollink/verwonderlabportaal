@@ -6150,7 +6150,14 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 <span>☐ Compleet retour</span>
             </div>
         </div>`;
-    }).join('');
+    });
+
+    // Verdeel de kaartjes in pagina's van exact 4 kaartjes per A4 (2x2 grid)
+    const paginasHtml = [];
+    for (let i = 0; i < kaartjesHtml.length; i += 4) {
+        const groep = kaartjesHtml.slice(i, i + 4).join('');
+        paginasHtml.push(`<div class="kaartjes-pagina">${groep}</div>`);
+    }
 
     const printHtml = `
     <!DOCTYPE html>
@@ -6162,7 +6169,7 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
         <style>
-            @page { size: A4 portrait; margin: 12mm; }
+            @page { size: A4 portrait; margin: 10mm; }
             * { box-sizing: border-box; }
             body {
                 font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
@@ -6174,7 +6181,8 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 print-color-adjust: exact;
             }
             .no-print {
-                margin-bottom: 18px;
+                max-width: 190mm;
+                margin: 0 auto 18px auto;
                 padding: 12px 16px;
                 background: #f0fdf4;
                 border: 1.5px solid #8CC63F;
@@ -6185,11 +6193,21 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 gap: 12px;
                 font-size: 13px;
             }
-            .kaartjes-grid {
+            .kaartjes-pagina {
+                width: 190mm;
+                height: 272mm;
+                margin: 0 auto 20px auto;
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 14px;
-                align-items: stretch;
+                grid-template-rows: repeat(2, 1fr);
+                gap: 8mm;
+                page-break-after: always;
+                break-after: page;
+            }
+            .kaartjes-pagina:last-child {
+                page-break-after: auto;
+                break-after: auto;
+                margin-bottom: 0;
             }
             .kaartje {
                 position: relative;
@@ -6198,20 +6216,20 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 border: 1.5px solid #cbd5e1;
                 border-left: 6px solid #8CC63F;
                 border-radius: 14px;
-                padding: 16px 18px 13px 18px;
+                padding: 18px 20px 14px 20px;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
-                min-height: 235px;
+                height: 100%;
                 break-inside: avoid;
                 page-break-inside: avoid;
             }
             .kaartje-logo-watermark {
                 position: absolute;
-                top: -28px;
-                right: -56px;
-                width: 136px;
-                height: 136px;
+                top: -32px;
+                right: -68px;
+                width: 165px;
+                height: 165px;
                 object-fit: contain;
                 filter: grayscale(100%) contrast(1.05);
                 opacity: 0.16;
@@ -6341,12 +6359,10 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
     </head>
     <body>
         <div class="no-print">
-            <span>🏷️ <strong>Printkaartjes (${list.length}):</strong> Knip of plak deze kaartjes direct op de leskisten. Kies in het printvenster voor je printer of <em>Opslaan als PDF</em>.</span>
+            <span>🏷️ <strong>Printkaartjes (${list.length}):</strong> 4 kaartjes per A4-vel. Knip of plak deze kaartjes direct op de leskisten, of kies <em>Opslaan als PDF</em>.</span>
             <button onclick="window.print()" style="background: #8CC63F; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; white-space: nowrap;">🖨️ Printen / Opslaan</button>
         </div>
-        <div class="kaartjes-grid">
-            ${kaartjesHtml}
-        </div>
+        ${paginasHtml.join('')}
         <script>
             window.onload = function() {
                 setTimeout(function() {
