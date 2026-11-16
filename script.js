@@ -1479,7 +1479,7 @@ const defaultElearningCursussen = [
                         "type": "pdf",
                         "typeLabel": "Leskaart (PDF)",
                         "duur": "10 min",
-                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK15 Word - Knippen kopiëren plakken.pdf"
+                        "pdfUrl": "Microsoft leerlijn/Microsoft 365 - BK15 Word - Knippen kopiëren plakken.pdf"
                     },
                     {
                         "id": "act_201_bk16",
@@ -10734,6 +10734,7 @@ window.renderElearningPdfViewer = async function(pdfUrl, containerEl, title) {
     const renderId = Date.now() + '_' + Math.random();
     window._activeElearningPdfRenderId = renderId;
 
+    if (pdfUrl.includes('Knippen kopiëren plakken')) { pdfUrl = pdfUrl.replace('Knippen kopiëren plakken', 'Knippen kopie\u0308ren plakken'); }
     if (pdfUrl.startsWith('E-Learning/Microsoft-leerlijn/')) {
         pdfUrl = pdfUrl.replace('E-Learning/Microsoft-leerlijn/', 'Microsoft leerlijn/');
     }
