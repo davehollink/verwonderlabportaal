@@ -6133,15 +6133,15 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                         ${leerkrachtEmail ? `<div class="kaartje-val-sub">${escapeHtml(leerkrachtEmail)}</div>` : ''}
                         <div class="kaartje-val-school">🏫 ${escapeHtml(schoolNaam)}</div>
                     </div>
-
-                    <div class="kaartje-periode-box">
-                        <div class="kaartje-label">Periode &amp; Termijn</div>
-                        <div class="kaartje-periode-naam">📅 ${escapeHtml(periodeNaam)}</div>
-                        <div class="kaartje-termijn">🗓️ ${escapeHtml(termijnTekst)}</div>
-                    </div>
                 </div>
 
                 ${opmHtml}
+            </div>
+
+            <div class="kaartje-periode-box">
+                <div class="kaartje-label">Uitleenperiode &amp; Termijn</div>
+                <div class="kaartje-periode-naam">📅 ${escapeHtml(periodeNaam)}</div>
+                <div class="kaartje-termijn">🗓️ ${escapeHtml(termijnTekst)}</div>
             </div>
         </div>`;
     });
@@ -6210,23 +6210,23 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 border: 1.5px solid #cbd5e1;
                 border-left: 6px solid #8CC63F;
                 border-radius: 14px;
-                padding: 18px 20px 14px 20px;
+                padding: 18px 20px 16px 20px;
                 display: flex;
                 flex-direction: column;
-                justify-content: flex-start;
+                justify-content: space-between;
                 height: 100%;
                 break-inside: avoid;
                 page-break-inside: avoid;
             }
             .kaartje-logo-watermark {
                 position: absolute;
-                top: -32px;
-                right: -68px;
-                width: 165px;
-                height: 165px;
+                top: -28px;
+                right: -120px;
+                width: 270px;
+                height: 270px;
                 object-fit: contain;
                 filter: grayscale(100%) contrast(1.05);
-                opacity: 0.16;
+                opacity: 0.14;
                 pointer-events: none;
                 user-select: none;
                 z-index: 0;
@@ -6275,7 +6275,7 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 padding-right: 44px;
             }
             .kaartje-materiaal-naam {
-                font-size: 16.5px;
+                font-size: 18.5px;
                 font-weight: 700;
                 color: #0f172a;
                 line-height: 1.25;
@@ -6286,36 +6286,40 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 gap: 8px;
             }
             .kaartje-val-strong {
-                font-size: 13px;
+                font-size: 18px;
                 font-weight: 700;
                 color: #0f172a;
+                line-height: 1.25;
             }
             .kaartje-val-sub {
-                font-size: 11px;
+                font-size: 12px;
                 color: #64748b;
-                margin-top: 1px;
+                margin-top: 2px;
                 word-break: break-all;
             }
             .kaartje-val-school {
-                font-size: 11.5px;
-                font-weight: 600;
-                color: #334155;
-                margin-top: 2px;
+                font-size: 15.5px;
+                font-weight: 700;
+                color: #1e293b;
+                margin-top: 5px;
             }
             .kaartje-periode-box {
+                position: relative;
+                z-index: 1;
+                margin-top: 12px;
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
-                border-radius: 9px;
-                padding: 7px 10px;
+                border-radius: 10px;
+                padding: 9px 12px;
             }
             .kaartje-periode-naam {
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 700;
                 color: #1e293b;
             }
             .kaartje-termijn {
-                font-size: 11.5px;
-                font-weight: 600;
+                font-size: 12.5px;
+                font-weight: 700;
                 color: #4d7c0f;
                 margin-top: 2px;
             }
