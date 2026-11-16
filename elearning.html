@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - E-Learning & Professionalisering</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261116A">
+    <link rel="stylesheet" href="style.css?v=20261116B">
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -70,6 +71,7 @@
             <div id="elearningControls" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 26px; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); padding: 14px 18px; border-radius: 14px; border: 1.5px solid #e2e8f0; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
                 <div id="elearningFilters" style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button onclick="window.filterElearning('Alle')" class="filter-btn active" style="background: #8CC63F; color: white; border: none; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;">Alle cursussen</button>
+                    <button onclick="window.filterElearning('Microsoft 365')" class="filter-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Microsoft 365</button>
                     <button onclick="window.filterElearning('Creatieve Tools')" class="filter-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Creatieve Tools (Canva)</button>
                     <button onclick="window.filterElearning('Digitale Geletterdheid')" class="filter-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Digitale Geletterdheid</button>
                     <button onclick="window.filterElearning('Programmeren & Robotica')" class="filter-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Robotica & Code</button>
@@ -320,6 +322,6 @@
 
 <script src="auth-config.js?v=20261026e"></script>
 <script src="auth.js?v=20261026e"></script>
-<script src="script.js?v=20261116A"></script>
+<script src="script.js?v=20261116B"></script>
 </body>
 </html>

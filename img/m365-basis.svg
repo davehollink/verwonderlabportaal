@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#4d7c0f"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg1)"/>
+  <circle cx="680" cy="90" r="140" fill="#8CC63F" opacity="0.16"/>
+  <circle cx="110" cy="430" r="130" fill="#3b82f6" opacity="0.16"/>
+  <!-- Microsoft 4-color logo -->
+  <g transform="translate(80, 95)">
+    <rect x="0" y="0" width="46" height="46" rx="4" fill="#F25022"/>
+    <rect x="52" y="0" width="46" height="46" rx="4" fill="#7FBA00"/>
+    <rect x="0" y="52" width="46" height="46" rx="4" fill="#00A4EF"/>
+    <rect x="52" y="52" width="46" height="46" rx="4" fill="#FFB900"/>
+  </g>
+  <text x="205" y="138" font-family="Ubuntu, Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">Microsoft 365</text>
+  <text x="205" y="180" font-family="Ubuntu, Arial, sans-serif" font-size="22" font-weight="500" fill="#bef264">Verwonderlab Leerlijn</text>
+  <rect x="80" y="240" width="640" height="3" rx="1.5" fill="#8CC63F" opacity="0.7"/>
+  <text x="80" y="305" font-family="Ubuntu, Arial, sans-serif" font-size="44" font-weight="700" fill="#ffffff">Basiscursus</text>
+  <text x="80" y="352" font-family="Ubuntu, Arial, sans-serif" font-size="23" fill="#cbd5e1">OneDrive • Word • PowerPoint • Excel • Paint • Zoeken</text>
+  <rect x="80" y="390" width="220" height="44" rx="22" fill="#8CC63F"/>
+  <text x="190" y="419" text-anchor="middle" font-family="Ubuntu, Arial, sans-serif" font-size="19" font-weight="700" fill="#0f172a">BK01 t/m BK40</text>
+</svg>
