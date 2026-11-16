@@ -5215,6 +5215,7 @@ window.renderBeheerdersTabellen = function() {
                 
                 let actieMenuHTML = `
                     <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        <button type="button" class="btn-table-print-icon" title="Printkaartje maken voor deze reservering" onclick="window.printReserveringsKaartjes(${r.id}, event)" style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">🏷️</button>
                         <button type="button" class="btn-table-edit-icon" title="Reservering bewerken" onclick="window.openBewerkReserveringModal(${r.id}, event)" style="background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">✏️</button>
                         <button type="button" class="btn-table-delete-icon" title="Reservering definitief verwijderen" onclick="window.actieReserveringVerwijderen(${r.id}, event)" style="background: #fee2e2; border: 1.5px solid #fecaca; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">🗑️</button>
                     </div>
@@ -6064,6 +6065,305 @@ window.downloadReserveringenPDF = function() {
         printWin.document.close();
     } else {
         alert("⚠️ Sta pop-ups toe in je browser om het PDF overzicht te openen.");
+    }
+};
+
+window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
+    if (evt) evt.stopPropagation();
+
+    let list = [];
+    if (enkeleId !== null && enkeleId !== undefined) {
+        const match = (reserveringen || []).find(r => String(r.id) === String(enkeleId));
+        if (match) list = [match];
+    } else {
+        list = window._laatstGefilterdeReserveringen || reserveringen || [];
+    }
+
+    if (!list || list.length === 0) {
+        alert("Geen reserveringen om kaartjes van te maken.");
+        return;
+    }
+
+    const logoUrl = new URL('Verwonderlab.jpg', window.location.href).href;
+
+    const kaartjesHtml = list.map(r => {
+        const per = (typeof window.vindPeriode === 'function')
+            ? window.vindPeriode(r)
+            : (periodes || []).find(p => String(p.id) === String(r.periodeId));
+
+        const periodeNaam = (per && per.naam)
+            ? per.naam
+            : (r.periode || r.periodeNaam || (r.periodeId ? `Periode ${r.periodeId}` : 'Onbekende periode'));
+
+        const termijnTekst = (per && per.start && per.eind && typeof window.formatteerDatumNL === 'function')
+            ? `${window.formatteerDatumNL(per.start)} t/m ${window.formatteerDatumNL(per.eind)}`
+            : 'Termijn niet opgegeven';
+
+        const leerkrachtNaam = r.leerkracht || 'Onbekende leerkracht';
+        const leerkrachtEmail = r.aanvragerEmail || '';
+        const schoolNaam = r.school || 'Locatie onbekend';
+        const kistNaam = r.kist || 'Onbekend materiaal';
+        const statusTekst = r.status || 'In afwachting';
+        const statusBg = statusTekst === 'Geaccepteerd' ? '#dcfce7' : (statusTekst === 'Afgewezen' ? '#fee2e2' : '#fef3c7');
+        const statusColor = statusTekst === 'Geaccepteerd' ? '#15803d' : (statusTekst === 'Afgewezen' ? '#b91c1c' : '#92400e');
+
+        const opmTekst = (r.opmerking || r.toelichting || '').trim();
+        const opmHtml = (opmTekst && opmTekst !== '-')
+            ? `<div class="kaartje-opm"><strong>💬 Opmerking:</strong> ${escapeHtml(opmTekst)}</div>`
+            : '';
+
+        return `
+        <div class="kaartje">
+            <img src="${escapeHtml(logoUrl)}" class="kaartje-logo-watermark" alt="Verwonderlab">
+            <div class="kaartje-inner">
+                <div class="kaartje-top-row">
+                    <span class="kaartje-brand-pill">VERWONDERLAB • LEENKAARTJE</span>
+                    <span class="kaartje-status-pill" style="background: ${statusBg}; color: ${statusColor};">${escapeHtml(statusTekst)}</span>
+                </div>
+
+                <div class="kaartje-materiaal-box">
+                    <div class="kaartje-label">Geleend materiaal</div>
+                    <div class="kaartje-materiaal-naam">📦 ${escapeHtml(kistNaam)}</div>
+                </div>
+
+                <div class="kaartje-meta-grid">
+                    <div class="kaartje-meta-item">
+                        <div class="kaartje-label">Voor wie</div>
+                        <div class="kaartje-val-strong">👤 ${escapeHtml(leerkrachtNaam)}</div>
+                        ${leerkrachtEmail ? `<div class="kaartje-val-sub">${escapeHtml(leerkrachtEmail)}</div>` : ''}
+                        <div class="kaartje-val-school">🏫 ${escapeHtml(schoolNaam)}</div>
+                    </div>
+
+                    <div class="kaartje-periode-box">
+                        <div class="kaartje-label">Periode &amp; Termijn</div>
+                        <div class="kaartje-periode-naam">📅 ${escapeHtml(periodeNaam)}</div>
+                        <div class="kaartje-termijn">🗓️ ${escapeHtml(termijnTekst)}</div>
+                    </div>
+                </div>
+
+                ${opmHtml}
+            </div>
+
+            <div class="kaartje-footer">
+                <span>☐ Klaargezet</span>
+                <span>☐ Opgehaald</span>
+                <span>☐ Compleet retour</span>
+            </div>
+        </div>`;
+    }).join('');
+
+    const printHtml = `
+    <!DOCTYPE html>
+    <html lang="nl">
+    <head>
+        <meta charset="utf-8">
+        <title>Verwonderlab Printkaartjes Reserveringen</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+            @page { size: A4 portrait; margin: 12mm; }
+            * { box-sizing: border-box; }
+            body {
+                font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+                color: #1e293b;
+                margin: 0;
+                padding: 18px;
+                background: #f8fafc;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                margin-bottom: 18px;
+                padding: 12px 16px;
+                background: #f0fdf4;
+                border: 1.5px solid #8CC63F;
+                border-radius: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                font-size: 13px;
+            }
+            .kaartjes-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+                align-items: stretch;
+            }
+            .kaartje {
+                position: relative;
+                overflow: hidden;
+                background: #ffffff;
+                border: 1.5px solid #cbd5e1;
+                border-left: 6px solid #8CC63F;
+                border-radius: 14px;
+                padding: 16px 18px 13px 18px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                min-height: 235px;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .kaartje-logo-watermark {
+                position: absolute;
+                top: -28px;
+                right: -56px;
+                width: 136px;
+                height: 136px;
+                object-fit: contain;
+                filter: grayscale(100%) contrast(1.05);
+                opacity: 0.16;
+                pointer-events: none;
+                user-select: none;
+                z-index: 0;
+            }
+            .kaartje-inner {
+                position: relative;
+                z-index: 1;
+            }
+            .kaartje-top-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                margin-bottom: 10px;
+                padding-right: 46px;
+            }
+            .kaartje-brand-pill {
+                font-size: 9.5px;
+                font-weight: 700;
+                letter-spacing: 0.6px;
+                color: #4d7c0f;
+                background: #f0fdf4;
+                border: 1px solid #bbf7d0;
+                padding: 3px 8px;
+                border-radius: 9999px;
+            }
+            .kaartje-status-pill {
+                font-size: 9.5px;
+                font-weight: 700;
+                padding: 3px 8px;
+                border-radius: 9999px;
+            }
+            .kaartje-label {
+                font-size: 9.5px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: #64748b;
+                margin-bottom: 2px;
+            }
+            .kaartje-materiaal-box {
+                margin-bottom: 11px;
+                padding-bottom: 9px;
+                border-bottom: 1px dashed #cbd5e1;
+                padding-right: 44px;
+            }
+            .kaartje-materiaal-naam {
+                font-size: 16.5px;
+                font-weight: 700;
+                color: #0f172a;
+                line-height: 1.25;
+            }
+            .kaartje-meta-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .kaartje-val-strong {
+                font-size: 13px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+            .kaartje-val-sub {
+                font-size: 11px;
+                color: #64748b;
+                margin-top: 1px;
+                word-break: break-all;
+            }
+            .kaartje-val-school {
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #334155;
+                margin-top: 2px;
+            }
+            .kaartje-periode-box {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 9px;
+                padding: 7px 10px;
+            }
+            .kaartje-periode-naam {
+                font-size: 12px;
+                font-weight: 700;
+                color: #1e293b;
+            }
+            .kaartje-termijn {
+                font-size: 11.5px;
+                font-weight: 600;
+                color: #4d7c0f;
+                margin-top: 2px;
+            }
+            .kaartje-opm {
+                margin-top: 8px;
+                font-size: 10.5px;
+                color: #78350f;
+                background: #fffbeb;
+                border: 1px solid #fde68a;
+                border-radius: 7px;
+                padding: 5px 8px;
+                line-height: 1.35;
+            }
+            .kaartje-footer {
+                position: relative;
+                z-index: 1;
+                margin-top: 11px;
+                padding-top: 8px;
+                border-top: 1px solid #e2e8f0;
+                display: flex;
+                justify-content: space-between;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #475569;
+            }
+            @media print {
+                body {
+                    padding: 0;
+                    background: #ffffff;
+                }
+                .no-print {
+                    display: none !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="no-print">
+            <span>🏷️ <strong>Printkaartjes (${list.length}):</strong> Knip of plak deze kaartjes direct op de leskisten. Kies in het printvenster voor je printer of <em>Opslaan als PDF</em>.</span>
+            <button onclick="window.print()" style="background: #8CC63F; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; white-space: nowrap;">🖨️ Printen / Opslaan</button>
+        </div>
+        <div class="kaartjes-grid">
+            ${kaartjesHtml}
+        </div>
+        <script>
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 450);
+            };
+        </script>
+    </body>
+    </html>`;
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    } else {
+        alert("⚠️ Sta pop-ups toe in je browser om de printkaartjes te openen.");
     }
 };
 
