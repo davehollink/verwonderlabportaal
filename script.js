@@ -6084,7 +6084,7 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
         return;
     }
 
-    const logoUrl = new URL('Verwonderlab.jpg', window.location.href).href;
+    const logoUrl = new URL('img/verwonderlab-icoon.png', window.location.href).href;
 
     const kaartjesHtml = list.map(r => {
         const per = (typeof window.vindPeriode === 'function')
@@ -6142,12 +6142,6 @@ window.printReserveringsKaartjes = function(enkeleId = null, evt = null) {
                 </div>
 
                 ${opmHtml}
-            </div>
-
-            <div class="kaartje-footer">
-                <span>☐ Klaargezet</span>
-                <span>☐ Opgehaald</span>
-                <span>☐ Compleet retour</span>
             </div>
         </div>`;
     });
