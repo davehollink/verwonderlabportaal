@@ -293,6 +293,7 @@
             mainApp.style.visibility = 'visible';
         }
     }
+    window.verbergLoginScherm = verbergLoginScherm;
 
     // Publieke functie: Inloggen met Microsoft 365 via directe redirect (betrouwbaarst voor alle browsers)
     window.loginMetMicrosoft = async function() {

@@ -3110,10 +3110,25 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (oauthCred && oauthCred.accessToken) {
                 localStorage.setItem('ww_ms_access_token', oauthCred.accessToken);
             }
-            const loginOverlay = document.getElementById('wwSsoLoginOverlay');
-            if (loginOverlay) loginOverlay.style.display = 'none';
+            if (typeof window.verbergLoginScherm === 'function') {
+                window.verbergLoginScherm();
+            } else {
+                const loginOverlay = document.getElementById('wwSsoLoginOverlay');
+                if (loginOverlay) loginOverlay.style.display = 'none';
+                const oudScherm = document.getElementById('emailLoginScherm');
+                if (oudScherm) oudScherm.style.display = 'none';
+                const mainApp = document.querySelector('.dashboard-container') || document.getElementById('mainApp');
+                if (mainApp) {
+                    mainApp.style.removeProperty('display');
+                    mainApp.style.opacity = '1';
+                    mainApp.style.visibility = 'visible';
+                }
+            }
             if (typeof window.initPortaalNaLogin === 'function') {
                 window.initPortaalNaLogin();
+            }
+            if (typeof window.updateSidebarUserProfile === 'function') {
+                window.updateSidebarUserProfile();
             }
             if (typeof window.updateAdminButtonVisibility === 'function') {
                 window.updateAdminButtonVisibility();
