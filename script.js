@@ -3080,13 +3080,11 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (!idToken) return null;
             try {
                 const provider = new OAuthProvider('microsoft.com');
-                const cred = accessToken
-                    ? provider.credential({ idToken, accessToken })
-                    : provider.credential({ idToken });
+                const cred = provider.credential({ idToken });
                 const result = await signInWithCredential(fbAuth, cred);
                 return result.user;
             } catch (e) {
-                console.warn("Firebase Microsoft Auth koppeling:", e.code || e.message);
+                console.warn("Firebase Microsoft Auth koppeling:", e.code || '', e.message || e);
                 return null;
             }
         };
