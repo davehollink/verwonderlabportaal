@@ -3005,7 +3005,7 @@ function slaDataOp() {
                     niveau: c.niveau,
                     duur: c.duur,
                     auteur: c.auteur,
-                    thumbnail: (c.thumbnail && c.thumbnail.length > 50000) ? 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Canva_icon_2021.svg/600px-Canva_icon_2021.svg.png' : c.thumbnail,
+                    thumbnail: c.thumbnail,
                     videoUrl: c.videoUrl,
                     omschrijving: c.omschrijving,
                     keySkills: c.keySkills,
@@ -3274,7 +3274,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     if (!isVerwijderd && lkIdStr) {
                         if (!cloudMap.has(lkIdStr)) {
                             cloudMap.set(lkIdStr, lk);
-                            if (window.saveMateriaalToCloud) {
+                            if (window.isHuidigeGebruikerBeheerder && window.isHuidigeGebruikerBeheerder() && window.saveMateriaalToCloud) {
                                 window.saveMateriaalToCloud(lk.id, lk, lk.afbeelding, lk.pdfs).catch(e => console.warn("Background sync materiaal:", e));
                             }
                         }
@@ -3509,7 +3509,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
                 }
             } else {
-                if (window.saveMenuConfigToCloud) {
+                if (window.isHuidigeGebruikerBeheerder && window.isHuidigeGebruikerBeheerder() && window.saveMenuConfigToCloud) {
                     window.saveMenuConfigToCloud(menuConfig);
                 }
             }
@@ -3559,7 +3559,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
                     if (!cloudMap.has(idStr)) {
                         cloudMap.set(idStr, lc);
-                        if (!inCooldown && window.saveElearningToCloud) {
+                        if (isAdminVoorRes && !inCooldown && window.saveElearningToCloud) {
                             _syncingElearningIds.set(idStr, now);
                             window.saveElearningToCloud(lc).catch(e => console.warn("Background sync elearning:", e));
                         }
@@ -3571,7 +3571,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
                         if (localTime > (cloudTime + 2000) && !inCooldown) {
                             cloudMap.set(idStr, lc);
-                            if (window.saveElearningToCloud) {
+                            if (isAdminVoorRes && window.saveElearningToCloud) {
                                 _syncingElearningIds.set(idStr, now);
                                 window.saveElearningToCloud(lc).catch(e => console.warn("Background sync local newer elearning:", e));
                             }
@@ -5954,7 +5954,8 @@ ${beschrijving}
             cursusUrl: (getVal('editElearningCursusUrl', 'https://wonderwijs.nl') || 'https://wonderwijs.nl').trim(),
             keySkills: keySkills,
             certificaatTitel: certificaatTitel,
-            lessen: lessen
+            lessen: lessen,
+            laatsteUpdate: new Date().toISOString()
         };
         
         verwijderdeElearning = (verwijderdeElearning || []).filter(v => v !== String(cId));
@@ -10886,12 +10887,12 @@ window.openCourseView = function(id) {
             <!-- Certificaat Kaart -->
             <div class="canva-cert-card">
                 <div class="canva-cert-preview ${isCertEarned ? 'earned' : ''}">
-                    <span class="canva-cert-badge">${isCertEarned ? '🏆' : '📜'}</span>
-                    <div class="canva-cert-title">${escapeHtml(cursus.certificaatTitel || 'Certified Legend')}</div>
-                    <span class="canva-cert-sub">Wonderwijs Digital Academy</span>
+                    <span class="canva-cert-badge">${isCertEarned ? '🏆' : '🔒'}</span>
+                    <div class="canva-cert-title">${escapeHtml(cursus.certificaatTitel || 'Certificaat')}</div>
+                    <span class="canva-cert-sub">${isCertEarned ? 'Wonderwijs Digital Academy' : (totalActs > 0 ? `Nog ${totalActs - completedActs} van ${totalActs} onderdelen te gaan` : 'Volg alle lessen om te behalen')}</span>
                 </div>
-                <button type="button" class="btn-canva-cert ${isCertEarned ? 'earned' : ''}" onclick="window.openCertificaatModal(${cursus.id})">
-                    <span>${isCertEarned ? '🎓 Certificaat Bekijken & Printen' : 'Certificaat behalen'}</span>
+                <button type="button" class="btn-canva-cert ${isCertEarned ? 'earned' : ''}" ${isCertEarned ? `onclick="window.openCertificaatModal(${cursus.id})"` : 'disabled style="opacity: 0.6; cursor: not-allowed; background: #f1f5f9; color: #64748b; border-color: #cbd5e1;"'}>
+                    <span>${isCertEarned ? '🎓 Certificaat Bekijken & Printen' : `🔒 Certificaat vergrendeld (${completedActs}/${totalActs})`}</span>
                 </button>
                 <div class="canva-learner-counter" id="courseHubLiveCompletedCount">
                     <span>👥</span>
@@ -11150,19 +11151,22 @@ window.openCanvaActivity = function(cursusId, lesId, actId) {
                 const rawSrc = img.getAttribute('src') || '';
                 const mediaId = img.getAttribute('data-media-id') || (rawSrc.startsWith('elearning-media:') ? rawSrc.replace('elearning-media:', '') : null);
                 if (mediaId) {
+                    let loadedSrc = null;
                     if (typeof AttachmentStore !== 'undefined' && AttachmentStore.getFile) {
-                        const cached = await AttachmentStore.getFile(mediaId);
-                        if (cached) {
-                            img.src = cached;
-                        } else if (window.firestoreDb && window.firestoreGetDoc && window.firestoreDoc) {
-                            try {
-                                const snap = await window.firestoreGetDoc(window.firestoreDoc(window.firestoreDb, "elearning_media", mediaId));
-                                if (snap.exists() && snap.data() && snap.data().data) {
-                                    img.src = snap.data().data;
-                                    if (AttachmentStore.setFile) AttachmentStore.setFile(mediaId, { id: mediaId, data: snap.data().data });
+                        loadedSrc = await AttachmentStore.getFile(mediaId);
+                    }
+                    if (loadedSrc) {
+                        img.src = loadedSrc;
+                    } else if (window.firestoreDb && window.firestoreGetDoc && window.firestoreDoc) {
+                        try {
+                            const snap = await window.firestoreGetDoc(window.firestoreDoc(window.firestoreDb, "elearning_media", mediaId));
+                            if (snap.exists() && snap.data() && snap.data().data) {
+                                img.src = snap.data().data;
+                                if (typeof AttachmentStore !== 'undefined' && AttachmentStore.setFile) {
+                                    AttachmentStore.setFile(mediaId, { id: mediaId, data: snap.data().data });
                                 }
-                            } catch(e) {}
-                        }
+                            }
+                        } catch(e) {}
                     }
                 }
                 if (!img.getAttribute('onclick')) {
@@ -11678,6 +11682,18 @@ window.playerNavigeer = function(delta) {
 window.openCertificaatModal = function(cursusId) {
     const cursus = (elearningCursussen || []).find(c => c.id == cursusId);
     if (!cursus) return;
+
+    // Controleer streng of alle lessen/onderdelen daadwerkelijk zijn afgerond
+    const lessen = Array.isArray(cursus.lessen) ? cursus.lessen : [];
+    const allActIds = [];
+    lessen.forEach(l => (l.activiteiten || []).forEach(a => { if (a && a.id) allActIds.push(a.id); }));
+    const totalActs = allActIds.length;
+    const completedActs = allActIds.filter(id => elearningProgress && elearningProgress[id] === true).length;
+
+    if (totalActs === 0 || completedActs < totalActs) {
+        alert(`🔒 Je kunt het certificaat pas downloaden of printen nadat je alle onderdelen van deze cursus hebt afgerond (${completedActs}/${totalActs} voltooid).`);
+        return;
+    }
 
     const modal = document.getElementById('elearningCertificaatModal');
     const titelEl = document.getElementById('certificaatCursusTitel');

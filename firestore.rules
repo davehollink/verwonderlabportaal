@@ -127,6 +127,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /bestanden_chunks/{chunkId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
     match /instellingen/{docId} {
       allow read: if isWonderwijsUser();
       allow create, update, delete: if isAdmin();
