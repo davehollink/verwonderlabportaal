@@ -391,7 +391,7 @@
             try { await window.signOutFirebase(); } catch(e) {}
         }
 
-        window.location.replace('login.html');
+        window.location.replace('/login');
     };
 
     // Controleer redirect (code of id_token in huidige URL na terugkeer van Microsoft)
@@ -483,12 +483,12 @@
         const opgeslagenNaam = localStorage.getItem('ww_huidige_leerkracht');
         const msIdToken = typeof window.getMicrosoftIdToken === 'function' ? window.getMicrosoftIdToken() : localStorage.getItem('ww_ms_id_token');
 
-        const isLoginPage = /(^|\/)login\.html$/i.test(window.location.pathname);
+        const isLoginPage = /(^|\/)login(\.html)?$/i.test(window.location.pathname);
 
         // Valideer bestaande sessie inclusief geldig, niet-verlopen Microsoft ID-token
         if (opgeslagenEmail && valideerDomein(opgeslagenEmail) && opgeslagenNaam && msIdToken) {
             if (isLoginPage) {
-                const target = sessionStorage.getItem('ww_redirect_after_login') || 'index.html';
+                const target = sessionStorage.getItem('ww_redirect_after_login') || '/';
                 sessionStorage.removeItem('ww_redirect_after_login');
                 window.location.replace(target);
                 return true;
@@ -513,7 +513,7 @@
         // Niet ingelogd: stuur door naar kale login.html (of toon login formulier als we al op login.html zijn)
         if (!isLoginPage) {
             sessionStorage.setItem('ww_redirect_after_login', window.location.pathname + window.location.search);
-            window.location.replace('login.html');
+            window.location.replace('/login');
             return false;
         }
         toonLoginScherm();

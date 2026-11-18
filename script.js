@@ -938,12 +938,12 @@ leskisten = leskisten.filter(k => k && !verwijderdeMaterialen.includes(String(k.
 // MENU ZICHTBAARHEID CONFIGURATIE (VOOR MEDEWERKERS)
 // ==========================================
 const defaultMenuConfig = {
-    "index.html": { id: "index.html", naam: "Dashboard", icoon: "📊", zichtbaar: true, vergrendeld: true, beschrijving: "Startpagina met overzicht, agenda en statistieken." },
-    "reserveren.html": { id: "reserveren.html", naam: "Leskisten & reserveren", icoon: "📦", zichtbaar: true, vergrendeld: false, beschrijving: "Uitleensysteem voor alle leskisten en apparatuur." },
-    "elearning.html": { id: "elearning.html", naam: "E-Learning", icoon: "🎓", zichtbaar: true, vergrendeld: false, beschrijving: "Interactieve cursussen en microlearnings voor leerkrachten." },
-    "leerlijnen.html": { id: "leerlijnen.html", naam: "Leerlijn digitale geletterdheid", icoon: "🧭", zichtbaar: true, vergrendeld: false, beschrijving: "Doelen en doorlopende leerlijn groep 1 t/m 8." },
-    "handreiking.html": { id: "handreiking.html", naam: "Handreiking digitale geletterdheid", icoon: "📖", zichtbaar: true, vergrendeld: false, beschrijving: "PDF-viewer en didactische handleiding." },
-    "lesideeen.html": { id: "lesideeen.html", naam: "Lesideeën & inspiratie", icoon: "💡", zichtbaar: true, vergrendeld: false, beschrijving: "Kant-en-klare lesbrieven en inspiratie voor in de klas." }
+    "/": { id: "/", naam: "Dashboard", icoon: "📊", zichtbaar: true, vergrendeld: true, beschrijving: "Startpagina met overzicht, agenda en statistieken." },
+    "/reserveren": { id: "/reserveren", naam: "Leskisten & reserveren", icoon: "📦", zichtbaar: true, vergrendeld: false, beschrijving: "Uitleensysteem voor alle leskisten en apparatuur." },
+    "/elearning": { id: "/elearning", naam: "E-Learning", icoon: "🎓", zichtbaar: true, vergrendeld: false, beschrijving: "Interactieve cursussen en microlearnings voor leerkrachten." },
+    "/leerlijnen": { id: "/leerlijnen", naam: "Leerlijn digitale geletterdheid", icoon: "🧭", zichtbaar: true, vergrendeld: false, beschrijving: "Doelen en doorlopende leerlijn groep 1 t/m 8." },
+    "/handreiking": { id: "/handreiking", naam: "Handreiking digitale geletterdheid", icoon: "📖", zichtbaar: true, vergrendeld: false, beschrijving: "PDF-viewer en didactische handleiding." },
+    "/lesideeen": { id: "/lesideeen", naam: "Lesideeën & inspiratie", icoon: "💡", zichtbaar: true, vergrendeld: false, beschrijving: "Kant-en-klare lesbrieven en inspiratie voor in de klas." }
 };
 
 let rawMenu = safeGetLocal('ww_menu_config_v1', null);
@@ -3110,8 +3110,8 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (oauthCred && oauthCred.accessToken) {
                 localStorage.setItem('ww_ms_access_token', oauthCred.accessToken);
             }
-            if (/(^|\/)login\.html$/i.test(window.location.pathname)) {
-                const target = sessionStorage.getItem('ww_redirect_after_login') || 'index.html';
+            if (/(^|\/)login(\.html)?$/i.test(window.location.pathname)) {
+                const target = sessionStorage.getItem('ww_redirect_after_login') || '/';
                 sessionStorage.removeItem('ww_redirect_after_login');
                 window.location.replace(target);
                 return true;
@@ -4516,7 +4516,7 @@ window.checkAdminPassword = async function() {
     // Als we niet op het dashboard (index.html) zitten, navigeer naar index.html en open admin
     if (!beheerdersView && !mountEl) {
         sessionStorage.setItem('ww_open_admin', 'true');
-        window.location.href = 'index.html';
+        window.location.href = '/';
         return;
     }
 
@@ -4670,36 +4670,36 @@ window.initMobileNavigation = function() {
         bottomNav.className = 'mobile-bottom-nav';
         
         const path = window.location.pathname.toLowerCase();
-        const isDashboard = path.endsWith('index.html') || path.endsWith('/') || path === '';
-        const isReserveren = path.endsWith('reserveren.html');
-        const isElearning = path.endsWith('elearning.html');
-        const isLesideeen = path.endsWith('lesideeen.html');
-        const isLeerlijnen = path.endsWith('leerlijnen.html');
-        const isHandreiking = path.endsWith('handreiking.html');
-        const isProfiel = path.endsWith('profiel.html');
+        const isDashboard = path.endsWith('/') || path.endsWith('/') || path === '';
+        const isReserveren = path.endsWith('/reserveren');
+        const isElearning = path.endsWith('/elearning');
+        const isLesideeen = path.endsWith('/lesideeen');
+        const isLeerlijnen = path.endsWith('/leerlijnen');
+        const isHandreiking = path.endsWith('/handreiking');
+        const isProfiel = path.endsWith('/profiel');
 
         bottomNav.innerHTML = `
-            <a href="index.html" class="bottom-nav-item ${isDashboard ? 'active' : ''}">
+            <a href="/" class="bottom-nav-item ${isDashboard ? 'active' : ''}">
                 <span class="nav-icon">🏠</span>
                 <span class="nav-label">Home</span>
             </a>
-            <a href="reserveren.html" class="bottom-nav-item ${isReserveren ? 'active' : ''}">
+            <a href="/reserveren" class="bottom-nav-item ${isReserveren ? 'active' : ''}">
                 <span class="nav-icon">📅</span>
                 <span class="nav-label">Reserveren</span>
             </a>
-            <a href="elearning.html" class="bottom-nav-item ${isElearning ? 'active' : ''}">
+            <a href="/elearning" class="bottom-nav-item ${isElearning ? 'active' : ''}">
                 <span class="nav-icon">🎓</span>
                 <span class="nav-label">E-Learning</span>
             </a>
-            <a href="leerlijnen.html" class="bottom-nav-item ${isLeerlijnen ? 'active' : ''}">
+            <a href="/leerlijnen" class="bottom-nav-item ${isLeerlijnen ? 'active' : ''}">
                 <span class="nav-icon">🎯</span>
                 <span class="nav-label">Leerlijnen</span>
             </a>
-            <a href="lesideeen.html" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
+            <a href="/lesideeen" class="bottom-nav-item ${isLesideeen ? 'active' : ''}">
                 <span class="nav-icon">💡</span>
                 <span class="nav-label">Lesideeën</span>
             </a>
-            <a href="profiel.html" class="bottom-nav-item ${isProfiel ? 'active' : ''}">
+            <a href="/profiel" class="bottom-nav-item ${isProfiel ? 'active' : ''}">
                 <span class="nav-icon">👤</span>
                 <span class="nav-label">Profiel</span>
             </a>
@@ -4736,8 +4736,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!item.classList.contains('logout')) {
             item.classList.remove('active'); 
             const itemPage = item.getAttribute('href');
-            // Zorg dat 'index.html' ook matcht als er geen bestandsnaam in de URL staat
-            if (itemPage === currentPage || (currentPage === '' && itemPage === 'index.html')) {
+            // Zorg dat '/' ook matcht als er geen bestandsnaam in de URL staat
+            if (itemPage === currentPage || (currentPage === '' && itemPage === '/')) {
                 item.classList.add('active'); 
             }
         }
@@ -4747,7 +4747,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(typeof window.updateAftelkalender === "function") window.updateAftelkalender();
 
     // Specifieke check voor profiel pagina
-    if(window.location.pathname.includes('profiel.html') || document.getElementById('profielStandaardSchool')) {
+    if(window.location.pathname.includes('/profiel') || document.getElementById('profielStandaardSchool')) {
         if(typeof window.laadProfielPagina === "function") window.laadProfielPagina();
     }
 
@@ -4757,7 +4757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         el.title = 'Terug naar Dashboard';
         el.onclick = (e) => {
             e.stopPropagation();
-            window.location.href = 'index.html';
+            window.location.href = '/';
         };
     });
 
@@ -4793,7 +4793,7 @@ window.renderMijnReserveringen = function() {
             <div style="font-size: 28px; margin-bottom: 8px;">📦</div>
             <p style="color: var(--slate-600); font-size: 14px; font-weight: 600; margin: 0 0 6px 0;">Geen actieve reserveringen</p>
             <p style="color: var(--slate-400); font-size: 12.5px; margin: 0 0 16px 0;">Kies een leskist of digitaal leermiddel voor jouw klas.</p>
-            <a href="reserveren.html" class="pill-btn pill-btn-primary" style="display: inline-flex; font-size: 12.5px; padding: 8px 18px;">
+            <a href="/reserveren" class="pill-btn pill-btn-primary" style="display: inline-flex; font-size: 12.5px; padding: 8px 18px;">
                 <span>Bekijk leskisten & reserveer</span>
                 <span class="pill-arrow">→</span>
             </a>
@@ -4933,7 +4933,7 @@ window.openLesModal = function(id) {
     const kist = window.vindKistVoorIdee(idee);
     const kistNaam = kist ? kist.naam : (idee.kistNaam || window.detecteerKistNaam(idee.titel, idee.beschrijving));
     const kistIdParam = (kist && kist.id) ? (kist.id || encodeURIComponent(kist.naam)) : encodeURIComponent(kistNaam);
-    const reserveerUrl = `reserveren.html?kist=${encodeURIComponent(kistIdParam)}`;
+    const reserveerUrl = `/reserveren?kist=${encodeURIComponent(kistIdParam)}`;
 
     const titleEl = document.getElementById('lesModalTitle');
     if (titleEl) titleEl.innerText = idee.titel;
@@ -5237,7 +5237,7 @@ window.renderLesideeenGrid = function() {
             if (moeilijkheid.includes("Beginner") || bouwBadge.includes("1-2") || bouwBadge.includes("3-4")) diffClass = "beginner";
             else if (moeilijkheid.includes("Uitdagend") || bouwBadge.includes("7-8")) diffClass = "uitdagend";
 
-            const reserveerUrl = `reserveren.html?kist=${encodeURIComponent(kistNaam)}`;
+            const reserveerUrl = `/reserveren?kist=${encodeURIComponent(kistNaam)}`;
             const detailId = `lesbrief-detail-${idee.id}`;
 
             gridHtml += `
