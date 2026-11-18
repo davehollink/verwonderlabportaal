@@ -4489,27 +4489,42 @@ window.updateAdminButtonVisibility = function() {
 };
 
 // Global functies voor beheerdersmodus (zonder wachtwoord, Microsoft SSO geautoriseerd)
-window.checkAdminPassword = function() {
+window.checkAdminPassword = async function() {
     if (typeof window.isHuidigeGebruikerBeheerder === 'function' && !window.isHuidigeGebruikerBeheerder()) {
         alert("⛔ Geen toegang: alleen geautoriseerde beheerders mogen het beheerdersdashboard openen.");
         return;
     }
     const leerkrachtView = document.getElementById("leerkrachtView");
+    const mountEl = document.getElementById("beheerdersViewMount");
     let beheerdersView = document.getElementById("beheerdersView");
-    if (!beheerdersView && window._detachedBeheerdersView && leerkrachtView && leerkrachtView.parentNode) {
-        leerkrachtView.parentNode.appendChild(window._detachedBeheerdersView);
-        beheerdersView = window._detachedBeheerdersView;
-    }
 
-    // Als we niet op het dashboard zitten, navigeer naar index.html en open admin
-    if (!beheerdersView) {
+    // Als we niet op het dashboard (index.html) zitten, navigeer naar index.html en open admin
+    if (!beheerdersView && !mountEl) {
         sessionStorage.setItem('ww_open_admin', 'true');
         window.location.href = 'index.html';
         return;
     }
 
+    // Laad beheerderspaneel-HTML pas dynamisch nadat admin-rechten zijn bevestigd
+    if (!beheerdersView && mountEl) {
+        try {
+            const resp = await fetch('admin-panel.html?v=20261118G');
+            if (!resp.ok) throw new Error('Kan beheerderspaneel niet laden.');
+            mountEl.innerHTML = await resp.text();
+            beheerdersView = document.getElementById("beheerdersView");
+        } catch (err) {
+            console.error("Fout bij laden admin-panel:", err);
+            alert("❌ Kan het beheerderspaneel nu niet laden. Ververs de pagina en probeer opnieuw.");
+            return;
+        }
+    }
+
+    if (!beheerdersView) return;
     if (leerkrachtView) leerkrachtView.style.display = "none";
     beheerdersView.style.display = "block";
+    if (typeof window.renderBeheerdersTabellen === "function") window.renderBeheerdersTabellen();
+    if (typeof window.laadEmailTemplatesInAdmin === "function") window.laadEmailTemplatesInAdmin();
+    if (typeof window.renderMenuBeheerTab === "function") window.renderMenuBeheerTab();
 
     const adminBtn = document.getElementById("adminLoginBtn");
     const adminLogoutBtn = document.getElementById("adminLogoutBtn");
