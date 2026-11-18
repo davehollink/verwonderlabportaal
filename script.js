@@ -3110,6 +3110,15 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (oauthCred && oauthCred.accessToken) {
                 localStorage.setItem('ww_ms_access_token', oauthCred.accessToken);
             }
+            if (/(^|\/)login\.html$/i.test(window.location.pathname)) {
+                const target = sessionStorage.getItem('ww_redirect_after_login') || 'index.html';
+                sessionStorage.removeItem('ww_redirect_after_login');
+                window.location.replace(target);
+                return true;
+            }
+            if (typeof window.ensureDashboardLoaded === 'function') {
+                await window.ensureDashboardLoaded();
+            }
             if (typeof window.verbergLoginScherm === 'function') {
                 window.verbergLoginScherm();
             } else {
@@ -3770,12 +3779,18 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         }
         } // einde startFirestoreListeners
 
-        onAuthStateChanged(fbAuth, (user) => {
+        onAuthStateChanged(fbAuth, async (user) => {
             if (user && user.email && user.email.toLowerCase().endsWith('@wonderwijs.nl')) {
+                if (typeof window.ensureDashboardLoaded === 'function') {
+                    await window.ensureDashboardLoaded();
+                }
                 startFirestoreListeners();
             }
         });
         if (fbAuth.currentUser) {
+            if (typeof window.ensureDashboardLoaded === 'function') {
+                await window.ensureDashboardLoaded();
+            }
             startFirestoreListeners();
         }
 
@@ -12362,8 +12377,33 @@ window.handleElearningImageUpload = async function(event) {
     }
 };
 
+window.ensureDashboardLoaded = async function() {
+    const mount = document.getElementById('appMount');
+    if (!mount || document.getElementById('mainApp')) return true;
+    if (window._loadingDashboardPromise) return window._loadingDashboardPromise;
+    window._loadingDashboardPromise = (async () => {
+        try {
+            const resp = await fetch('dashboard-content.html?v=20261118H');
+            if (!resp.ok) throw new Error('Kan dashboard-content niet laden.');
+            mount.innerHTML = await resp.text();
+            if (typeof window.initPortaalNaLogin === 'function') window.initPortaalNaLogin();
+            if (typeof window.updateSidebarUserProfile === 'function') window.updateSidebarUserProfile();
+            if (typeof window.updateAdminButtonVisibility === 'function') window.updateAdminButtonVisibility();
+            if (typeof window.reproduceerVinkjes === 'function') window.reproduceerVinkjes();
+            return true;
+        } catch (err) {
+            console.error("Fout bij laden dashboard-content:", err);
+            return false;
+        }
+    })();
+    return window._loadingDashboardPromise;
+};
+
 // Start eventuele deep link routering en e-learning weergave bij het laden
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    if (document.getElementById('appMount') && localStorage.getItem('ww_huidige_email')) {
+        await window.ensureDashboardLoaded();
+    }
     if (document.getElementById('elearningGrid') && typeof window.renderElearningGrid === 'function') {
         window.renderElearningGrid();
     }

@@ -1,0 +1,844 @@
+<div class="dashboard-container" id="mainApp">
+    <aside class="sidebar">
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;" title="Terug naar Dashboard">
+            <img src="Verwonderlab.jpg" alt="Verwonderlab Logo" class="logo-img">
+        </div>
+        <nav class="menu">
+            <p class="menu-label">Menu</p>
+            <a href="index.html" class="menu-item active">Dashboard</a>
+            <a href="reserveren.html" class="menu-item">Leskisten & reserveren</a>
+            <a href="elearning.html" class="menu-item">E-Learning</a>
+            <a href="leerlijnen.html" class="menu-item">Leerlijn digitale geletterdheid</a>
+            <a href="handreiking.html" class="menu-item">Handreiking digitale geletterdheid</a>
+            <a href="lesideeen.html" class="menu-item">Lesideeën & inspiratie</a>
+        </nav>
+        <div class="bottom-menu">
+            <p class="menu-label">Account</p>
+            <a href="profiel.html" class="menu-item">Mijn Profiel</a>
+            <a href="#" class="menu-item logout">Uitloggen</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div>
+                <div class="pill-badge-live">
+                    <span class="live-dot pulse"></span>
+                    <span>Verwonderlab Portaal 2026 • Wonderwijs</span>
+                </div>
+                <h1 id="pageTitle" style="margin-bottom: 4px;">Welkom terug!</h1>
+                <p id="userEmailSubtitle" class="top-bar-subtitle"></p>
+            </div>
+            <div class="top-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button class="pill-btn primary" onclick="window.location.href='reserveren.html'"><span>📅</span> Snel reserveren</button>
+                <button class="pill-btn secondary" onclick="window.location.href='mailto:verwonderlab@wonderwijs.nl?subject=Storing Melden&body=Leskist:'"><span>⚠️</span> Storing melden</button>
+                <button id="adminLoginBtn" class="pill-btn admin" onclick="checkAdminPassword()" style="display: none;"><span>⚙️</span> Admin</button>
+                <button id="adminLogoutBtn" class="pill-btn admin-logout" onclick="logoutAdmin()" style="display: none;">Verlaat Admin</button>
+            </div>
+        </header>
+
+        <div id="leerkrachtView">
+            <!-- Bento Stats Grid (zoals op voorbeeldfoto 1 & 2) -->
+            <div class="bento-stats-grid">
+                <!-- Bento 1: Reserveringen -->
+                <div class="bento-card">
+                    <div class="bento-header">
+                        <span class="bento-label">Mijn Reserveringen</span>
+                        <span class="bento-trend green">↗ Actief</span>
+                    </div>
+                    <div class="bento-metric" id="statReserveringenCount">1</div>
+                    <span class="bento-subtext">Actuele aanvragen in jouw portaal</span>
+                    <div class="bento-equalizer">
+                        <span style="height: 40%;"></span><span style="height: 70%;"></span><span style="height: 55%;"></span><span style="height: 90%;"></span>
+                        <span style="height: 60%;"></span><span style="height: 80%;"></span><span style="height: 45%;"></span><span style="height: 75%;"></span>
+                        <span style="height: 100%;"></span><span style="height: 65%;"></span><span style="height: 50%;"></span><span style="height: 85%;"></span>
+                    </div>
+                </div>
+
+                <!-- Bento 2: Aftelkalender & Inleverdag (Uitleentermijn) -->
+                <div class="bento-countdown-card">
+                    <div class="bento-header">
+                        <span class="bento-label">📅 Inleverdeadline Leskisten</span>
+                        <span class="bento-trend green" id="countdownTrendBadge">⏳ Lopende periode</span>
+                    </div>
+                    <div class="countdown-visual-box">
+                        <span class="countdown-metric" id="countdownDaysValue">--</span>
+                        <span class="countdown-unit" id="countdownDaysUnit">dagen tot inleverdag</span>
+                    </div>
+                    <span class="bento-subtext" id="countdownPeriodeInfo">Laden van actieve periode...</span>
+                    
+                    <div class="countdown-timeline">
+                        <div class="countdown-progress-bar" id="countdownProgressBar" style="width: 50%;"></div>
+                    </div>
+                    <div class="countdown-meta-row">
+                        <span id="countdownStartDatum">Start: ...</span>
+                        <span id="countdownEindDatum" style="color: #c2410c; font-weight: 700;">Inleverdag: ...</span>
+                    </div>
+                </div>
+
+                <!-- Bento 3: Wist je dat...? (ICT & Technologie Inspiratie) -->
+                <div class="bento-inspiration-card">
+                    <div class="bento-header">
+                        <span class="bento-label">💡 Wist je dat...?</span>
+                        <button onclick="window.toonWillekeurigeTip()" class="btn-refresh-tip" title="Toon andere tip">↻ Nieuwe tip</button>
+                    </div>
+                    <div class="bento-tip-quote" id="bentoTipText">
+                        "Met de greenscreen-methode en de app DoInk nemen leerlingen binnen 15 minuten een live nieuwsjournaal of boekbespreking op."
+                    </div>
+                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11.5px; color: var(--slate-400);">Wonderwijs Didactiek</span>
+                        <a href="lesideeen.html" class="glass-action-link" style="font-size: 11.5px; padding: 4px 12px;">Bekijk lesideeën →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Twee Kolommen: Live Reserveringen Stream + Kalender -->
+            <div class="dashboard-layout" style="margin-top: 30px;">
+                <div class="left-column">
+                    <section class="recent-tasks">
+                        <div class="section-title-bar">
+                            <div class="title-with-live">
+                                <span class="live-dot pulse"></span>
+                                <h2 style="font-size: 19px; margin: 0; color: #0f172a;">Live Reserveringen Overzicht</h2>
+                            </div>
+                            <a href="reserveren.html" class="glass-action-link">Nieuwe aanvraag +</a>
+                        </div>
+                        <div class="task-list" id="teacherReservationsList"></div>
+                    </section>
+                </div>
+                <div class="right-column">
+                    <div class="calendar-widget">
+                        <div class="calendar-header">
+                            <h3 id="monthYearText">Laden...</h3>
+                            <div class="calendar-nav">
+                                <span id="prevMonthBtn">&lt;</span>
+                                <span id="nextMonthBtn">&gt;</span>
+                            </div>
+                        </div>
+                        <div class="calendar-days-grid" id="calendarGrid">
+                            <div class="day-name">Ma</div><div class="day-name">Di</div><div class="day-name">Wo</div>
+                            <div class="day-name">Do</div><div class="day-name">Vr</div><div class="day-name">Za</div><div class="day-name">Zo</div>
+                        </div>
+                        <div class="upcoming-events">
+                            <h4>Binnenkort</h4>
+                            <div id="upcomingEventsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="beheerdersViewMount"></div>
+    </main>
+
+</div>
+
+<!-- Modals -->
+<div id="periodeModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalPeriodeTitle">Periode</h2>
+        <form id="periodeForm">
+            <input type="hidden" id="editPeriodeId">
+            <div class="form-group">
+                <label>Naam:</label>
+                <input type="text" id="periodeNaam" required>
+            </div>
+            <div class="form-group">
+                <label>Start:</label>
+                <input type="date" id="periodeStart" required>
+            </div>
+            <div class="form-group">
+                <label>Eind:</label>
+                <input type="date" id="periodeEind" required>
+            </div>
+            <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 20px; font-size: 14px; padding: 12px 24px;">💾 Periode Opslaan</button>
+        </form>
+    </div>
+</div>
+
+<div id="schoolModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalSchoolTitle">Locatie</h2>
+        <form id="schoolForm">
+            <input type="hidden" id="editSchoolId">
+            <div class="form-group">
+                <label>Naam locatie (bijv. De Wegwijzer):</label>
+                <input type="text" id="schoolNaam" required>
+            </div>
+            <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 20px; font-size: 14px; padding: 12px 24px;">💾 Locatie Opslaan</button>
+        </form>
+    </div>
+</div>
+
+<div id="editLeskistModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalMateriaalTitle">Materiaal</h2>
+        <form id="editLeskistForm">
+            <input type="hidden" id="editKistId">
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="editBeschikbaar" checked>
+                <label>Beschikbaar voor reservering</label>
+            </div>
+            <div class="form-group">
+                <label style="font-weight: 700; color: var(--slate-800); margin-bottom: 6px; display: block;">Afbeelding van het materiaal:</label>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="editAfbeelding" placeholder="Plak een URL (bijv. https://... of img/les_dansende_robot.jpg)" style="flex: 1; min-width: 220px;" oninput="window.updateMateriaalAfbeeldingPreview(this.value)">
+                    <label class="btn-green-action" style="cursor: pointer; padding: 10px 14px; font-size: 13px; white-space: nowrap; margin: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                        <span>📷 Foto uploaden / kiezen</span>
+                        <input type="file" id="editAfbeeldingFile" accept="image/*" style="display: none;" onchange="window.handleMateriaalAfbeeldingUpload(event)">
+                    </label>
+                </div>
+                <div id="imagePreview" style="margin-top: 10px;"></div>
+                <p style="font-size: 11.5px; color: #64748b; margin-top: 5px;">Kies een foto vanaf je computer/iPad óf plak een afbeeldings-URL. Geüploade foto's worden direct geoptimaliseerd voor snel laden.</p>
+            </div>
+            
+            <div class="form-group">
+                <label>Leskaarten / Bijlagen (PDF):</label>
+                <input type="file" id="editPdfFiles" accept="application/pdf,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple onchange="window.handlePdfUpload(event)">
+                <div id="pdfPreviewContainer" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+                <input type="hidden" id="editPdfData">
+                <p style="font-size: 11px; color: #888; margin-top: 5px;">Tip: Je kunt meerdere bestanden tegelijk selecteren door Ctrl (of Cmd op Mac) in te drukken tijdens het klikken.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Naam Leskist:</label>
+                <input type="text" id="editNaam" required>
+            </div>
+            <div class="form-group">
+                <label>Tag (bijv. '8 items'):</label>
+                <input type="text" id="editTag">
+            </div>
+            <div class="form-group">
+                <label>Doelgroep:</label>
+                <input type="text" id="editDoelgroep">
+            </div>
+            <div class="form-group">
+                <label>Kerndoelen:</label>
+                <input type="text" id="editKerndoelen">
+            </div>
+            <div class="form-group">
+                <label>Beschrijving:</label>
+                <textarea id="editBeschrijving" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Inhoud (bijv. 4x iPad):</label>
+                <textarea id="editInhoud" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Video URL:</label>
+                <input type="text" id="editVideo" placeholder="Bijv. https://www.youtube.com/watch?v=...">
+            </div>
+
+            <!-- Externe link (bijv. SharePoint of website) -->
+            <div class="form-group" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 10px;">
+                <label style="font-weight: 700; color: var(--slate-800); margin-bottom: 6px; display: block;">🔗 Externe link (SharePoint / Website):</label>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+                    <input type="text" id="editExterneLinkTitel" placeholder="Titel (bijv. SharePoint Map of Handleiding)" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <input type="url" id="editExterneLink" placeholder="Link URL (bijv. https://wonderwijs.sharepoint.com/...)" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                </div>
+                <p style="font-size: 11px; color: #64748b; margin-top: 5px; margin-bottom: 0;">Voeg een directe link toe naar een SharePoint-map, OneDrive-map of externe website met lesmaterialen.</p>
+            </div>
+
+            <!-- Praktijk- en sfeerfoto's voor onder de video -->
+            <div class="form-group" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 10px;">
+                <label style="font-weight: 700; color: var(--slate-800); margin-bottom: 6px; display: block;">📸 Praktijk- & Sfeerfoto's (weergave onder de video):</label>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <label class="btn-green-action" style="cursor: pointer; padding: 8px 14px; font-size: 12.5px; white-space: nowrap; margin: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                        <span>➕ Foto's uploaden</span>
+                        <input type="file" id="editGalerijFiles" accept="image/*" multiple style="display: none;" onchange="window.handleGalerijUpload(event)">
+                    </label>
+                    <input type="text" id="editGalerijUrlInput" placeholder="Of plak een afbeeldings-URL..." style="flex: 1; min-width: 180px; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                    <button type="button" onclick="window.addGalerijUrl()" style="padding: 8px 14px; background: #0f172a; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Toevoegen</button>
+                </div>
+                <div id="galerijPreviewContainer" class="admin-galerij-grid"></div>
+                <p style="font-size: 11px; color: #64748b; margin-top: 6px; margin-bottom: 0;">Upload sfeerfoto's van kinderen die met deze kist werken of voorbeelden van resultaten. Deze verschijnen in een nette fotogalerij onder het YouTube-filmpje.</p>
+            </div>
+
+            <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 20px; font-size: 14px; padding: 12px 24px;">💾 Materiaal Opslaan</button>
+            <button type="button" id="btnDeleteKistFromModal" style="display: none; width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; padding: 11px 20px; border-radius: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; cursor: pointer; font-weight: 700; align-items: center; gap: 8px;" onclick="const kId = document.getElementById('editKistId').value; if(kId) window.deleteMateriaal(kId, event);">🗑️ Dit materiaal verwijderen</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal voor E-Learning Beheer -->
+<div id="editElearningModal" class="modal modal-large">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1.5px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">🎓</div>
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">E-Learning Beheer</span>
+                <h2 id="modalElearningTitle" style="color: var(--slate-950); font-size: 22px; font-weight: 800; margin: 0;">Cursus Bewerken</h2>
+            </div>
+        </div>
+
+        <form id="editElearningForm">
+            <input type="hidden" id="editElearningId">
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">📌 1. Basisgegevens Cursus</h3>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Titel van de cursus / module:</label>
+                    <input type="text" id="editElearningTitel" placeholder="Bijv. Canva voor Onderwijs: De Basiscursus" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Categorie:</label>
+                        <select id="editElearningCategorie" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="Creatieve Tools">Creatieve Tools (Canva, etc.)</option>
+                            <option value="Microsoft 365">Microsoft 365</option>
+                            <option value="Digitale Geletterdheid">Digitale Geletterdheid</option>
+                            <option value="Programmeren & Robotica">Programmeren & Robotica</option>
+                            <option value="AI in de Klas">AI in de Klas</option>
+                            <option value="Digitaal Burgerschap">Digitaal Burgerschap</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Doelgroep / Niveau:</label>
+                        <input type="text" id="editElearningNiveau" placeholder="Bijv. Leerkrachten PO • Beginner" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Geschatte tijdsduur:</label>
+                        <input type="text" id="editElearningDuur" placeholder="Bijv. 45 min of 3 modules (1,5 uur)" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Gemaakt door / Auteur:</label>
+                        <input type="text" id="editElearningAuteur" placeholder="Bijv. Wonderwijs ICT & Didactiek" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🖼️ 2. Afbeelding & Media</h3>
+                <div class="form-group">
+                    <label style="font-weight: 700; font-size: 13px;">Thumbnail / Omslagafbeelding:</label>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="editElearningThumbnail" placeholder="URL naar afbeelding (bijv. https://... of img/...)" style="flex: 1; min-width: 220px; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                        <label class="btn-green-action" style="cursor: pointer; padding: 10px 14px; font-size: 13px; white-space: nowrap; margin: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 8px;">
+                            <span>📷 Foto kiezen</span>
+                            <input type="file" id="editElearningFile" accept="image/*" style="display: none;" onchange="window.handleElearningImageUpload(event)">
+                        </label>
+                    </div>
+                    <div id="elearningImagePreview" style="margin-top: 10px;"></div>
+                </div>
+                <div class="form-group" style="margin-top: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Introductie Video / Embed URL (optioneel):</label>
+                    <input type="text" id="editElearningVideo" placeholder="Bijv. YouTube link of Canva preview" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">📝 3. Omschrijving & Doelvaardigheden</h3>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Korte cursusomschrijving:</label>
+                    <textarea id="editElearningOmschrijving" rows="3" placeholder="Wat leert de leerkracht in deze e-learning module?" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-weight: 700; font-size: 13px;">Kernvaardigheden (komma-gescheiden):</label>
+                    <input type="text" id="editElearningSkills" placeholder="Bijv. Canva Education, Klasbeheer, Didactiek, Lesontwerp" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    <p style="font-size: 11px; color: #64748b; margin-top: 5px;">Deze labels verschijnen als badges in de rechterkolom van de e-learning pagina.</p>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: 700; font-size: 13px;">Naam op certificaat bij afronding:</label>
+                    <input type="text" id="editElearningCertificaatTitel" placeholder="Bijv. Certified Legend - Canva Onderwijs Expert" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <!-- SECTIE 4: INTERACTIEF LESPROGRAMMA BUILDER -->
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">📚 4. Lessen &amp; Activiteiten (Zelf invullen)</h3>
+                        <p style="font-size: 11.5px; color: #64748b; margin: 3px 0 0 0;">Bouw hier je eigen lessenreeks met video's, gidsen, spiekbrieven en opdrachten (zoals in Canva Design School).</p>
+                    </div>
+                    <button type="button" class="btn-green-action" onclick="window.adminVoegLesToe()" style="padding: 7px 14px; font-size: 12px; border-radius: 8px;">
+                        <span>➕</span> Les toevoegen
+                    </button>
+                </div>
+
+                <div id="adminLessonBuilderContainer" class="admin-lesson-builder">
+                    <!-- Dynamisch opgebouwd via script.js -->
+                </div>
+            </div>
+
+            <button type="submit" class="btn-green-action" style="width: 100%; justify-content: center; margin-top: 10px; font-size: 14px; padding: 12px 24px;">💾 Cursus Opslaan</button>
+            <button type="button" id="btnDeleteElearningFromModal" style="display: none; width: 100%; justify-content: center; margin-top: 10px; font-size: 13.5px; padding: 11px 20px; border-radius: 8px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; cursor: pointer; font-weight: 700; align-items: center; gap: 8px;" onclick="const eId = document.getElementById('editElearningId').value; if(eId) window.deleteElearning(eId, event);">🗑️ Deze cursus verwijderen</button>
+        </form>
+    </div>
+</div>
+
+<!-- Uitgebreide Beheerder Modal voor Lesideeën & Lesbrieven -->
+<div id="editLesideeModal" class="modal modal-large">
+    <div class="modal-content" style="max-width: 820px; max-height: 90vh; overflow-y: auto;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1.5px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">💡</div>
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Lesidee Beheer</span>
+                <h2 id="modalLesideeTitle" style="color: var(--slate-950); font-size: 22px; font-weight: 800; margin: 0;">Lesidee Bewerken</h2>
+            </div>
+        </div>
+
+        <form id="editLesideeForm">
+            <input type="hidden" id="editLesideeId">
+
+            <!-- SECTIE 1: BASISINFORMATIE -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: var(--slate-900); margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">📌 1. Basisgegevens & Koppeling</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label style="font-weight: 700; font-size: 13px;">Titel van het lesidee:</label>
+                        <input type="text" id="editLesideeTitel" placeholder="Bijv. Dansende Robot Party" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Gekoppelde Leskist:</label>
+                        <select id="editLesideeKistSelect" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <!-- Dynamisch gevuld met actieve leskisten -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Doelgroep / Bouw:</label>
+                        <select id="editLesideeDoelgroep" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="Groep 1-2 (Onderbouw)">Groep 1-2 (Onderbouw)</option>
+                            <option value="Groep 3-4 (Middenbouw)">Groep 3-4 (Middenbouw)</option>
+                            <option value="Groep 5-6 (Midden/Bovenbouw)">Groep 5-6 (Midden/Bovenbouw)</option>
+                            <option value="Groep 7-8 (Bovenbouw)">Groep 7-8 (Bovenbouw)</option>
+                            <option value="Alle groepen (1 t/m 8)">Alle groepen (1 t/m 8)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Moeilijkheidsgraad:</label>
+                        <select id="editLesideeMoeilijkheid" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; background: white;">
+                            <option value="Beginner ⭐">Beginner ⭐</option>
+                            <option value="Gemiddeld ⭐⭐">Gemiddeld ⭐⭐</option>
+                            <option value="Uitdagend ⭐⭐⭐">Uitdagend ⭐⭐⭐</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Thema / Categorie:</label>
+                        <input type="text" id="editLesideeCategorie" placeholder="Bijv. Robotica & Muziek" required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px; margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Korte samenvatting (zichtbaar op de overzichtskaart):</label>
+                    <textarea id="editLesideeBeschrijving" rows="2" placeholder="Korte wervende introductie over de les..." required style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+            </div>
+
+            <!-- SECTIE 2: DIGITALE GELETTERDHEID LEERLIJN -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #1e3a8a; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🧠 2. Wonderwijs Leerlijn Digitale Geletterdheid</h3>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">DG Domein / Focus:</label>
+                        <input type="text" id="editLesideeDgDomein" placeholder="Bijv. Wonderwijs Digitale Geletterdheid (Computational Thinking & Programmeren)" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Gekoppelde kerndoelen & leerlijndoelen (één per regel):</label>
+                        <textarea id="editLesideeDgKerndoelen" rows="3" placeholder="Kerndoel 1: Leerlingen ontdekken hoe algoritmes en stappenplannen werken&#10;Kerndoel 2: Probleemoplossend denken en debuggen in blokcode" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-weight: 700; font-size: 13px;">Wat leert de leerling tijdens deze les?</label>
+                        <textarea id="editLesideeDgLeerlingDoelen" rows="2" placeholder="Leerlingen leren zelfstandig een reeks commando's opbouwen..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTIE 3: TIJDSINVESTERING, MATERIALEN & VOORBEREIDING -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #14532d; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🧰 3. Tijdsinvestering, Materialen & Voorbereiding</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Totale lesduur:</label>
+                        <input type="text" id="editLesideeTijd" placeholder="Bijv. 60 min" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Klassikale organisatie:</label>
+                        <input type="text" id="editLesideeOrganisatie" placeholder="Bijv. Tweetallen of groepjes van 4" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Materialen uit de Verwonderlab leskist:</label>
+                        <input type="text" id="editLesideeKistMateriaal" placeholder="Bijv. Dash robots, opladers, opdrachtenkaarten" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">Zelf aanwezig in de klas:</label>
+                        <input type="text" id="editLesideeKlasMateriaal" placeholder="Bijv. 1 tablet per tweetal, digibord" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Praktische voorbereiding leerkracht:</label>
+                    <textarea id="editLesideeVoorbereiding" rows="2" placeholder="Wat moet de leerkracht 10 minuten van tevoren klaargezet hebben?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+            </div>
+
+            <!-- SECTIE 4: STAPSGEWIJS LESVERLOOP -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #b45309; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🚀 4. Stapsgewijs Lesverloop (3 Fasen)</h3>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; font-size: 13px;">Stap 1: Inleiding & Prikkeling (ca. 10-15 min):</label>
+                    <textarea id="editLesideeInleiding" rows="3" placeholder="Hoe open je de les? Wat toon je op het digibord?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-weight: 700; font-size: 13px;">Stap 2: Kernactiviteit & Challenge (ca. 30-35 min):</label>
+                    <textarea id="editLesideeKern" rows="4" placeholder="Wat is de concrete opdracht voor de leerlingen?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Stap 3: Demonstratie, Afronding & Reflectie (ca. 10-15 min):</label>
+                    <textarea id="editLesideeAfsluiting" rows="3" placeholder="Hoe evalueren en delen de leerlingen hun eindresultaat?" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                </div>
+            </div>
+
+            <!-- SECTIE 5: DIFFERENTIATIE & VERDIEPING -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 18px;">
+                <h3 style="font-size: 14px; font-weight: 800; color: #6d28d9; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.5px;">🌟 5. Differentiatie & Externe Links</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">⭐ Uitdaging / Verdieping:</label>
+                        <textarea id="editLesideeDiffUitdaging" rows="2" placeholder="Voor snelle of gevorderde leerlingen..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 700; font-size: 13px;">💡 Extra ondersteuning:</label>
+                        <textarea id="editLesideeDiffOndersteuning" rows="2" placeholder="Tips voor leerlingen die extra hulp nodig hebben..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;"></textarea>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: 700; font-size: 13px;">Externe website of handleiding link (optioneel):</label>
+                    <input type="url" id="editLesideeLink" placeholder="https://..." style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <!-- SECTIE 6: BESTANDEN & WERKBLADEN UPLOADEN -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">📎 6. Lesbestanden & Werkbladen Uploaden</h3>
+                    <span style="font-size: 12px; color: var(--slate-500);">PDF, Word, PowerPoint of werkkaarten</span>
+                </div>
+
+                <div class="les-file-dropzone" onclick="document.getElementById('editLesideeFilesInput').click()">
+                    <span style="font-size: 28px; display: block; margin-bottom: 4px;">📂</span>
+                    <strong style="color: var(--slate-900); font-size: 13.5px;">Klik hier om lesbestanden toe te voegen</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--slate-500);">Kies één of meerdere bestanden (PDF, DOCX, PPTX, afbeeldingen)</p>
+                    <input type="file" id="editLesideeFilesInput" multiple accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.png,.jpg,.jpeg,.zip" style="display: none;" onchange="window.handleLesideeFilesUpload(event)">
+                </div>
+
+                <div id="lesideeFilesPreviewContainer" class="les-files-preview-list"></div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" onclick="sluitAlleModals()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+                    Annuleren
+                </button>
+                <button type="submit" class="btn-green-action" style="font-size: 14px; padding: 12px 28px; justify-content: center;">
+                    💾 Lesidee Compleet Opslaan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lesbrief Popup Modal voor weergave -->
+<div id="lesModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div class="les-modal-header">
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Lesbrief & Handleiding</span>
+                <h2 id="lesModalTitle" style="color: var(--slate-950); font-size: 24px; font-weight: 800; margin: 0;">Lesidee</h2>
+            </div>
+        </div>
+        <div id="lesModalBody"></div>
+    </div>
+</div>
+
+<div id="feedbackDetailModal" class="modal modal-large">
+    <div class="modal-content" style="max-width: 760px; max-height: 90vh; overflow-y: auto;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1.5px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(140, 198, 63, 0.15); display: flex; align-items: center; justify-content: center; font-size: 24px;">📝</div>
+            <div>
+                <span class="status-indicator-pill" style="font-size: 11px; margin-bottom: 4px;">Evaluatie & Ervaring</span>
+                <h2 id="feedbackModalKist" style="color: var(--slate-950); font-size: 22px; font-weight: 800; margin: 0;">Lesmateriaal</h2>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #f8fafc; padding: 14px 18px; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Leerkracht</span>
+                <div id="feedbackModalDocent" style="font-size: 13.5px; font-weight: 700; color: #0f172a;">...</div>
+            </div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Periode</span>
+                <div id="feedbackModalPeriode" style="font-size: 13.5px; font-weight: 700; color: #0f172a;">...</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Algemene Beoordeling</span>
+            <div id="feedbackModalSterren" style="display: flex; align-items: center;"></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Enthousiasme Klas</span>
+                <div id="feedbackModalEnthousiasme" style="font-size: 13px; font-weight: 700; color: #1e293b;">...</div>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Compleetheid Kist</span>
+                <div id="feedbackModalCompleet" style="font-size: 13px; font-weight: 700; color: #1e293b;">...</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px;">Toelichting / Leservaring</span>
+            <div id="feedbackModalToelichting" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; color: #334155;">...</div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 6px;">Doelen Digitale Geletterdheid</span>
+            <div id="feedbackModalDoelen" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;"></div>
+            <div style="font-size: 12.5px; color: #64748b;">
+                <strong>Opdracht:</strong> <span id="feedbackModalOpdracht">...</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px;">📸 Projectfoto's uit de klas</span>
+            <div id="feedbackModalFotos" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+            <div id="feedbackModalOneDrive" style="margin-top: 10px; font-size: 13px; display: none;"></div>
+        </div>
+
+        <div id="feedbackModalQuoteContainer" style="margin-bottom: 20px; display: none; background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px;">
+            <span style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase;">Quote van leerling / leerkracht</span>
+            <div id="feedbackModalQuote" style="font-style: italic; font-size: 13.5px; color: #92400e; margin-top: 4px;">...</div>
+        </div>
+
+        <div id="feedbackModalExtraVragenContainer" style="margin-bottom: 20px; display: none;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 8px;">Aanvullende Vragen</span>
+            <div id="feedbackModalExtraVragenList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div style="text-align: right; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <button class="pill-btn secondary" onclick="sluitAlleModals()">Sluiten</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal voor Extra / Aangepaste Vraag toevoegen of bewerken -->
+<div id="extraVraagModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+        <span class="close-btn" onclick="sluitAlleModals()">&times;</span>
+        <h2 id="modalExtraVraagTitle" style="margin-top: 0; font-size: 20px;">➕ Vraag toevoegen</h2>
+        <form id="extraVraagForm" onsubmit="window.saveExtraVraag(event)">
+            <input type="hidden" id="editExtraVraagId">
+            <div class="form-group">
+                <label>Vraagstelling (verplicht):</label>
+                <input type="text" id="extraVraagTitel" class="form-control-text" placeholder="Bijv. Zou je deze leskist aanbevelen aan een collega?" required>
+            </div>
+            <div class="form-group">
+                <label>Hulptekst / Toelichting (optioneel):</label>
+                <input type="text" id="extraVraagToelichting" class="form-control-text" placeholder="Korte hint of uitleg voor de leerkracht...">
+            </div>
+            <div class="form-group">
+                <label>Type vraag:</label>
+                <select id="extraVraagType" class="form-control-text" onchange="window.toggleExtraVraagOptiesVeld()" style="background: white;">
+                    <option value="tekst">Korte open tekst (1 regel)</option>
+                    <option value="textarea">Uitgebreide open tekst (meerdere regels)</option>
+                    <option value="radio">Meerkeuze (1 antwoord selecteren)</option>
+                    <option value="checkbox">Selectievakjes (meerdere antwoorden mogelijk)</option>
+                    <option value="sterren">Beoordeling met sterren (1 t/m 5)</option>
+                    <option value="janee">Ja / Nee vraag</option>
+                </select>
+            </div>
+            <div class="form-group" id="extraVraagOptiesGroep" style="display: none;">
+                <label>Antwoordopties (gescheiden door komma's):</label>
+                <input type="text" id="extraVraagOpties" class="form-control-text" placeholder="Bijv. Ja zeker, Misschien, Nee">
+                <p style="font-size: 11px; color: #64748b; margin-top: 4px;">Typ de keuzemogelijkheden gescheiden door een komma.</p>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                <input type="checkbox" id="extraVraagVerplicht" style="width: 18px; height: 18px; accent-color: var(--ww-green);">
+                <label for="extraVraagVerplicht" style="margin: 0; font-size: 13px; font-weight: 600; cursor: pointer;">Verplicht veld (leerkracht moet dit beantwoorden)</label>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+                <button type="button" class="pill-btn secondary" onclick="sluitAlleModals()">Annuleren</button>
+                <button type="submit" class="btn-green-action" style="padding: 10px 22px;">💾 Vraag Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal voor Handmatige Reservering door Beheerder -->
+<div id="modalHandmatigeReservering" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 580px;">
+        <span class="close-btn" onclick="window.sluitAlleModals()">&times;</span>
+        <h2 style="margin-top: 0; font-size: 20px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>➕</span> Reservering handmatig toevoegen
+        </h2>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
+            Voeg namens een collega-leerkracht direct een reservering toe aan het systeem.
+        </p>
+        <form id="formHandmatigeReservering" onsubmit="window.slaHandmatigeReserveringOp(event)">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Leskist / Materiaal: *</label>
+                <select id="handmatigKist" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                    <!-- Dynamisch gevuld via script.js -->
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Naam leerkracht: *</label>
+                    <input type="text" id="handmatigLeerkracht" class="form-control-text" placeholder="Bijv. Myra Janssen" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">E-mail leerkracht: *</label>
+                    <input type="email" id="handmatigEmail" class="form-control-text" placeholder="bijv. m.janssen@wonderwijs.nl" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">School / Locatie: *</label>
+                    <select id="handmatigSchool" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                        <!-- Dynamisch gevuld via script.js -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Periode: *</label>
+                    <select id="handmatigPeriode" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                        <!-- Dynamisch gevuld via script.js -->
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Status reservering:</label>
+                <select id="handmatigStatus" class="form-control-text" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                    <option value="Geaccepteerd">✔ Direct Geaccepteerd</option>
+                    <option value="In afwachting">⏳ In afwachting</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Opmerking / Toelichting (optioneel):</label>
+                <textarea id="handmatigOpmerking" class="form-control-text" rows="2" placeholder="Bijv. Groep 8A, extra begeleiding gewenst..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                <button type="button" class="pill-btn secondary" onclick="window.sluitAlleModals()">Annuleren</button>
+                <button type="submit" id="btnOpslaanHandmatigeReservering" class="btn-green-action" style="padding: 10px 22px; background: #0284c7; border: none; font-weight: 700; border-radius: 8px; color: white; cursor: pointer;">💾 Reservering Toevoegen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal voor Reservering Bewerken door Beheerder -->
+<div id="modalReserveringBewerken" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 580px;">
+        <span class="close-btn" onclick="window.sluitAlleModals()">&times;</span>
+        <h2 style="margin-top: 0; font-size: 20px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>✏️</span> Reservering bewerken
+        </h2>
+        <p style="font-size: 13px; color: #64748b; margin-top: -5px; margin-bottom: 20px;">
+            Pas het lesmateriaal, de leerkracht, school, periode of status van deze reservering aan.
+        </p>
+        <form id="formReserveringBewerken" onsubmit="window.slaBewerkteReserveringOp(event)">
+            <input type="hidden" id="bewerkResId">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Leskist / Materiaal: *</label>
+                <select id="bewerkResKist" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                    <!-- Dynamisch gevuld via script.js -->
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Naam leerkracht: *</label>
+                    <input type="text" id="bewerkResLeerkracht" class="form-control-text" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">E-mail leerkracht: *</label>
+                    <input type="email" id="bewerkResEmail" class="form-control-text" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">School / Locatie: *</label>
+                    <select id="bewerkResSchool" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                        <!-- Dynamisch gevuld via script.js -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Periode: *</label>
+                    <select id="bewerkResPeriode" class="form-control-text" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                        <!-- Dynamisch gevuld via script.js -->
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Status reservering:</label>
+                <select id="bewerkResStatus" class="form-control-text" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: white;">
+                    <option value="In afwachting">⏳ In afwachting</option>
+                    <option value="Geaccepteerd">✔ Geaccepteerd</option>
+                    <option value="Afgewezen">✖ Afgewezen</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 700; font-size: 13px; margin-bottom: 5px;">Opmerking / Toelichting:</label>
+                <textarea id="bewerkResOpmerking" class="form-control-text" rows="2" placeholder="Ruimte voor opmerkingen..." style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                <button type="button" class="pill-btn secondary" onclick="window.sluitAlleModals()">Annuleren</button>
+                <button type="submit" id="btnOpslaanBewerkteReservering" class="btn-green-action" style="padding: 10px 22px; background: #8CC63F; border: none; font-weight: 700; border-radius: 8px; color: white; cursor: pointer;">💾 Wijzigingen Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    // Functionaliteit voor het openen van het beheerdersdashboard (zonder wachtwoord, geverifieerd via Microsoft SSO)
+    function checkAdminPassword() {
+        document.getElementById("leerkrachtView").style.display = "none";
+        document.getElementById("beheerdersView").style.display = "block";
+        document.getElementById("adminLoginBtn").style.display = "none";
+        document.getElementById("adminLogoutBtn").style.display = "inline-block";
+        document.getElementById("pageTitle").innerText = "Beheerders Dashboard";
+    }
+
+    // Functionaliteit om uit te loggen als beheerder
+    function logoutAdmin() {
+        document.getElementById("leerkrachtView").style.display = ""; 
+        document.getElementById("beheerdersView").style.display = "none";
+        document.getElementById("adminLoginBtn").style.display = "inline-block";
+        document.getElementById("adminLogoutBtn").style.display = "none";
+        
+        let huidigeNaam = localStorage.getItem('ww_huidige_leerkracht') || "Gastdocent";
+        document.getElementById("pageTitle").innerText = "Welkom, " + huidigeNaam + "!";
+    }
+
+    function filterMaterialen() {
+        const searchInput = document.getElementById('searchMateriaal').value.toLowerCase();
+        const doelgroepFilter = document.getElementById('filterDoelgroep').value;
+        const statusFilter = document.getElementById('filterStatus').value;
+        
+        const rows = document.querySelectorAll('#adminLeskistenBody tr');
+        
+        rows.forEach(row => {
+            const naamTekst = row.cells[1].innerText.toLowerCase();
+            const doelgroepEnStatusTekst = row.cells[2].innerText; 
+            
+            let matchSearch = naamTekst.includes(searchInput);
+            let matchDoelgroep = doelgroepFilter === 'Alle' || doelgroepEnStatusTekst.includes(doelgroepFilter);
+            let matchStatus = statusFilter === 'Alle' || 
+                              (statusFilter === 'Actief' && doelgroepEnStatusTekst.includes('Actief')) || 
+                              (statusFilter === 'Reparatie' && doelgroepEnStatusTekst.includes('In reparatie'));
+                              
+            if (matchSearch && matchDoelgroep && matchStatus) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+
