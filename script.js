@@ -810,8 +810,10 @@ window.isKistGereserveerdInPeriode = function(kistNaam, periodeId, kistId) {
     if (isNaN(targetPId)) return false;
 
     if (typeof reserveringen === 'undefined' || !Array.isArray(reserveringen)) return false;
+    const bezettingLijst = Array.isArray(window.publiekeBezetting) ? window.publiekeBezetting : [];
+    const bronLijst = [...reserveringen, ...bezettingLijst];
 
-    return reserveringen.some(r => {
+    return bronLijst.some(r => {
         if (!r || r.status === 'Afgewezen') return false;
 
         let matchPeriode = false;
@@ -3055,8 +3057,9 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 (async () => {
     try {
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
-        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         const { getStorage, ref, uploadString, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js");
+        const { getAuth, OAuthProvider, signInWithCredential, signOut, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
 
         const firebaseConfig = {
             apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
@@ -3070,6 +3073,33 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         window.firebaseApp = initializeApp(firebaseConfig);
         const db = getFirestore(window.firebaseApp);
         const storage = getStorage(window.firebaseApp);
+        const fbAuth = getAuth(window.firebaseApp);
+
+        window.firebaseAuth = fbAuth;
+        window.signInFirebaseWithMicrosoft = async function(idToken, accessToken = null) {
+            if (!idToken) return null;
+            try {
+                const provider = new OAuthProvider('microsoft.com');
+                const cred = accessToken
+                    ? provider.credential({ idToken, accessToken })
+                    : provider.credential({ idToken });
+                const result = await signInWithCredential(fbAuth, cred);
+                return result.user;
+            } catch (e) {
+                console.warn("Firebase Microsoft Auth koppeling:", e.code || e.message);
+                return null;
+            }
+        };
+        window.signOutFirebase = async function() {
+            try { await signOut(fbAuth); } catch (e) {}
+        };
+
+        // Koppel bestaande Microsoft SSO sessie direct aan Firebase Auth voor Firestore Security Rules
+        const cachedMsToken = typeof window.getMicrosoftIdToken === 'function' ? window.getMicrosoftIdToken() : localStorage.getItem('ww_ms_id_token');
+        const cachedMsAccess = localStorage.getItem('ww_ms_access_token') || null;
+        if (!fbAuth.currentUser && cachedMsToken) {
+            window.signInFirebaseWithMicrosoft(cachedMsToken, cachedMsAccess);
+        }
 
         window.firestoreDb = db;
         window.firestoreDoc = doc;
@@ -3312,7 +3342,21 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 if(window.renderLesideeenGrid) window.renderLesideeenGrid(); 
             } 
         }, checkError);
-        onSnapshot(collection(db, "reserveringen"), (snapshot) => { 
+        window.publiekeBezetting = [];
+        onSnapshot(collection(db, "bezetting"), (snapshot) => {
+            window.publiekeBezetting = snapshot.docs.map(d => ({ ...d.data(), _docId: d.id }));
+            if (typeof renderLeskistenGrid === "function") renderLeskistenGrid();
+            if (typeof window.verversReserveringPeriodeOpties === "function") window.verversReserveringPeriodeOpties();
+        }, checkError);
+
+        const huidigeEmailVoorRes = (localStorage.getItem('ww_huidige_email') || '').trim().toLowerCase();
+        const isAdminVoorRes = (typeof window.isHuidigeGebruikerBeheerder === 'function' && window.isHuidigeGebruikerBeheerder())
+            || ['d.hollink@wonderwijs.nl', 'verwonderlab@wonderwijs.nl'].includes(huidigeEmailVoorRes);
+        const reserveringenQuery = isAdminVoorRes
+            ? collection(db, "reserveringen")
+            : query(collection(db, "reserveringen"), where("aanvragerEmail", "==", huidigeEmailVoorRes));
+
+        onSnapshot(reserveringenQuery, (snapshot) => { 
             if(!snapshot.empty) { 
                 const cloudRes = [];
                 snapshot.docs.forEach(d => {
@@ -3326,12 +3370,24 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         || (cr.leerkracht === 'Test' && cr.aanvragerEmail === 'JHendriks@wonderwijs.nl');
 
                     if (isVerwijderd) {
-                        // Verwijder het spook-document direct en permanent uit Firestore
-                        deleteDoc(d.ref).catch(e => console.warn("Firestore cleanup spook-reservering:", e));
+                        if (isAdminVoorRes) {
+                            deleteDoc(d.ref).catch(e => console.warn("Firestore cleanup spook-reservering:", e));
+                            if (idStr) deleteDoc(doc(db, "bezetting", idStr)).catch(() => {});
+                        }
                         return;
                     }
 
                     cloudRes.push(cr);
+                    // Synchroniseer voor admins automatisch anonieme bezetting zodat collega's alleen vrije periodes zien
+                    if (isAdminVoorRes && idStr) {
+                        setDoc(doc(db, "bezetting", idStr), {
+                            id: cr.id,
+                            kist: cr.kist || '',
+                            kistId: cr.kistId || null,
+                            periodeId: cr.periodeId || null,
+                            status: cr.status || 'In afwachting'
+                        }, { merge: true }).catch(() => {});
+                    }
                 });
 
                 const cloudMap = new Map();
@@ -4064,16 +4120,46 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         };
         window.saveSchoolToCloud = async function(newData) { await setDoc(doc(db, "scholen", newData.id.toString()), newData); };
         window.deleteSchoolFromCloud = async function(id) { await deleteDoc(doc(db, "scholen", id.toString())); };
-        window.saveBeheerderToCloud = async function(newData) { await setDoc(doc(db, "beheerders", newData.id.toString()), newData); };
-        window.deleteBeheerderFromCloud = async function(id) { await deleteDoc(doc(db, "beheerders", id.toString())); };
-        window.addReserveringToCloud = async function(newData) { await setDoc(doc(db, "reserveringen", newData.id.toString()), newData); };
-        window.updateChecklistInCloud = async function(id, dataObj) { await setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }); };
+        window.saveBeheerderToCloud = async function(newData) {
+            const docKey = (newData.email || newData.id.toString()).toLowerCase().trim();
+            await setDoc(doc(db, "beheerders", docKey), newData);
+        };
+        window.deleteBeheerderFromCloud = async function(id, email) {
+            try { await deleteDoc(doc(db, "beheerders", id.toString())); } catch(e) {}
+            if (email) { try { await deleteDoc(doc(db, "beheerders", email.toLowerCase().trim())); } catch(e) {} }
+        };
+        window.addReserveringToCloud = async function(newData) {
+            const payload = {
+                ...newData,
+                aanvragerEmail: (newData.aanvragerEmail || '').trim().toLowerCase()
+            };
+            await setDoc(doc(db, "reserveringen", payload.id.toString()), payload);
+            await setDoc(doc(db, "bezetting", payload.id.toString()), {
+                id: payload.id,
+                kist: payload.kist || '',
+                kistId: payload.kistId || null,
+                periodeId: payload.periodeId || null,
+                status: payload.status || 'In afwachting'
+            }).catch(() => {});
+        };
+        window.updateChecklistInCloud = async function(id, dataObj) {
+            await setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true });
+            if (dataObj && typeof dataObj.status === 'string') {
+                await setDoc(doc(db, "bezetting", id.toString()), { status: dataObj.status }, { merge: true }).catch(() => {});
+            }
+        };
         window.deleteReserveringFromCloud = async function(id, docId, targetRes) {
             if (!db) return;
             try {
                 const idStr = id != null ? id.toString() : '';
-                if (idStr) await deleteDoc(doc(db, "reserveringen", idStr)).catch(() => {});
-                if (docId && docId !== idStr) await deleteDoc(doc(db, "reserveringen", docId)).catch(() => {});
+                if (idStr) {
+                    await deleteDoc(doc(db, "reserveringen", idStr)).catch(() => {});
+                    await deleteDoc(doc(db, "bezetting", idStr)).catch(() => {});
+                }
+                if (docId && docId !== idStr) {
+                    await deleteDoc(doc(db, "reserveringen", docId)).catch(() => {});
+                    await deleteDoc(doc(db, "bezetting", docId)).catch(() => {});
+                }
                 
                 const snap = await getDocs(collection(db, "reserveringen"));
                 snap.forEach(d => {
@@ -4295,13 +4381,28 @@ window.updateAdminButtonVisibility = function() {
             btn.onclick = () => window.checkAdminPassword();
             container.appendChild(btn);
         }
+    } else {
+        // Verwijder beheerders-DOM volledig voor normale gebruikers (geen security by obscurity)
+        const bv = document.getElementById('beheerdersView');
+        if (bv && bv.parentNode) {
+            if (!window._detachedBeheerdersView) window._detachedBeheerdersView = bv;
+            bv.parentNode.removeChild(bv);
+        }
     }
 };
 
 // Global functies voor beheerdersmodus (zonder wachtwoord, Microsoft SSO geautoriseerd)
 window.checkAdminPassword = function() {
+    if (typeof window.isHuidigeGebruikerBeheerder === 'function' && !window.isHuidigeGebruikerBeheerder()) {
+        alert("⛔ Geen toegang: alleen geautoriseerde beheerders mogen het beheerdersdashboard openen.");
+        return;
+    }
     const leerkrachtView = document.getElementById("leerkrachtView");
-    const beheerdersView = document.getElementById("beheerdersView");
+    let beheerdersView = document.getElementById("beheerdersView");
+    if (!beheerdersView && window._detachedBeheerdersView && leerkrachtView && leerkrachtView.parentNode) {
+        leerkrachtView.parentNode.appendChild(window._detachedBeheerdersView);
+        beheerdersView = window._detachedBeheerdersView;
+    }
 
     // Als we niet op het dashboard zitten, navigeer naar index.html en open admin
     if (!beheerdersView) {
@@ -4323,7 +4424,7 @@ window.checkAdminPassword = function() {
     if (pageTitle) pageTitle.innerText = "Beheerders Dashboard";
     if (userEmailSubtitle) {
         let huidigeEmail = localStorage.getItem('ww_huidige_email') || "";
-        userEmailSubtitle.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #8CC63F; font-weight: 600;">🛡️ Beheerdersmodus &bull; Ingelogd als: ${huidigeEmail}</span>`;
+        userEmailSubtitle.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #8CC63F; font-weight: 600;">🛡️ Beheerdersmodus &bull; Ingelogd als: ${escapeHtml(huidigeEmail)}</span>`;
     }
 };
 
@@ -4582,9 +4683,9 @@ window.renderMijnReserveringen = function() {
             return `
             <div class="task-item" style="border-left: 4px solid ${statusColor};">
                 <div class="task-info">
-                    <strong>${r.kist}</strong>
-                    <span>Periode: ${periode ? periode.naam : 'Lopend schooljaar'} • Wonderwijs</span>
-                    ${(r.opmerking || r.toelichting) ? `<span style="font-size: 11.5px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 4px;">💬 <em>"${r.opmerking || r.toelichting}"</em></span>` : ''}
+                    <strong>${escapeHtml(r.kist)}</strong>
+                    <span>Periode: ${escapeHtml(periode ? periode.naam : 'Lopend schooljaar')} • Wonderwijs</span>
+                    ${(r.opmerking || r.toelichting) ? `<span style="font-size: 11.5px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 4px;">💬 <em>"${escapeHtml(r.opmerking || r.toelichting)}"</em></span>` : ''}
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; font-size: 11.5px; padding: 4px 10px; border-radius: var(--radius-full); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
@@ -5052,6 +5153,28 @@ window.renderLesideeenGrid = function() {
     container.innerHTML = filterHtml + gridHtml;
 };
 
+window.formatteerAanvraagTijdstip = function(r) {
+    if (!r) return '';
+    const nlOptsDateTime = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const nlOptsDateOnly = { day: 'numeric', month: 'short', year: 'numeric' };
+
+    if (r.aangevraagdOp && typeof r.aangevraagdOp === 'string' && r.aangevraagdOp.includes('T')) {
+        const d = new Date(r.aangevraagdOp);
+        if (!isNaN(d.getTime())) return d.toLocaleDateString('nl-NL', nlOptsDateTime);
+    }
+    const numId = Number(r.id);
+    if (!isNaN(numId) && numId > 1600000000000 && numId < 2500000000000) {
+        const d = new Date(numId);
+        if (!isNaN(d.getTime())) return d.toLocaleDateString('nl-NL', nlOptsDateTime);
+    }
+    if (r.aangevraagdOp) {
+        const d = new Date(r.aangevraagdOp);
+        if (!isNaN(d.getTime())) return d.toLocaleDateString('nl-NL', nlOptsDateOnly);
+        return String(r.aangevraagdOp);
+    }
+    return '';
+};
+
 window.renderBeheerdersTabellen = function() {
     const periodesBody = document.getElementById('adminPeriodsBody');
     if (periodesBody) {
@@ -5083,9 +5206,9 @@ window.renderBeheerdersTabellen = function() {
             gebruikersBody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 25px; color: #64748b;">Nog geen extra beheerders toegevoegd.</td></tr>`;
         } else {
             gebruikersBody.innerHTML = beheerdersLijst.map(b => `<tr>
-                <td style="padding: 14px 18px; font-family: monospace; font-size: 13.5px;"><strong>${b.email}</strong></td>
+                <td style="padding: 14px 18px; font-family: monospace; font-size: 13.5px;"><strong>${escapeHtml(b.email)}</strong></td>
                 <td style="text-align: right; padding: 14px 18px; white-space: nowrap;">
-                    <button class="btn-table-delete" onclick="window.verwijderBeheerder(${b.id})">🗑️ Rechten Intrekken</button>
+                    <button class="btn-table-delete" onclick="window.verwijderBeheerder(${Number(b.id)})">🗑️ Rechten Intrekken</button>
                 </td>
             </tr>`).join('');
         }
@@ -5221,18 +5344,22 @@ window.renderBeheerdersTabellen = function() {
                     </div>
                 `;
                 
-                const docentNaam = r.leerkracht || "Onbekende leerkracht";
+                const docentNaam = escapeHtml(r.leerkracht || "Onbekende leerkracht");
                 const docentEmail = r.aanvragerEmail 
-                    ? `<div style="font-size: 12px; color: #64748b; margin-top: 3px;"><a href="mailto:${r.aanvragerEmail}" style="color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; word-break: break-all;">✉️ ${r.aanvragerEmail}</a></div>` 
+                    ? `<div style="font-size: 12px; color: #64748b; margin-top: 3px;"><a href="mailto:${escapeHtml(r.aanvragerEmail)}" style="color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; word-break: break-all;">✉️ ${escapeHtml(r.aanvragerEmail)}</a></div>` 
                     : `<div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">(Geen e-mailadres)</div>`;
                 const schoolBadge = r.school 
-                    ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 600;">🏫 ${r.school}</div>` 
+                    ? `<div style="font-size: 12px; color: #334155; margin-top: 4px; font-weight: 600;">🏫 ${escapeHtml(r.school)}</div>` 
+                    : '';
+                const aanvraagTijd = window.formatteerAanvraagTijdstip(r);
+                const aanvraagBadge = aanvraagTijd
+                    ? `<div style="margin-top: 5px;"><span style="font-size: 11px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" title="Datum en tijd waarop de reservering is aangemaakt">🕒 Gereserveerd op: <strong style="color:#475569;">${escapeHtml(aanvraagTijd)}</strong></span></div>`
                     : '';
                 const opmerkingTekst = (r.opmerking || r.toelichting || '').trim();
                 const opmerkingBadge = (opmerkingTekst && opmerkingTekst !== '-')
                     ? `<div style="margin-top: 6px; background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 8px; padding: 6px 10px; font-size: 12px; color: #78350f; line-height: 1.4; max-width: 320px; word-break: break-word;">
                         <span style="font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: #92400e;">💬 Opmerking leerkracht:</span>
-                        <div style="margin-top: 2px; color: #451a03; font-style: italic;">"${opmerkingTekst}"</div>
+                        <div style="margin-top: 2px; color: #451a03; font-style: italic;">"${escapeHtml(opmerkingTekst)}"</div>
                     </div>` 
                     : '';
                 
@@ -5241,6 +5368,7 @@ window.renderBeheerdersTabellen = function() {
                         <strong style="color: #0f172a; font-size: 14px;">${docentNaam}</strong>
                         ${docentEmail}
                         ${schoolBadge}
+                        ${aanvraagBadge}
                         ${opmerkingBadge}
                     </div>
                 `;
@@ -5712,7 +5840,7 @@ async function verwerkFormulier(formId, btnElement) {
                 status: "In afwachting",
                 toelichting: opmerking,
                 opmerking: opmerking,
-                aangevraagdOp: new Date().toISOString().split('T')[0]
+                aangevraagdOp: new Date().toISOString()
             }; 
             
             reserveringen.push(nieuweReservering); 
@@ -5967,16 +6095,16 @@ window.downloadReserveringenPDF = function() {
         if (r.schade) checklistItems.push('⚠️ Schade');
         let checklistTekst = checklistItems.length > 0 ? `<div style="font-size: 11px; color: #334155; margin-top: 3px;">${checklistItems.join(' &bull; ')}</div>` : '';
         let opmPrint = (r.opmerking || r.toelichting || '').trim();
-        let toelichtingTekst = opmPrint ? `<div style="font-size: 11px; color: #78350f; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-style: italic; margin-top: 3px;">💬 "${opmPrint}"</div>` : '';
+        let toelichtingTekst = opmPrint ? `<div style="font-size: 11px; color: #78350f; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-style: italic; margin-top: 3px;">💬 "${escapeHtml(opmPrint)}"</div>` : '';
 
         return `
         <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-            <td style="padding: 10px 12px; font-weight: bold; color: #1e293b; vertical-align: top;">${r.kist}</td>
+            <td style="padding: 10px 12px; font-weight: bold; color: #1e293b; vertical-align: top;">${escapeHtml(r.kist)}</td>
             <td style="padding: 10px 12px; vertical-align: top;">
-                <div style="font-weight: 600; color: #0f172a;">${r.leerkracht || 'Onbekend'}</div>
-                <div style="font-size: 11px; color: #64748b;">${r.aanvragerEmail || ''}</div>
+                <div style="font-weight: 600; color: #0f172a;">${escapeHtml(r.leerkracht || 'Onbekend')}</div>
+                <div style="font-size: 11px; color: #64748b;">${escapeHtml(r.aanvragerEmail || '')}</div>
             </td>
-            <td style="padding: 10px 12px; color: #334155; vertical-align: top;">${r.school || '-'}</td>
+            <td style="padding: 10px 12px; color: #334155; vertical-align: top;">${escapeHtml(r.school || '-')}</td>
             <td style="padding: 10px 12px; vertical-align: top;">${perTekst}</td>
             <td style="padding: 10px 12px; vertical-align: top;">
                 ${statusBadge}
@@ -6676,7 +6804,7 @@ window.renderStatistiekenTab = function() {
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
                     <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
                         <span style="font-size: 16px;">${medailles[i] || '🏫'}</span>
-                        <strong style="font-size: 13px; color: #1e293b; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${schoolNaam}</strong>
+                        <strong style="font-size: 13px; color: #1e293b; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(schoolNaam)}</strong>
                     </div>
                     <span style="background: rgba(140, 198, 63, 0.15); color: #4d7c0f; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; flex-shrink: 0;">${count}x</span>
                 </div>
@@ -6694,8 +6822,8 @@ window.renderStatistiekenTab = function() {
                 return `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
                     <div style="overflow: hidden;">
-                        <strong style="font-size: 13px; color: #1e293b; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${naam}</strong>
-                        <span style="font-size: 11px; color: #64748b;">${email || 'Geen email'}</span>
+                        <strong style="font-size: 13px; color: #1e293b; display: block; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">${escapeHtml(naam)}</strong>
+                        <span style="font-size: 11px; color: #64748b;">${escapeHtml(email || 'Geen email')}</span>
                     </div>
                     <span style="background: rgba(59, 130, 246, 0.12); color: #1d4ed8; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; flex-shrink: 0;">${count}x</span>
                 </div>`;
@@ -6726,16 +6854,16 @@ window.renderStatsLogboekTabel = function(items) {
         return `
         <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
             <td style="padding: 10px 12px; font-family: monospace; font-size: 12px; color: #64748b;">${datumTekst}</td>
-            <td style="padding: 10px 12px; font-weight: bold; color: #0f172a;">${r.kist}</td>
+            <td style="padding: 10px 12px; font-weight: bold; color: #0f172a;">${escapeHtml(r.kist)}</td>
             <td style="padding: 10px 12px;">
-                <div style="font-weight: 600; color: #1e293b;">${r.leerkracht || 'Onbekend'}</div>
-                <div style="font-size: 11px; color: #64748b;">${r.aanvragerEmail || ''}</div>
-                ${(r.opmerking || r.toelichting) ? `<div style="font-size: 11px; color: #78350f; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; margin-top: 3px; display: inline-block;">💬 <em>"${r.opmerking || r.toelichting}"</em></div>` : ''}
+                <div style="font-weight: 600; color: #1e293b;">${escapeHtml(r.leerkracht || 'Onbekend')}</div>
+                <div style="font-size: 11px; color: #64748b;">${escapeHtml(r.aanvragerEmail || '')}</div>
+                ${(r.opmerking || r.toelichting) ? `<div style="font-size: 11px; color: #78350f; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 7px; border-radius: 4px; margin-top: 3px; display: inline-block;">💬 <em>"${escapeHtml(r.opmerking || r.toelichting)}"</em></div>` : ''}
             </td>
-            <td style="padding: 10px 12px; color: #334155;">${r.school || '-'}</td>
-            <td style="padding: 10px 12px;">${per ? per.naam : 'Onbekend'}</td>
+            <td style="padding: 10px 12px; color: #334155;">${escapeHtml(r.school || '-')}</td>
+            <td style="padding: 10px 12px;">${escapeHtml(per ? per.naam : 'Onbekend')}</td>
             <td style="padding: 10px 12px;">
-                <span style="background: ${statusKleur}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">${r.status}</span>
+                <span style="background: ${statusKleur}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">${escapeHtml(r.status)}</span>
             </td>
         </tr>`;
     }).join('');
@@ -7111,9 +7239,15 @@ Let op: er is geen e-mailadres gekoppeld aan deze aanvraag voor ${docentNaam}. E
     // 1. Probeer automatische verzending via Vercel Serverless API (/api/send-email)
     let isVerzondenViaServer = false;
     try {
+        const msToken = typeof window.getMicrosoftIdToken === 'function'
+            ? window.getMicrosoftIdToken()
+            : localStorage.getItem('ww_ms_id_token');
         const response = await fetch('/api/send-email', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(msToken ? { 'Authorization': `Bearer ${msToken}` } : {})
+            },
             body: JSON.stringify({
                 to: docentEmail,
                 leerkracht: docentNaam,
@@ -7606,7 +7740,7 @@ window.deleteMateriaal = async function(id, event) {
 };
 window.deleteLesidee = function(id) { if(confirm("Weet je zeker dat je dit lesidee wilt verwijderen?")) { lesideeen = lesideeen.filter(i => i.id != id); slaDataOp(); if(document.getElementById('lesideeenContainer')) window.renderLesideeenGrid(); if(window.deleteLesideeFromCloud) window.deleteLesideeFromCloud(id); } }
 window.voegBeheerderToe = async function() { const emailInput = document.getElementById('nieuweBeheerderEmail'); const email = emailInput ? emailInput.value.trim().toLowerCase() : ""; if(!email || !email.includes('@')) { alert("⚠️ Vul een geldig e-mailadres in."); return; } if(beheerdersLijst.some(b => b.email === email)) { alert("ℹ Dit e-mailadres is al een beheerder."); emailInput.value = ""; return; } const newData = { id: Date.now(), email: email }; beheerdersLijst.push(newData); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.saveBeheerderToCloud) { await window.saveBeheerderToCloud(newData); emailInput.value = ""; alert("✅ E-mailadres succesvol toegevoegd als beheerder!"); } else { alert("❌ Kan niet verbinden met de Cloud."); } }
-window.verwijderBeheerder = async function(id) { if(confirm("Weet je zeker dat je de beheerdersrechten van dit e-mailadres wilt intrekken?")) { beheerdersLijst = beheerdersLijst.filter(b => b.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteBeheerderFromCloud) await window.deleteBeheerderFromCloud(id); } }
+window.verwijderBeheerder = async function(id) { if(confirm("Weet je zeker dat je de beheerdersrechten van dit e-mailadres wilt intrekken?")) { const target = beheerdersLijst.find(b => b.id == id); beheerdersLijst = beheerdersLijst.filter(b => b.id != id); slaDataOp(); if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen(); if(window.deleteBeheerderFromCloud) await window.deleteBeheerderFromCloud(id, target ? target.email : null); } }
 
 // Open Modals
 window.openPeriodeModal = function(id = null) { const form = document.getElementById('periodeForm'); if(form) form.reset(); if(id) { document.getElementById('modalPeriodeTitle').innerText = "Periode Bewerken"; const per = periodes.find(p => p.id == id); if(document.getElementById('editPeriodeId')) document.getElementById('editPeriodeId').value = per.id; if(document.getElementById('periodeNaam')) document.getElementById('periodeNaam').value = per.naam; if(document.getElementById('periodeStart')) document.getElementById('periodeStart').value = per.start; if(document.getElementById('periodeEind')) document.getElementById('periodeEind').value = per.eind; } else { document.getElementById('modalPeriodeTitle').innerText = "Nieuwe Periode Aanmaken"; if(document.getElementById('editPeriodeId')) document.getElementById('editPeriodeId').value = ""; } const m = document.getElementById('periodeModal'); if(m) m.style.display = 'flex'; }
@@ -10393,7 +10527,7 @@ window.slaHandmatigeReserveringOp = async function(event) {
         status: status,
         toelichting: opmerking || '',
         opmerking: opmerking || '',
-        aangevraagdOp: new Date().toISOString().split('T')[0]
+        aangevraagdOp: new Date().toISOString()
     };
 
     reserveringen.unshift(resObj);

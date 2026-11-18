@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // VERWONDERLAB PORTAAL - WATERDICHTE FIRESTORE SECURITY RULES
+    // =========================================================================
+    // Standaard: ALLES geblokkeerd voor niet-geverifieerde gebruikers.
+    // Alleen Microsoft-geverifieerde accounts met @wonderwijs.nl hebben toegang.
+    // =========================================================================
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    function userEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isWonderwijsUser() {
+      return isSignedIn() && userEmail().matches('.*@wonderwijs\\.nl$');
+    }
+
+    function sanitizedEmail() {
+      return userEmail().replace('@', '_').replace('.', '_').replace('-', '_');
+    }
+
+    // Controleert server-side of de ingelogde gebruiker beheerder is
+    function isAdmin() {
+      return isWonderwijsUser() && (
+        userEmail() in ['d.hollink@wonderwijs.nl', 'verwonderlab@wonderwijs.nl'] ||
+        exists(/databases/$(database)/documents/beheerders/$(userEmail()))
+      );
+    }
+
+    // 1. Beheerderslijst: alleen @wonderwijs.nl mag controleren; wijzigen uitsluitend door admins
+    match /beheerders/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 2. Medewerkers-voortgang (persoonlijke leerresultaten & certificaten):
+    //    Een medewerker mag ALLEEN zijn/haar eigen voortgang lezen & bijwerken.
+    //    Beheerders mogen alle medewerkersvoortgang inzien voor rapportage.
+    match /voortgang_elearning/{userDocId} {
+      allow read: if isWonderwijsUser() && (userDocId == sanitizedEmail() || isAdmin());
+      allow create, update: if isWonderwijsUser() && (userDocId == sanitizedEmail() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /voortgang/{userDocId} {
+      allow read: if isWonderwijsUser() && (userDocId == sanitizedEmail() || isAdmin());
+      allow create, update: if isWonderwijsUser() && (userDocId == sanitizedEmail() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /gebruikers/{userDocId} {
+      allow read, create, update: if isWonderwijsUser() && (userDocId == sanitizedEmail() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // 3. Reserveringen (strikt privé):
+    //    Gewone medewerkers mogen ALLEEN hun eigen reserveringen lezen en aanmaken (status: 'In afwachting').
+    //    Zij hebben GEEN toegang tot e-mailadressen of gegevens van andere leerkrachten.
+    //    Alleen beheerders mogen alle reserveringen lezen, statussen wijzigen of verwijderen.
+    match /reserveringen/{resId} {
+      allow read: if isWonderwijsUser() && (
+        isAdmin() ||
+        resource.data.aanvragerEmail.lower() == userEmail()
+      );
+      allow create: if isWonderwijsUser() && (
+        isAdmin() ||
+        (request.resource.data.aanvragerEmail.lower() == userEmail() &&
+         request.resource.data.status == 'In afwachting')
+      );
+      allow update: if isAdmin() || (
+        isWonderwijsUser() &&
+        resource.data.aanvragerEmail.lower() == userEmail() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['feedbackOntvangen', 'feedbackDatum'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 3b. Anonieme bezetting (uitsluitend kist + periodeId + status, zonder persoonsgegevens):
+    //     Gebruikt voor beschikbaarheidscontrole bij nieuwe aanvragen zonder collega-gegevens te lekken.
+    match /bezetting/{resId} {
+      allow read: if isWonderwijsUser();
+      allow create: if isWonderwijsUser() && (
+        isAdmin() ||
+        (request.resource.data.status == 'In afwachting' &&
+         !('aanvragerEmail' in request.resource.data) &&
+         !('leerkracht' in request.resource.data) &&
+         !('school' in request.resource.data) &&
+         !('opmerking' in request.resource.data))
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // 4. Catalogus & lesmateriaal (alleen lezen voor @wonderwijs.nl, beheer uitsluitend door admins)
+    match /leskisten/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /lesideeen/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /periodes/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /scholen/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /elearning/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /elearning_media/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /instellingen/{docId} {
+      allow read: if isWonderwijsUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 5. Meldingen (defecten) & Feedback:
+    //    Medewerkers mogen een melding of feedback insturen; alleen beheerders mogen ze beheren/verwijderen.
+    match /meldingen/{docId} {
+      allow create: if isWonderwijsUser();
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /feedback/{docId} {
+      allow create: if isWonderwijsUser();
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Catch-all: alles wat niet expliciet is toegestaan wordt geweigerd
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

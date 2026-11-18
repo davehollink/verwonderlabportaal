@@ -110,7 +110,7 @@
     }
 
     // Verwerk token data van Microsoft
-    function verwerkMicrosoftToken(payload) {
+    function verwerkMicrosoftToken(payload, rawIdToken = null, rawAccessToken = null) {
         if (!payload) return false;
 
         const email = (payload.email || payload.preferred_username || payload.upn || "").toLowerCase().trim();
@@ -121,6 +121,9 @@
         if (!valideerDomein(email)) {
             localStorage.removeItem('ww_huidige_leerkracht');
             localStorage.removeItem('ww_huidige_email');
+            localStorage.removeItem('ww_ms_id_token');
+            localStorage.removeItem('ww_ms_access_token');
+            localStorage.removeItem('ww_ms_token_exp');
             toonLoginScherm({
                 foutmelding: `<strong>Toegang geweigerd</strong><br>Je bent aangemeld met <u>${email || 'onbekend account'}</u>.<br>Alleen medewerkers met een <strong>${vereistDomein}</strong> account hebben toegang.`
             });
@@ -137,6 +140,19 @@
         localStorage.setItem('ww_huidige_leerkracht', naam);
         localStorage.setItem('ww_huidige_email', email);
         localStorage.setItem('ww_auth_provider', 'microsoft_sso');
+        if (rawIdToken) {
+            localStorage.setItem('ww_ms_id_token', rawIdToken);
+            if (payload.exp) {
+                localStorage.setItem('ww_ms_token_exp', String(payload.exp * 1000));
+            }
+        }
+        if (rawAccessToken) {
+            localStorage.setItem('ww_ms_access_token', rawAccessToken);
+        }
+
+        if (typeof window.signInFirebaseWithMicrosoft === 'function' && rawIdToken) {
+            window.signInFirebaseWithMicrosoft(rawIdToken, rawAccessToken || null);
+        }
 
         verbergLoginScherm();
 
@@ -146,6 +162,14 @@
 
         return true;
     }
+
+    window.getMicrosoftIdToken = function() {
+        const tok = localStorage.getItem('ww_ms_id_token');
+        const exp = parseInt(localStorage.getItem('ww_ms_token_exp') || '0', 10);
+        if (!tok) return null;
+        if (exp && Date.now() > exp) return null;
+        return tok;
+    };
 
     // Toon de beveiligde Microsoft SSO Inlogomgeving
     function toonLoginScherm(opties = {}) {
@@ -337,7 +361,7 @@
     };
 
     // Publieke functie: Uitloggen
-    window.logoutMicrosoft = function() {
+    window.logoutMicrosoft = async function() {
         localStorage.removeItem('ww_huidige_leerkracht');
         localStorage.removeItem('ww_huidige_email');
         localStorage.removeItem('ww_standaard_school');
@@ -345,6 +369,13 @@
         localStorage.removeItem('ww_ms_code_verifier');
         localStorage.removeItem('ww_ms_redirect_uri');
         localStorage.removeItem('ww_ms_auth_state');
+        localStorage.removeItem('ww_ms_id_token');
+        localStorage.removeItem('ww_ms_access_token');
+        localStorage.removeItem('ww_ms_token_exp');
+
+        if (typeof window.signOutFirebase === 'function') {
+            try { await window.signOutFirebase(); } catch(e) {}
+        }
 
         window.location.reload();
     };
@@ -357,11 +388,22 @@
 
             const searchParams = new URLSearchParams(window.location.search);
             const code = searchParams.get('code');
+            const returnedState = searchParams.get('state');
+            const savedState = localStorage.getItem('ww_ms_auth_state');
             const codeVerifier = localStorage.getItem('ww_ms_code_verifier');
             const redirectUri = localStorage.getItem('ww_ms_redirect_uri') || (window.location.origin + window.location.pathname);
 
             // Ruim query string direct op uit de browser balk
             history.replaceState(null, '', window.location.pathname);
+
+            // CSRF-bescherming: verifieer OAuth state parameter
+            if (savedState && returnedState !== savedState) {
+                localStorage.removeItem('ww_ms_code_verifier');
+                localStorage.removeItem('ww_ms_auth_state');
+                toonLoginScherm({ foutmelding: '<strong>Beveiligingswaarschuwing:</strong> Ongeldige sessie-status (CSRF). Klik opnieuw op "Aanmelden met Microsoft 365".' });
+                return false;
+            }
+            localStorage.removeItem('ww_ms_auth_state');
 
             if (code && codeVerifier) {
                 localStorage.removeItem('ww_ms_code_verifier');
@@ -369,7 +411,7 @@
                     const tokenData = await wisselCodeOmVoorToken(code, codeVerifier, redirectUri);
                     if (tokenData && tokenData.id_token) {
                         const payload = decodeerJwtToken(tokenData.id_token);
-                        return verwerkMicrosoftToken(payload);
+                        return verwerkMicrosoftToken(payload, tokenData.id_token, tokenData.access_token || null);
                     }
                 } catch (e) {
                     console.error("Fout bij omwisselen code na redirect:", e);
@@ -398,7 +440,7 @@
             if (idToken) {
                 const payload = decodeerJwtToken(idToken);
                 history.replaceState(null, '', window.location.pathname);
-                return verwerkMicrosoftToken(payload);
+                return verwerkMicrosoftToken(payload, idToken, null);
             }
         }
         return false;
@@ -414,11 +456,25 @@
 
         const opgeslagenEmail = localStorage.getItem('ww_huidige_email');
         const opgeslagenNaam = localStorage.getItem('ww_huidige_leerkracht');
+        const msIdToken = typeof window.getMicrosoftIdToken === 'function' ? window.getMicrosoftIdToken() : localStorage.getItem('ww_ms_id_token');
 
-        // Valideer bestaande sessie
-        if (opgeslagenEmail && valideerDomein(opgeslagenEmail) && opgeslagenNaam) {
+        // Valideer bestaande sessie inclusief geldig, niet-verlopen Microsoft ID-token
+        if (opgeslagenEmail && valideerDomein(opgeslagenEmail) && opgeslagenNaam && msIdToken) {
             verbergLoginScherm();
             return true;
+        }
+
+        // Ruim ongeldige, verlopen of handmatig gemanipuleerde sessiegegevens op
+        if (opgeslagenEmail || opgeslagenNaam || localStorage.getItem('ww_ms_id_token')) {
+            localStorage.removeItem('ww_huidige_email');
+            localStorage.removeItem('ww_huidige_leerkracht');
+            localStorage.removeItem('ww_ms_id_token');
+            localStorage.removeItem('ww_ms_access_token');
+            localStorage.removeItem('ww_ms_token_exp');
+            localStorage.removeItem('auth_provider');
+            if (typeof window.signOutFirebase === 'function') {
+                window.signOutFirebase();
+            }
         }
 
         // Niet ingelogd: toon login scherm
