@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verwonderlab - Feedback & Ervaringen</title>
     <link rel="icon" type="image/jpeg" href="Verwonderlab.jpg">
-    <link rel="stylesheet" href="style.css?v=20261116A">
+    <link rel="stylesheet" href="style.css?v=20261118A">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -692,6 +692,7 @@
     </div>
 </div>
 
+<script src="auth.js?v=20261118F"></script>
 <script>
 // ==========================================
 // FEEDBACK FORMULIER LOGICA
@@ -1245,8 +1246,13 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
 
     // 2. Opslaan in Firestore Cloud indien Firebase beschikbaar is
     try {
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
+        const msIdToken = typeof window.getMicrosoftIdToken === 'function' ? window.getMicrosoftIdToken() : null;
+        if (!msIdToken) {
+            throw new Error("Geen geldig Microsoft-token gevonden voor cloud-opslag.");
+        }
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
         const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        const { getAuth, OAuthProvider, signInWithCredential } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
         
         const firebaseConfig = {
             apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
@@ -1256,7 +1262,13 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
             messagingSenderId: "778630419427",
             appId: "1:778630419427:web:02d9ddd753f3efed2846d6"
         };
-        const app = initializeApp(firebaseConfig);
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        if (!auth.currentUser) {
+            const provider = new OAuthProvider('microsoft.com');
+            const credential = provider.credential({ idToken: msIdToken });
+            await signInWithCredential(auth, credential);
+        }
         const db = getFirestore(app);
 
         // Feedback document opslaan
@@ -1282,8 +1294,11 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
 // Asynchrone Firestore Cloud Sync voor de meest actuele configuratie
 (async () => {
     try {
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
+        const msIdToken = typeof window.getMicrosoftIdToken === 'function' ? window.getMicrosoftIdToken() : null;
+        if (!msIdToken) return;
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
         const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        const { getAuth, OAuthProvider, signInWithCredential } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
         
         const firebaseConfig = {
             apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
@@ -1293,7 +1308,13 @@ document.getElementById('feedbackMainForm').addEventListener('submit', async fun
             messagingSenderId: "778630419427",
             appId: "1:778630419427:web:02d9ddd753f3efed2846d6"
         };
-        const app = initializeApp(firebaseConfig);
+        const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        if (!auth.currentUser) {
+            const provider = new OAuthProvider('microsoft.com');
+            const credential = provider.credential({ idToken: msIdToken });
+            await signInWithCredential(auth, credential);
+        }
         const db = getFirestore(app);
 
         const snap = await getDoc(doc(db, "instellingen", "feedback_config"));
