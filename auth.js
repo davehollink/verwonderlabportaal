@@ -461,6 +461,17 @@
 
     // Hoofdfunctie voor authenticatiecontrole
     window.controleerSSOAuthenticatie = async function() {
+        // Eenmalige opschoning van oude pre-Firebase-Auth sessies in bestaande browsers
+        if (localStorage.getItem('ww_auth_v2_migrated') !== '1') {
+            localStorage.removeItem('ww_huidige_email');
+            localStorage.removeItem('ww_huidige_leerkracht');
+            localStorage.removeItem('ww_ms_id_token');
+            localStorage.removeItem('ww_ms_access_token');
+            localStorage.removeItem('ww_ms_token_exp');
+            localStorage.removeItem('auth_provider');
+            localStorage.setItem('ww_auth_v2_migrated', '1');
+        }
+
         // Controleer eerst of we net terugkeren van een Microsoft redirect
         const viaRedirect = await controleerRedirect();
         if (viaRedirect) {
