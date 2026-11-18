@@ -316,7 +316,20 @@
         const btn = document.getElementById('msLoginBtn');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = `<span>⏳ Doorsturen naar Microsoft 365...</span>`;
+            btn.innerHTML = `<span>⏳ Aanmelden via Microsoft 365...</span>`;
+        }
+
+        // Gebruik bij voorkeur de officiële Firebase Microsoft OAuth-koppeling zodat Firestore Rules direct werken
+        if (typeof window.loginMetFirebaseMicrosoft === 'function') {
+            try {
+                const ok = await window.loginMetFirebaseMicrosoft();
+                if (ok) return;
+            } catch (fbErr) {
+                console.warn("Firebase Microsoft login fallback check:", fbErr);
+                const msg = (fbErr && fbErr.message) ? fbErr.message : 'Aanmelden mislukt.';
+                toonLoginScherm({ foutmelding: `<strong>Aanmelden mislukt:</strong><br>${msg}` });
+                return;
+            }
         }
 
         try {

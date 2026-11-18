@@ -3059,7 +3059,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
         const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         const { getStorage, ref, uploadString, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js");
-        const { getAuth, OAuthProvider, signInWithCredential, signOut, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
+        const { getAuth, OAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
 
         const firebaseConfig = {
             apiKey: "AIzaSyCAvg6sZJBzkVhe7UH_jUzFmuoy6aYcYFM",
@@ -3076,8 +3076,82 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         const fbAuth = getAuth(window.firebaseApp);
 
         window.firebaseAuth = fbAuth;
-        window.signInFirebaseWithMicrosoft = async function(idToken, accessToken = null) {
+        window.getFirebaseIdToken = async function() {
+            try {
+                if (fbAuth && fbAuth.currentUser) {
+                    return await fbAuth.currentUser.getIdToken();
+                }
+            } catch (e) {}
+            return null;
+        };
+
+        async function verwerkFirebaseMicrosoftResult(result) {
+            if (!result || !result.user) return false;
+            const user = result.user;
+            const email = (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || '').trim().toLowerCase();
+            if (!email || !email.endsWith('@wonderwijs.nl')) {
+                await signOut(fbAuth).catch(() => {});
+                alert(`Toegang geweigerd: het account "${email || 'onbekend'}" hoort niet bij @wonderwijs.nl.`);
+                return false;
+            }
+            const naam = (user.displayName || email.split('@')[0]).trim();
+            localStorage.setItem('ww_huidige_email', email);
+            localStorage.setItem('ww_huidige_leerkracht', naam);
+            localStorage.setItem('auth_provider', 'microsoft_sso');
+            const oauthCred = OAuthProvider.credentialFromResult(result);
+            if (oauthCred && oauthCred.idToken) {
+                localStorage.setItem('ww_ms_id_token', oauthCred.idToken);
+                localStorage.setItem('ww_ms_token_exp', String(Date.now() + 3500 * 1000));
+            } else {
+                const fbJwt = await user.getIdToken();
+                localStorage.setItem('ww_ms_id_token', fbJwt);
+                localStorage.setItem('ww_ms_token_exp', String(Date.now() + 3500 * 1000));
+            }
+            if (oauthCred && oauthCred.accessToken) {
+                localStorage.setItem('ww_ms_access_token', oauthCred.accessToken);
+            }
+            const loginOverlay = document.getElementById('wwSsoLoginOverlay');
+            if (loginOverlay) loginOverlay.style.display = 'none';
+            if (typeof window.initPortaalNaLogin === 'function') {
+                window.initPortaalNaLogin();
+            }
+            if (typeof window.updateAdminButtonVisibility === 'function') {
+                window.updateAdminButtonVisibility();
+            }
+            return true;
+        }
+
+        window.loginMetFirebaseMicrosoft = async function() {
+            const provider = new OAuthProvider('microsoft.com');
+            provider.setCustomParameters({
+                tenant: 'organizations',
+                prompt: 'select_account'
+            });
+            try {
+                const result = await signInWithPopup(fbAuth, provider);
+                return await verwerkFirebaseMicrosoftResult(result);
+            } catch (err) {
+                if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
+                    await signInWithRedirect(fbAuth, provider);
+                    return false;
+                }
+                console.error("Firebase Microsoft login fout:", err);
+                throw err;
+            }
+        };
+
+        // Verwerk eventuele terugkeer van Firebase Microsoft redirect
+        getRedirectResult(fbAuth).then(async (res) => {
+            if (res && res.user) {
+                await verwerkFirebaseMicrosoftResult(res);
+            }
+        }).catch((err) => {
+            console.warn("Firebase redirect result:", err);
+        });
+
+        window.signInFirebaseWithMicrosoft = async function(idToken) {
             if (!idToken) return null;
+            if (fbAuth.currentUser) return fbAuth.currentUser;
             try {
                 const provider = new OAuthProvider('microsoft.com');
                 const cred = provider.credential({ idToken });
@@ -3092,13 +3166,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             try { await signOut(fbAuth); } catch (e) {}
         };
 
-        // Koppel bestaande Microsoft SSO sessie direct aan Firebase Auth voor Firestore Security Rules
-        const cachedMsToken = typeof window.getMicrosoftIdToken === 'function' ? window.getMicrosoftIdToken() : localStorage.getItem('ww_ms_id_token');
-        const cachedMsAccess = localStorage.getItem('ww_ms_access_token') || null;
-        if (!fbAuth.currentUser && cachedMsToken) {
-            window.signInFirebaseWithMicrosoft(cachedMsToken, cachedMsAccess);
-        }
-
         window.firestoreDb = db;
         window.firestoreDoc = doc;
         window.firestoreSetDoc = setDoc;
@@ -3108,6 +3175,11 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         const checkError = (err) => { 
             console.warn("Firebase snapshot error:", err); 
         };
+
+        let _listenersStarted = false;
+        function startFirestoreListeners() {
+            if (_listenersStarted) return;
+            _listenersStarted = true;
 
         // 0. Synchronisatie van definitief verwijderde items (werkt ook in Incognito en synchroniseert tussen alle apparaten)
         onSnapshot(doc(db, "instellingen", "verwijderde_items"), (snap) => {
@@ -3443,8 +3515,10 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if(typeof window.renderStatistiekenTab === "function") window.renderStatistiekenTab(); 
             if(typeof window.renderReserveringsGrid === "function") window.renderReserveringsGrid(); 
         }, checkError);
-        onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
-        onSnapshot(collection(db, "feedback"), (snapshot) => { if(!snapshot.empty) { feedbackLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+        if (isAdminVoorRes) {
+            onSnapshot(collection(db, "meldingen"), (snapshot) => { if(!snapshot.empty) { meldingen = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+            onSnapshot(collection(db, "feedback"), (snapshot) => { if(!snapshot.empty) { feedbackLijst = snapshot.docs.map(d => d.data()); slaDataOp(); if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); } }, checkError);
+        }
         onSnapshot(doc(db, "instellingen", "feedback_config"), (snap) => {
             if (snap.exists()) {
                 const cloudConfig = snap.data();
@@ -3649,40 +3723,46 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
         // Beheerders overzicht: Realtime luisteren naar alle medewerkersvoortgang
         window.alleMedewerkersVoortgang = [];
-        onSnapshot(collection(db, "voortgang_elearning"), (snapshot) => {
-            const list = [];
-            snapshot.docs.forEach(d => {
-                const docData = d.data();
-                list.push({ ...docData, _id: d.id });
-            });
-            window.alleMedewerkersVoortgang = list;
-            if (typeof window.renderAdminMedewerkersVoortgang === "function") {
-                window.renderAdminMedewerkersVoortgang();
-            }
-            if (typeof window.updateLiveCourseHubCounter === "function") {
-                window.updateLiveCourseHubCounter();
-            }
-        }, checkError);
+        if (isAdminVoorRes) {
+            onSnapshot(collection(db, "voortgang_elearning"), (snapshot) => {
+                const list = [];
+                snapshot.docs.forEach(d => {
+                    const docData = d.data();
+                    list.push({ ...docData, _id: d.id });
+                });
+                window.alleMedewerkersVoortgang = list;
+                if (typeof window.renderAdminMedewerkersVoortgang === "function") {
+                    window.renderAdminMedewerkersVoortgang();
+                }
+                if (typeof window.updateLiveCourseHubCounter === "function") {
+                    window.updateLiveCourseHubCounter();
+                }
+            }, checkError);
+        }
 
-        // Voortgang realtime ophalen en direct toepassen op de vinkjes
-        onSnapshot(collection(db, "voortgang"), (snapshot) => { 
-            let huidigeEmail = localStorage.getItem('ww_huidige_email'); 
-            if (huidigeEmail) { 
-                const cleanEmail = huidigeEmail.trim().toLowerCase();
-                const veiligId = cleanEmail.replace(/[@.]/g, '_');
-                const docSnap = snapshot.docs.find(d => 
-                    d.id === veiligId || 
-                    d.id === cleanEmail || 
-                    (d.data() && d.data().email && d.data().email.toLowerCase() === cleanEmail)
-                ); 
-                if(docSnap && docSnap.data().vinkjes) { 
-                    localStorage.setItem('ww_vinkjes', docSnap.data().vinkjes); 
-                    if(typeof window.reproduceerVinkjes === "function") {
-                        window.reproduceerVinkjes(); 
+        // Voortgang realtime ophalen (eigen document voor medewerker)
+        const _vEmail = (localStorage.getItem('ww_huidige_email') || '').trim().toLowerCase();
+        if (_vEmail) {
+            const _vId = _vEmail.replace(/[^a-z0-9]/g, '_');
+            onSnapshot(doc(db, "voortgang", _vId), (docSnap) => {
+                if (docSnap.exists() && docSnap.data().vinkjes) {
+                    localStorage.setItem('ww_vinkjes', docSnap.data().vinkjes);
+                    if (typeof window.reproduceerVinkjes === "function") {
+                        window.reproduceerVinkjes();
                     }
-                } 
-            } 
-        }, checkError);
+                }
+            }, checkError);
+        }
+        } // einde startFirestoreListeners
+
+        onAuthStateChanged(fbAuth, (user) => {
+            if (user && user.email && user.email.toLowerCase().endsWith('@wonderwijs.nl')) {
+                startFirestoreListeners();
+            }
+        });
+        if (fbAuth.currentUser) {
+            startFirestoreListeners();
+        }
 
         // Functie om de e-learning voortgang waterdicht op te slaan per werknemer gekoppeld aan Microsoft account
         window.saveUserElearningProgressToCloud = async function(email, progress, cursusId, lesId, actId, actTitle) {
@@ -4346,6 +4426,9 @@ window.updateSidebarUserProfile = function() {
 // Universele controle of de huidige gebruiker een beheerder is
 window.isCurrentAdmin = function() {
     const huidigeEmail = (localStorage.getItem('ww_huidige_email') || '').toLowerCase().trim();
+    if (huidigeEmail && ['d.hollink@wonderwijs.nl', 'verwonderlab@wonderwijs.nl'].includes(huidigeEmail)) {
+        return true;
+    }
     if (huidigeEmail && Array.isArray(beheerdersLijst) && beheerdersLijst.some(b => b.email && b.email.toLowerCase().trim() === huidigeEmail)) {
         return true;
     }
@@ -4355,6 +4438,7 @@ window.isCurrentAdmin = function() {
     }
     return false;
 };
+window.isHuidigeGebruikerBeheerder = window.isCurrentAdmin;
 
 // Universele zichtbaarheidscontrole voor de Admin knop (alleen voor geverifieerde beheerders)
 window.updateAdminButtonVisibility = function() {
