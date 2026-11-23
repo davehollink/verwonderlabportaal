@@ -761,7 +761,6 @@ window.getKistNumber = function(name) {
 };
 
 window.isZelfdeKist = function(kistA, kistB, kistIdA, kistIdB) {
-    if (kistIdA && kistIdB && String(kistIdA) === String(kistIdB)) return true;
     if (kistB && typeof kistB === 'object') {
         if (kistIdA && kistB.id && String(kistIdA) === String(kistB.id)) return true;
         kistB = kistB.naam || kistB.titel || '';
@@ -771,37 +770,15 @@ window.isZelfdeKist = function(kistA, kistB, kistIdA, kistIdB) {
         kistA = kistA.naam || kistA.titel || '';
     }
 
+    if (kistIdA && kistIdB && String(kistIdA) === String(kistIdB)) return true;
     if (!kistA || !kistB) return false;
-    const a = kistA.toLowerCase().trim();
-    const b = kistB.toLowerCase().trim();
-    if (a === b) return true;
 
-    // 1. Vergelijk op basis van canonieke categorie (bijv. 'VR Brillen set 1' vs 'VR Brillen')
-    if (typeof window.detecteerKistNaam === 'function') {
-        const catA = window.detecteerKistNaam(a);
-        const catB = window.detecteerKistNaam(b);
-        if (catA && catB && catA !== 'Wonderlab Leskist' && catA === catB) {
-            const numA = window.getKistNumber(a);
-            const numB = window.getKistNumber(b);
-            // Alleen uitsluiten als BEIDE een specifiek afwijkend nummer hebben (bijv. set 1 vs set 2)
-            if (numA && numB && numA !== numB) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    // 2. Vergelijk genormaliseerde namen
-    const cA = window.cleanKistNaam(a);
-    const cB = window.cleanKistNaam(b);
-    if (!cA || !cB) return false;
-    if (cA === cB) return true;
-
-    const numA = window.getKistNumber(a);
-    const numB = window.getKistNumber(b);
-    if (numA && numB && numA !== numB) return false;
-
-    return cA.includes(cB) || cB.includes(cA);
+    // Vergelijk exact (case-insensitive en genormaliseerde spaties), zodat varianten
+    // zoals "Intelino groepsset" vs "Intelino groepsset (4 items)" of
+    // "Infento Talent Kit" vs "Infento: discovery set (groepsset)" strikt gescheiden blijven.
+    const normA = kistA.toLowerCase().replace(/\s+/g, ' ').trim();
+    const normB = kistB.toLowerCase().replace(/\s+/g, ' ').trim();
+    return normA === normB;
 };
 
 window.isKistGereserveerdInPeriode = function(kistNaam, periodeId, kistId) {
