@@ -3178,9 +3178,19 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         };
 
         let _listenersStarted = false;
-        function startFirestoreListeners() {
+        async function startFirestoreListeners() {
             if (_listenersStarted) return;
             _listenersStarted = true;
+            try {
+                const initBeheerdersSnap = await getDocs(collection(db, "beheerders"));
+                if (!initBeheerdersSnap.empty) {
+                    beheerdersLijst = initBeheerdersSnap.docs.map(d => d.data());
+                    slaDataOp();
+                    if (typeof window.updateAdminButtonVisibility === "function") window.updateAdminButtonVisibility();
+                }
+            } catch (e) {
+                console.warn("Initiële beheerders ophalen:", e);
+            }
 
         // 0. Synchronisatie van definitief verwijderde items (werkt ook in Incognito en synchroniseert tussen alle apparaten)
         onSnapshot(doc(db, "instellingen", "verwijderde_items"), (snap) => {
@@ -3304,6 +3314,16 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         onSnapshot(collection(db, "beheerders"), (snapshot) => { 
             if(!snapshot.empty) { 
                 beheerdersLijst = snapshot.docs.map(d => d.data()); 
+                const curEmail = (localStorage.getItem('ww_huidige_email') || '').trim().toLowerCase();
+                if (['d.hollink@wonderwijs.nl', 'verwonderlab@wonderwijs.nl'].includes(curEmail)) {
+                    snapshot.docs.forEach(d => {
+                        const bData = d.data();
+                        const bEmail = (bData && bData.email ? bData.email : '').trim().toLowerCase();
+                        if (bEmail && d.id !== bEmail) {
+                            setDoc(doc(db, "beheerders", bEmail), bData, { merge: true }).catch(() => {});
+                        }
+                    });
+                }
                 slaDataOp(); 
                 if(typeof renderBeheerdersTabellen === "function") renderBeheerdersTabellen(); 
             } else { 
@@ -3477,9 +3497,12 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         || (lr.leerkracht === 'Test' && lr.aanvragerEmail === 'JHendriks@wonderwijs.nl');
 
                     if (!isVerwijderd && !cloudMap.has(lrIdStr)) {
-                        cloudMap.set(lrIdStr, lr);
-                        if (window.addReserveringToCloud) {
-                            window.addReserveringToCloud(lr).catch(e => console.warn("Cloud sync reservering:", e));
+                        const lrEmail = (lr.aanvragerEmail || '').trim().toLowerCase();
+                        if (isAdminVoorRes || (lrEmail && lrEmail === huidigeEmailVoorRes)) {
+                            cloudMap.set(lrIdStr, lr);
+                            if (window.addReserveringToCloud) {
+                                window.addReserveringToCloud(lr).catch(e => console.warn("Cloud sync reservering:", e));
+                            }
                         }
                     }
                 });
@@ -4218,6 +4241,10 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 ...newData,
                 aanvragerEmail: (newData.aanvragerEmail || '').trim().toLowerCase()
             };
+            // Firestore weigert documenten met undefined-waarden (Unsupported field value: undefined)
+            Object.keys(payload).forEach(k => {
+                if (payload[k] === undefined) delete payload[k];
+            });
             await setDoc(doc(db, "reserveringen", payload.id.toString()), payload);
             await setDoc(doc(db, "bezetting", payload.id.toString()), {
                 id: payload.id,
@@ -5934,7 +5961,7 @@ async function verwerkFormulier(formId, btnElement) {
             const nieuweReservering = { 
                 id: Date.now(), 
                 kist: kistNaam, 
-                kistId: kistId || undefined,
+                kistId: kistId || null,
                 leerkracht: huidigeNaam, 
                 aanvragerEmail: huidigeEmail, 
                 school: gekozenSchool, 
@@ -10496,7 +10523,7 @@ window.importeerHistorischeReserveringen = async function() {
                 reserveringen.push(resObj);
                 nieuwAantal++;
                 aangepast = true;
-                if (window.addReserveringToCloud) {
+                if (window.isCurrentAdmin && window.isCurrentAdmin() && window.addReserveringToCloud) {
                     window.addReserveringToCloud(resObj).catch(e => console.warn('Cloud reservering sync fout:', e));
                 }
             }
