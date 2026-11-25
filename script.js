@@ -3034,7 +3034,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 (async () => {
     try {
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js");
-        const { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+        const { initializeFirestore, getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         const { getStorage, ref, uploadString, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js");
         const { getAuth, OAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js");
 
@@ -3048,7 +3048,12 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         };
 
         window.firebaseApp = initializeApp(firebaseConfig);
-        const db = getFirestore(window.firebaseApp);
+        let db;
+        try {
+            db = initializeFirestore(window.firebaseApp, { experimentalAutoDetectLongPolling: true });
+        } catch (initErr) {
+            db = getFirestore(window.firebaseApp);
+        }
         const storage = getStorage(window.firebaseApp);
         const fbAuth = getAuth(window.firebaseApp);
 
@@ -4237,6 +4242,9 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             if (email) { try { await deleteDoc(doc(db, "beheerders", email.toLowerCase().trim())); } catch(e) {} }
         };
         window.addReserveringToCloud = async function(newData) {
+            if (!fbAuth || !fbAuth.currentUser) {
+                throw new Error("Je bent niet meer ingelogd bij Firebase. Ververs de pagina of log opnieuw in.");
+            }
             const payload = {
                 ...newData,
                 aanvragerEmail: (newData.aanvragerEmail || '').trim().toLowerCase()
@@ -4245,19 +4253,19 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             Object.keys(payload).forEach(k => {
                 if (payload[k] === undefined) delete payload[k];
             });
-            await setDoc(doc(db, "reserveringen", payload.id.toString()), payload);
-            await setDoc(doc(db, "bezetting", payload.id.toString()), {
+            await withTimeout(setDoc(doc(db, "reserveringen", payload.id.toString()), payload), 8000);
+            await withTimeout(setDoc(doc(db, "bezetting", payload.id.toString()), {
                 id: payload.id,
                 kist: payload.kist || '',
                 kistId: payload.kistId || null,
                 periodeId: payload.periodeId || null,
                 status: payload.status || 'In afwachting'
-            }).catch(() => {});
+            }), 5000).catch(() => {});
         };
         window.updateChecklistInCloud = async function(id, dataObj) {
-            await setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true });
+            await withTimeout(setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }), 8000);
             if (dataObj && typeof dataObj.status === 'string') {
-                await setDoc(doc(db, "bezetting", id.toString()), { status: dataObj.status }, { merge: true }).catch(() => {});
+                await withTimeout(setDoc(doc(db, "bezetting", id.toString()), { status: dataObj.status }, { merge: true }), 5000).catch(() => {});
             }
         };
         window.deleteReserveringFromCloud = async function(id, docId, targetRes) {
@@ -5980,14 +5988,29 @@ async function verwerkFormulier(formId, btnElement) {
             if(window.updateKalenderEnLijst) window.updateKalenderEnLijst(); 
             if(window.renderMijnReserveringen) window.renderMijnReserveringen(); 
             if(window.renderReserveringsGrid) window.renderReserveringsGrid();
-            if(window.addReserveringToCloud) await window.addReserveringToCloud(nieuweReservering); 
+            let cloudGelukt = true;
+            if(window.addReserveringToCloud) {
+                try {
+                    await window.addReserveringToCloud(nieuweReservering);
+                } catch (cloudErr) {
+                    cloudGelukt = false;
+                    console.error("Cloud opslag reservering fout:", cloudErr);
+                    reserveringen = reserveringen.filter(r => String(r.id) !== String(nieuweReservering.id));
+                    slaDataOp();
+                    if(window.renderBeheerdersTabellen) window.renderBeheerdersTabellen();
+                    if(window.renderMijnReserveringen) window.renderMijnReserveringen();
+                    if(window.renderReserveringsGrid) window.renderReserveringsGrid();
+                    alert('❌ Opslaan naar de server duurde te lang of is geweigerd: ' + (cloudErr.message || cloudErr) + '\n\nVervers de pagina (of log opnieuw in) en probeer het nogmaals.');
+                    return;
+                }
+            }
             
             window.sluitAlleModals(); 
             const formObj = document.getElementById('reserveForm'); 
             if (formObj) formObj.reset(); 
             const opmInput = document.getElementById('reserveOpmerking');
             if (opmInput) opmInput.value = '';
-            alert('✅ Aanvraag is gelukt en is direct zichtbaar op je dashboard!'); 
+            if (cloudGelukt) alert('✅ Aanvraag is gelukt en is direct zichtbaar op je dashboard!'); 
        } else if (formId === 'storingForm') { 
         const kistSelect = getVal('storingKist'); 
         const soortMelding = getVal('storingSoort'); 
