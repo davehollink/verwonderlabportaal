@@ -3370,9 +3370,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     if (!isVerwijderd && lkIdStr) {
                         if (!cloudMap.has(lkIdStr)) {
                             cloudMap.set(lkIdStr, lk);
-                            if (window.isHuidigeGebruikerBeheerder && window.isHuidigeGebruikerBeheerder() && window.saveMateriaalToCloud) {
-                                window.saveMateriaalToCloud(lk.id, lk, lk.afbeelding, lk.pdfs).catch(e => console.warn("Background sync materiaal:", e));
-                            }
                         }
                     }
                 });
@@ -3509,9 +3506,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         const lrEmail = (lr.aanvragerEmail || '').trim().toLowerCase();
                         if (isAdminVoorRes || (lrEmail && lrEmail === huidigeEmailVoorRes)) {
                             cloudMap.set(lrIdStr, lr);
-                            if (window.addReserveringToCloud) {
-                                window.addReserveringToCloud(lr).catch(e => console.warn("Cloud sync reservering:", e));
-                            }
                         }
                     }
                 });
@@ -3639,7 +3633,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                         cd.omschrijving = defaultElearningCursussen[0].omschrijving;
                         cd.keySkills = defaultElearningCursussen[0].keySkills;
                         cd.lessen = JSON.parse(JSON.stringify(defaultElearningCursussen[0].lessen));
-                        setDoc(d.ref, cd, { merge: true }).catch(() => {});
                     }
                     cloudCursussen.push(cd);
                 });
@@ -3664,22 +3657,13 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
 
                     if (!cloudMap.has(idStr)) {
                         cloudMap.set(idStr, lc);
-                        if (isAdminVoorRes && !inCooldown && window.saveElearningToCloud) {
-                            _syncingElearningIds.set(idStr, now);
-                            window.saveElearningToCloud(lc).catch(e => console.warn("Background sync elearning:", e));
-                        }
                     } else {
-                        // Alleen syncen als de lokale versie aantoonbaar nieuwer is (> 2 sec verschil) én niet in cooldown
                         const cloudItem = cloudMap.get(idStr);
                         const localTime = new Date(lc.laatsteUpdate || 0).getTime();
                         const cloudTime = new Date(cloudItem.laatsteUpdate || 0).getTime();
 
-                        if (localTime > (cloudTime + 2000) && !inCooldown) {
+                        if (localTime > (cloudTime + 2000)) {
                             cloudMap.set(idStr, lc);
-                            if (isAdminVoorRes && window.saveElearningToCloud) {
-                                _syncingElearningIds.set(idStr, now);
-                                window.saveElearningToCloud(lc).catch(e => console.warn("Background sync local newer elearning:", e));
-                            }
                         }
                     }
                 });
