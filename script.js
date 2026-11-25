@@ -4298,7 +4298,6 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 ...newData,
                 aanvragerEmail: (newData.aanvragerEmail || '').trim().toLowerCase()
             };
-            // Firestore weigert documenten met undefined-waarden (Unsupported field value: undefined)
             Object.keys(payload).forEach(k => {
                 if (payload[k] === undefined) delete payload[k];
             });
@@ -4309,37 +4308,14 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                 periodeId: payload.periodeId || null,
                 status: payload.status || 'In afwachting'
             };
-            try {
-                await withTimeout(setDoc(doc(db, "reserveringen", payload.id.toString()), payload), 4500);
-            } catch (sdkErr) {
-                if (String(sdkErr && sdkErr.message).includes('Cloud timeout')) {
-                    await saveDocViaRestFallback("reserveringen", payload.id.toString(), payload);
-                } else {
-                    throw sdkErr;
-                }
-            }
-            try {
-                await withTimeout(setDoc(doc(db, "bezetting", payload.id.toString()), bezettingPayload), 4000);
-            } catch (bezErr) {
-                await saveDocViaRestFallback("bezetting", payload.id.toString(), bezettingPayload).catch(() => {});
-            }
+            // Directe HTTPS REST-call (~150ms) zodat de SDK write-queue nooit blijft hangen
+            await withTimeout(saveDocViaRestFallback("reserveringen", payload.id.toString(), payload), 6000);
+            withTimeout(saveDocViaRestFallback("bezetting", payload.id.toString(), bezettingPayload), 5000).catch(() => {});
         };
         window.updateChecklistInCloud = async function(id, dataObj) {
-            try {
-                await withTimeout(setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }), 4500);
-            } catch (sdkErr) {
-                if (String(sdkErr && sdkErr.message).includes('Cloud timeout')) {
-                    await saveDocViaRestFallback("reserveringen", id.toString(), dataObj, true);
-                } else {
-                    throw sdkErr;
-                }
-            }
+            await withTimeout(saveDocViaRestFallback("reserveringen", id.toString(), dataObj, true), 6000);
             if (dataObj && typeof dataObj.status === 'string') {
-                try {
-                    await withTimeout(setDoc(doc(db, "bezetting", id.toString()), { status: dataObj.status }, { merge: true }), 4000);
-                } catch (bezErr) {
-                    await saveDocViaRestFallback("bezetting", id.toString(), { status: dataObj.status }, true).catch(() => {});
-                }
+                withTimeout(saveDocViaRestFallback("bezetting", id.toString(), { status: dataObj.status }, true), 5000).catch(() => {});
             }
         };
         window.deleteReserveringFromCloud = async function(id, docId, targetRes) {
