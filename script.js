@@ -3474,17 +3474,21 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
                     }
 
                     cloudRes.push(cr);
-                    // Synchroniseer voor admins automatisch anonieme bezetting zodat collega's alleen vrije periodes zien
-                    if (isAdminVoorRes && idStr) {
-                        setDoc(doc(db, "bezetting", idStr), {
-                            id: cr.id,
-                            kist: cr.kist || '',
-                            kistId: cr.kistId || null,
-                            periodeId: cr.periodeId || null,
-                            status: cr.status || 'In afwachting'
-                        }, { merge: true }).catch(() => {});
+                    // Synchroniseer voor admins alleen ontbrekende bezetting (max 1x per sessie, geen write-storm)
+                    if (isAdminVoorRes && idStr && !window._bezettingBackfilled) {
+                        const heeftAlBezetting = Array.isArray(window.publiekeBezetting) && window.publiekeBezetting.some(b => String(b.id || b._docId) === idStr && b.status === (cr.status || 'In afwachting'));
+                        if (!heeftAlBezetting) {
+                            setDoc(doc(db, "bezetting", idStr), {
+                                id: cr.id,
+                                kist: cr.kist || '',
+                                kistId: cr.kistId || null,
+                                periodeId: cr.periodeId || null,
+                                status: cr.status || 'In afwachting'
+                            }, { merge: true }).catch(() => {});
+                        }
                     }
                 });
+                if (isAdminVoorRes) window._bezettingBackfilled = true;
 
                 const cloudMap = new Map();
                 cloudRes.forEach(cr => {
@@ -4241,6 +4245,51 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             try { await deleteDoc(doc(db, "beheerders", id.toString())); } catch(e) {}
             if (email) { try { await deleteDoc(doc(db, "beheerders", email.toLowerCase().trim())); } catch(e) {} }
         };
+        function toFirestoreRestValue(val) {
+            if (val === null || val === undefined) return { nullValue: null };
+            if (typeof val === 'boolean') return { booleanValue: val };
+            if (typeof val === 'number') return Number.isInteger(val) ? { integerValue: String(val) } : { doubleValue: val };
+            if (typeof val === 'string') return { stringValue: val };
+            if (Array.isArray(val)) return { arrayValue: { values: val.map(toFirestoreRestValue) } };
+            if (typeof val === 'object') {
+                const fields = {};
+                Object.keys(val).forEach(k => {
+                    if (val[k] !== undefined) fields[k] = toFirestoreRestValue(val[k]);
+                });
+                return { mapValue: { fields } };
+            }
+            return { stringValue: String(val) };
+        }
+
+        async function saveDocViaRestFallback(collectionName, docId, dataObj, mergeFields = null) {
+            if (!fbAuth || !fbAuth.currentUser) {
+                throw new Error("Je bent niet ingelogd bij Firebase.");
+            }
+            const idToken = await fbAuth.currentUser.getIdToken();
+            const fields = {};
+            const maskParams = [];
+            Object.keys(dataObj).forEach(k => {
+                if (dataObj[k] !== undefined) {
+                    fields[k] = toFirestoreRestValue(dataObj[k]);
+                    if (mergeFields) maskParams.push(`updateMask.fieldPaths=${encodeURIComponent(k)}`);
+                }
+            });
+            const queryStr = maskParams.length ? `?${maskParams.join('&')}` : '';
+            const url = `https://firestore.googleapis.com/v1/projects/verwonderlab-portaal/databases/(default)/documents/${encodeURIComponent(collectionName)}/${encodeURIComponent(String(docId))}${queryStr}`;
+            const resp = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fields })
+            });
+            if (!resp.ok) {
+                const errText = await resp.text().catch(() => '');
+                throw new Error(`Firestore HTTP ${resp.status}: ${errText.slice(0, 150)}`);
+            }
+        }
+
         window.addReserveringToCloud = async function(newData) {
             if (!fbAuth || !fbAuth.currentUser) {
                 throw new Error("Je bent niet meer ingelogd bij Firebase. Ververs de pagina of log opnieuw in.");
@@ -4253,19 +4302,44 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             Object.keys(payload).forEach(k => {
                 if (payload[k] === undefined) delete payload[k];
             });
-            await withTimeout(setDoc(doc(db, "reserveringen", payload.id.toString()), payload), 8000);
-            await withTimeout(setDoc(doc(db, "bezetting", payload.id.toString()), {
+            const bezettingPayload = {
                 id: payload.id,
                 kist: payload.kist || '',
                 kistId: payload.kistId || null,
                 periodeId: payload.periodeId || null,
                 status: payload.status || 'In afwachting'
-            }), 5000).catch(() => {});
+            };
+            try {
+                await withTimeout(setDoc(doc(db, "reserveringen", payload.id.toString()), payload), 4500);
+            } catch (sdkErr) {
+                if (String(sdkErr && sdkErr.message).includes('Cloud timeout')) {
+                    await saveDocViaRestFallback("reserveringen", payload.id.toString(), payload);
+                } else {
+                    throw sdkErr;
+                }
+            }
+            try {
+                await withTimeout(setDoc(doc(db, "bezetting", payload.id.toString()), bezettingPayload), 4000);
+            } catch (bezErr) {
+                await saveDocViaRestFallback("bezetting", payload.id.toString(), bezettingPayload).catch(() => {});
+            }
         };
         window.updateChecklistInCloud = async function(id, dataObj) {
-            await withTimeout(setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }), 8000);
+            try {
+                await withTimeout(setDoc(doc(db, "reserveringen", id.toString()), dataObj, { merge: true }), 4500);
+            } catch (sdkErr) {
+                if (String(sdkErr && sdkErr.message).includes('Cloud timeout')) {
+                    await saveDocViaRestFallback("reserveringen", id.toString(), dataObj, true);
+                } else {
+                    throw sdkErr;
+                }
+            }
             if (dataObj && typeof dataObj.status === 'string') {
-                await withTimeout(setDoc(doc(db, "bezetting", id.toString()), { status: dataObj.status }, { merge: true }), 5000).catch(() => {});
+                try {
+                    await withTimeout(setDoc(doc(db, "bezetting", id.toString()), { status: dataObj.status }, { merge: true }), 4000);
+                } catch (bezErr) {
+                    await saveDocViaRestFallback("bezetting", id.toString(), { status: dataObj.status }, true).catch(() => {});
+                }
             }
         };
         window.deleteReserveringFromCloud = async function(id, docId, targetRes) {
