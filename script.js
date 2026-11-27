@@ -3182,6 +3182,19 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             console.warn("Firebase snapshot error:", err); 
         };
 
+        function ontdubbelBeheerdersDocs(docs) {
+            const map = new Map();
+            docs.forEach(d => {
+                const bData = d.data();
+                const bEmail = (bData && bData.email ? bData.email : '').trim().toLowerCase();
+                if (!bEmail) return;
+                if (!map.has(bEmail) || d.id === bEmail) {
+                    map.set(bEmail, bData);
+                }
+            });
+            return Array.from(map.values());
+        }
+
         let _listenersStarted = false;
         async function startFirestoreListeners() {
             if (_listenersStarted) return;
@@ -3189,7 +3202,7 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
             try {
                 const initBeheerdersSnap = await getDocs(collection(db, "beheerders"));
                 if (!initBeheerdersSnap.empty) {
-                    beheerdersLijst = initBeheerdersSnap.docs.map(d => d.data());
+                    beheerdersLijst = ontdubbelBeheerdersDocs(initBeheerdersSnap.docs);
                     slaDataOp();
                     if (typeof window.updateAdminButtonVisibility === "function") window.updateAdminButtonVisibility();
                 }
@@ -3318,14 +3331,21 @@ const getCheck = (id, def = true) => { const el = document.getElementById(id); r
         }, checkError);
         onSnapshot(collection(db, "beheerders"), (snapshot) => { 
             if(!snapshot.empty) { 
-                beheerdersLijst = snapshot.docs.map(d => d.data()); 
+                beheerdersLijst = ontdubbelBeheerdersDocs(snapshot.docs);
                 const curEmail = (localStorage.getItem('ww_huidige_email') || '').trim().toLowerCase();
                 if (['d.hollink@wonderwijs.nl', 'verwonderlab@wonderwijs.nl'].includes(curEmail)) {
+                    const existingEmailIds = new Set(snapshot.docs.map(d => d.id));
                     snapshot.docs.forEach(d => {
                         const bData = d.data();
                         const bEmail = (bData && bData.email ? bData.email : '').trim().toLowerCase();
                         if (bEmail && d.id !== bEmail) {
-                            setDoc(doc(db, "beheerders", bEmail), bData, { merge: true }).catch(() => {});
+                            if (existingEmailIds.has(bEmail)) {
+                                deleteDoc(d.ref).catch(() => {});
+                            } else {
+                                setDoc(doc(db, "beheerders", bEmail), bData, { merge: true })
+                                    .then(() => deleteDoc(d.ref).catch(() => {}))
+                                    .catch(() => {});
+                            }
                         }
                     });
                 }
